@@ -146,5 +146,5 @@ package-lock.json
 .secrets
 .env.act
 .actrc
-.bin
-.test-github-actions.sh
+bin/
+test-github-actions.sh
