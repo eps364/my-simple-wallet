@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationContextInitializer=\
+br.dev.mission.simplewallet.config.DotenvConfig

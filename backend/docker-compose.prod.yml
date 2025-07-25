@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: eps364/simplewallet-db:latest
+    container_name: eps364/simplewallet-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+    networks:
+      - simplewallet-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  app:
+    image: eps364/simplewallet-backend:latest
+    container_name: eps364/simplewallet-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      # Application configuration
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      APP_NAME: ${APP_NAME}
+      
+      # Server configuration
+      PORT: ${PORT:-8080}
+      
+      # Database configuration
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      
+      # Hibernate/JPA configuration
+      HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO:-validate}
+      SHOW_SQL: ${SHOW_SQL:-false}
+      
+      # Logging configuration
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      WEB_LOG_LEVEL: ${WEB_LOG_LEVEL:-WARN}
+      SQL_LOG_LEVEL: ${SQL_LOG_LEVEL:-WARN}
+      SQL_PARAM_LOG_LEVEL: ${SQL_PARAM_LOG_LEVEL:-WARN}
+      
+      # Security configuration
+      JWT_SECRET: ${JWT_SECRET}
+      
+      # Additional configuration
+      SHOW_ALL_VARIABLES: ${SHOW_ALL_VARIABLES:-false}
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - app_logs:/app/logs
+    networks:
+      - simplewallet-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+    driver: local
+  app_logs:
+    driver: local
+
+networks:
+  simplewallet-prod-network:
+    driver: bridge

@@ -1,0 +1,9 @@
+target/
+!target/simplewallet-*.jar
+.mvn/wrapper/maven-wrapper.jar
+.git
+.gitignore
+README*.md
+.env*
+logs/
+*.log
