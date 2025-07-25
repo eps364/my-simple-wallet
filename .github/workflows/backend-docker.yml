@@ -35,7 +35,7 @@ jobs:
     - name: Run tests
       run: |
         cd backend
-        ./mvnw clean test
+        ./mvnw clean test -Dspring.profiles.active=test
 
     - name: Set up QEMU (multiplatform)
       uses: docker/setup-qemu-action@v3
