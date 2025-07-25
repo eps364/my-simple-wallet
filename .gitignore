@@ -141,3 +141,10 @@ temp/
 
 # Lock files (keep yarn.lock but ignore others)
 package-lock.json
+
+# Local testing with act
+.secrets
+.env.act
+.actrc
+bin/
+test-github-actions.sh
