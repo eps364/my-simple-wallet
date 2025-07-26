@@ -1,6 +1,7 @@
 services:
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:15}
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: ${POSTGRES_CONTAINER_NAME:-simplewallet-postgres-db}
     restart: unless-stopped
     env_file:
@@ -13,23 +14,17 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+      # - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
     networks:
       - simplewallet-prod-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   app:
     image: eps364/simplewallet-backend:latest
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: simplewallet-backend
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     env_file:
       - .env
     environment:
@@ -42,7 +37,7 @@ services:
       
       # Database configuration
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -68,12 +63,6 @@ services:
       - app_logs:/app/logs
     networks:
       - simplewallet-prod-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
 volumes:
   postgres_data:
