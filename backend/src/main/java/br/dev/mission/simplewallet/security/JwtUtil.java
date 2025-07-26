@@ -1,5 +1,8 @@
 package br.dev.mission.simplewallet.security;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -44,5 +47,21 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public long getExpirationInSeconds() {
+        return EXPERATION_MS / 1000;
+    }
+
+    public String getExpirationDateISO() {
+        return Instant.ofEpochMilli(System.currentTimeMillis() + EXPERATION_MS)
+                .atZone(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ISO_INSTANT);
+    }
+
+    public String generateRefreshToken(String username) {
+        // Por enquanto, vamos retornar um token simples
+        // Em uma implementação real, você deveria usar um mecanismo separado
+        return "refresh_" + username + "_" + System.currentTimeMillis();
     }
 }

@@ -50,7 +50,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(401, "Usuário ou senha inválidos", null));
         }
-        String token = jwtUtil.generateToken(userOpt.get().getUsername());
-        return ResponseEntity.ok(new ApiResponse<>(200, "Login realizado com sucesso", new LoginResponse(token)));
+        
+        User user = userOpt.get();
+        String token = jwtUtil.generateToken(user.getUsername());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+        long expiresIn = jwtUtil.getExpirationInSeconds();
+        String expiresAt = jwtUtil.getExpirationDateISO();
+        
+        LoginResponse loginResponse = new LoginResponse(token, refreshToken, expiresIn, expiresAt, "Bearer");
+        return ResponseEntity.ok(new ApiResponse<>(200, "Login realizado com sucesso", loginResponse));
     }
 }
