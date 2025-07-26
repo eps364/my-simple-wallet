@@ -2,30 +2,30 @@
 
 export interface Account {
   id: number;
-  name: string;
-  type: string;
+  description: string;
   balance: number;
-  currency?: string;
-  userId: number;
+  credit?: number;
+  dueDate?: number;
+  userId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface AccountCreateRequest {
-  name: string;
-  type: string;
+  description: string;
   balance?: number;
-  currency?: string;
+  credit?: number;
+  dueDate?: number;
 }
 
 export interface AccountUpdateRequest {
-  name?: string;
-  type?: string;
+  description?: string;
   balance?: number;
-  currency?: string;
+  credit?: number;
+  dueDate?: number;
 }
 
-// Enum para tipos de conta
+// Enum para tipos de conta (mantido para compatibilidade)
 export enum AccountType {
   CHECKING = 'CHECKING',
   SAVINGS = 'SAVINGS',
