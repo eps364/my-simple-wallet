@@ -1,10 +1,10 @@
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
-      <main className="container mx-auto px-4 py-16">
+      <main className="container mx-auto px-4 py-8">
         <div className="text-center max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-12">
+          <div className="mb-12 pt-8">
             <h1 className="text-5xl font-bold text-gray-800 dark:text-white mb-4">
               Simple Wallet
             </h1>
