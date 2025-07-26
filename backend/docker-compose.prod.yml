@@ -1,6 +1,7 @@
 services:
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:15}
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: ${POSTGRES_CONTAINER_NAME:-simplewallet-postgres-db}
     restart: unless-stopped
     env_file:
@@ -25,6 +26,7 @@ services:
 
   app:
     image: eps364/simplewallet-backend:latest
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: simplewallet-backend
     restart: unless-stopped
     depends_on:
