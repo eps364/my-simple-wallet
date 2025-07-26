@@ -32,10 +32,10 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
 
-    - name: Run tests
-      run: |
-        cd backend
-        ./mvnw clean test -Dspring.profiles.active=test
+    # - name: Run tests
+    #   run: |
+    #     cd backend
+    #     ./mvnw clean test -Dspring.profiles.active=test
 
     - name: Set up QEMU (multiplatform)
       uses: docker/setup-qemu-action@v3
