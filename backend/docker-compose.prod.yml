@@ -17,12 +17,6 @@ services:
       - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
     networks:
       - simplewallet-prod-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   app:
     image: eps364/simplewallet-backend:latest
@@ -30,8 +24,7 @@ services:
     container_name: simplewallet-backend
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     env_file:
       - .env
     environment:
@@ -70,12 +63,6 @@ services:
       - app_logs:/app/logs
     networks:
       - simplewallet-prod-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
 volumes:
   postgres_data:
