@@ -1,0 +1,3 @@
+# Multi-stage Dockerfile for PostgreSQL with custom initialization
+FROM postgres:15
+
