@@ -1,5 +1,5 @@
 # Use Temurin JDK 21 as base image for building the application
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:21-jdk AS build
 
 # Set working directory
 WORKDIR /app
@@ -22,7 +22,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
 # Usar uma imagem leve para executar a aplicação
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre
 
 # Definir diretório de trabalho
 WORKDIR /app
