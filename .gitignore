@@ -130,10 +130,11 @@ build/
 dist/
 out/
 
-# Database
-*.db
+# Database files
 *.sqlite
 *.sqlite3
+*.db
+!Dockerfile.db
 
 # Temporary files
 tmp/
