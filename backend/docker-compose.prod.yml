@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: eps364/simplewallet-db:latest
-    container_name: simplewallet-postgres
+    image: ${POSTGRES_IMAGE:-postgres:15}
+    container_name: ${POSTGRES_CONTAINER_NAME:-simplewallet-postgres-db}
     restart: unless-stopped
     env_file:
       - .env
