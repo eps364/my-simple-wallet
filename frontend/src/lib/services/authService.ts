@@ -3,7 +3,7 @@
  * Seguindo o princípio Single Responsibility: gerencia apenas operações de auth
  */
 
-import { LoginResponse } from '@/lib/types/auth';
+import { LoginResponse, RegisterResponse } from '@/lib/types/auth';
 import { API_BASE_URL, getAuthToken } from './baseService';
 
 export class AuthService {
@@ -49,6 +49,32 @@ export class AuthService {
     if (typeof document !== 'undefined') {
       document.cookie = 'token=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
     }
+  }
+
+  // Registro
+  async register(username: string, email: string, password: string): Promise<RegisterResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, email, password })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Erro ao registrar usuário');
+    }
+
+    const result = await response.json();
+    
+    // Verifica se a resposta tem a estrutura esperada da API
+    if (result.status === 201 && result.data) {
+      return result.data; // Retorna apenas o objeto data
+    }
+    
+    // Se não tem a estrutura esperada, lança erro
+    throw new Error(result.message || 'Resposta da API inválida');
   }
 
   // Verificar se está autenticado

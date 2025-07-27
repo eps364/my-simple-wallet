@@ -74,9 +74,13 @@ export default function LoginPage() {
             Faça login na sua conta
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Ou{' '}
+            Não tem conta?{' '}
+            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              Criar conta
+            </Link>
+            {' '}ou{' '}
             <Link href="/" className="font-medium text-blue-600 hover:text-blue-500">
-              volte para a página inicial
+              voltar para a página inicial
             </Link>
           </p>
         </div>

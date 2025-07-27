@@ -16,3 +16,16 @@ export interface LoginRequest {
 export interface RefreshTokenRequest {
   refreshToken: string;
 }
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  id: string;
+  username: string;
+  email: string;
+  parentId: string | null;
+}

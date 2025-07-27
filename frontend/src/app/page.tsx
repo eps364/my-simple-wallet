@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
@@ -62,12 +64,18 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="flex gap-4 justify-center flex-col sm:flex-row">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
-              Começar Agora
-            </button>
-            <button className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-8 rounded-lg border border-gray-300 transition-colors">
-              Saiba Mais
-            </button>
+            <Link 
+              href="/register" 
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors text-center"
+            >
+              Criar Conta Grátis
+            </Link>
+            <Link 
+              href="/login" 
+              className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-8 rounded-lg border border-gray-300 transition-colors text-center"
+            >
+              Fazer Login
+            </Link>
           </div>
         </div>
       </main>

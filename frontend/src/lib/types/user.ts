@@ -1,12 +1,13 @@
 // Tipos relacionados aos usuários
 
 export interface User {
-  id: number;
+  id: string; // API retorna UUID como string
   username: string;
   email?: string;
   name?: string;
   createdAt?: string;
   updatedAt?: string;
+  parentId?: string | null;
 }
 
 export interface UserCreateRequest {
