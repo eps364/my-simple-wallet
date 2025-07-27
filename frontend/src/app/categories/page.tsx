@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Category } from '@/lib/types/category';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { CategoryModal } from '@/components/forms';
@@ -8,6 +9,7 @@ import { CategoryModal } from '@/components/forms';
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
 export default function CategoriesPage() {
+  const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -17,6 +19,14 @@ export default function CategoriesPage() {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  // Verificar se deve abrir o modal de criação automaticamente
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'create') {
+      setModalMode('create');
+    }
+  }, [searchParams]);
 
   const loadCategories = async () => {
     try {

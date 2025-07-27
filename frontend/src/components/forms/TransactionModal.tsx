@@ -445,6 +445,30 @@ export default function TransactionModal({
                   label: account.description
                 }))}
                 required
+                labelExtra={
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const url = '/accounts?action=create';
+                      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                      if (newWindow) {
+                        newWindow.focus();
+                      } else {
+                        // Fallback se popup foi bloqueado
+                        window.location.href = url;
+                      }
+                    }}
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors"
+                    title="Abrir página de contas em nova aba"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Adicionar
+                  </button>
+                }
               />
 
               <FormField
@@ -495,6 +519,30 @@ export default function TransactionModal({
                     label: category.category
                   }))
                 ]}
+                labelExtra={
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const url = '/categories?action=create';
+                      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                      if (newWindow) {
+                        newWindow.focus();
+                      } else {
+                        // Fallback se popup foi bloqueado
+                        window.location.href = url;
+                      }
+                    }}
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors"
+                    title="Abrir página de categorias em nova aba"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Adicionar
+                  </button>
+                }
               />
 
               <FormField

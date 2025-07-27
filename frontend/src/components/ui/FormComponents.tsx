@@ -11,6 +11,7 @@ interface FormFieldProps {
   readonly options?: Array<{ value: string | number; label: string }>;
   readonly rows?: number;
   readonly disabled?: boolean;
+  readonly labelExtra?: React.ReactNode;
 }
 
 export function FormField({ 
@@ -23,7 +24,8 @@ export function FormField({
   placeholder, 
   options, 
   rows = 3,
-  disabled = false 
+  disabled = false,
+  labelExtra
 }: FormFieldProps) {
   const baseClasses = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm";
   const disabledClasses = disabled ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed" : "";
@@ -84,10 +86,17 @@ export function FormField({
 
   return (
     <div className="mb-4">
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
+      <div className="flex items-center justify-between mb-1">
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        {labelExtra && (
+          <div className="text-sm">
+            {labelExtra}
+          </div>
+        )}
+      </div>
       {renderInput()}
     </div>
   );

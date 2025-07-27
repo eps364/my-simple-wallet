@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Account } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
 import AccountModal from '@/components/forms/AccountModal';
 
 export default function AccountsPage() {
+  const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -21,6 +23,17 @@ export default function AccountsPage() {
   useEffect(() => {
     loadAccounts();
   }, []);
+
+  // Verificar se deve abrir o modal de criação automaticamente
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'create') {
+      setModalState({
+        isOpen: true,
+        mode: 'create'
+      });
+    }
+  }, [searchParams]);
 
   const loadAccounts = async () => {
     try {
