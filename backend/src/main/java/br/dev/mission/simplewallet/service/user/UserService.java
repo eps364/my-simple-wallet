@@ -38,6 +38,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException(""));
         savedUser.setUsername(updateUser.username());
         savedUser.setEmail(updateUser.email());
+        savedUser.setNome(updateUser.name());
 
         return userMapper.toResponse(userRepository.save(savedUser));
     }

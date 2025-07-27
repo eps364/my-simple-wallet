@@ -28,6 +28,7 @@ public class UserMapper {
         User user = new User();
         user.setUsername(dto.username());
         user.setEmail(dto.email());
+        user.setNome(dto.name());
         user.setPassword(dto.password());
         user.setParentId(null); 
         return user;
@@ -38,6 +39,7 @@ public class UserMapper {
         user.setId(dto.id() == null ? null : UUID.fromString(dto.id()));
         user.setUsername(dto.username());
         user.setEmail(dto.email());
+        user.setNome(dto.name());
         return user;
     }
 
@@ -67,6 +69,7 @@ public class UserMapper {
             user.getId() != null ? user.getId().toString() : null,
             user.getUsername(),
             user.getEmail(),
+            user.getNome(),
             user.getParentId()
         );
     }
