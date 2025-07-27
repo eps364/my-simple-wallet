@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { loginUser } from '@/lib/api';
+import { authService } from '@/lib/services/authService';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -19,9 +19,9 @@ export default function LoginPage() {
     console.log('🔐 Iniciando processo de login...', { username });
 
     try {
-      // Chamada para a API de autenticação usando a função helper
+      // Chamada para a API de autenticação usando o authService corrigido
       console.log('📡 Enviando requisição para API de login...');
-      const data = await loginUser(username, password);
+      const data = await authService.login(username, password);
       
       console.log('✅ Login realizado com sucesso!', {
         tokenReceived: !!data.token,
