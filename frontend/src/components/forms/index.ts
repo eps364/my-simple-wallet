@@ -5,5 +5,5 @@
 export { default as AccountForm } from './AccountForm';
 export { default as AccountModal } from './AccountModal';
 export { default as CategoryModal } from './CategoryModal';
-export { default as TransactionForm } from './TransactionForm';
+export { default as TransactionModal } from './TransactionModal';
 export { default as UserForm } from './UserForm';

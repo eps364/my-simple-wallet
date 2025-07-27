@@ -5,10 +5,14 @@ export interface Transaction {
   description: string;
   amount: number;
   type: TransactionType;
-  categoryId?: number;
+  dueDate: string;
+  effectiveDate?: string;
+  effectiveAmount?: number;
   accountId: number;
-  userId: number;
-  date: string;
+  account?: string;
+  categoryId?: number;
+  category?: string;
+  userId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -17,24 +21,28 @@ export interface TransactionCreateRequest {
   description: string;
   amount: number;
   type: TransactionType;
-  categoryId?: number;
+  dueDate: string;
+  effectiveDate?: string;
+  effectiveAmount?: number;
   accountId: number;
-  date: string;
+  categoryId?: number;
 }
 
 export interface TransactionUpdateRequest {
   description?: string;
   amount?: number;
   type?: TransactionType;
-  categoryId?: number;
+  dueDate?: string;
+  effectiveDate?: string;
+  effectiveAmount?: number;
   accountId?: number;
-  date?: string;
+  categoryId?: number;
 }
 
 // Enum para tipos de transação
 export enum TransactionType {
-  INCOME = 'INCOME',
-  EXPENSE = 'EXPENSE'
+  INCOME = 0,
+  EXPENSE = 1
 }
 
 // Interface para filtros de transação

@@ -9,6 +9,28 @@ import { apiRequest, fetchConfig } from './baseService';
 export class TransactionsService {
   private readonly endpoint = '/transactions';
 
+  // Converter data de YYYY-MM-DD para DD/MM/YYYY
+  private formatDateForBackend(date: string): string {
+    if (!date) return '';
+    const [year, month, day] = date.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  // Preparar dados para envio ao backend
+  private prepareDataForBackend(data: TransactionCreateRequest | TransactionUpdateRequest): TransactionCreateRequest | TransactionUpdateRequest {
+    const preparedData = { ...data };
+    
+    if ('dueDate' in data && data.dueDate) {
+      preparedData.dueDate = this.formatDateForBackend(data.dueDate);
+    }
+    
+    if ('effectiveDate' in data && data.effectiveDate) {
+      preparedData.effectiveDate = this.formatDateForBackend(data.effectiveDate);
+    }
+    
+    return preparedData;
+  }
+
   // Listar todas as transações
   async getAll(): Promise<Transaction[]> {
     return apiRequest<Transaction[]>(this.endpoint, fetchConfig());
@@ -21,12 +43,14 @@ export class TransactionsService {
 
   // Criar nova transação
   async create(data: TransactionCreateRequest): Promise<Transaction> {
-    return apiRequest<Transaction>(this.endpoint, fetchConfig('POST', data));
+    const preparedData = this.prepareDataForBackend(data);
+    return apiRequest<Transaction>(this.endpoint, fetchConfig('POST', preparedData));
   }
 
   // Atualizar transação
   async update(id: number, data: TransactionUpdateRequest): Promise<Transaction> {
-    return apiRequest<Transaction>(`${this.endpoint}/${id}`, fetchConfig('PUT', data));
+    const preparedData = this.prepareDataForBackend(data);
+    return apiRequest<Transaction>(`${this.endpoint}/${id}`, fetchConfig('PUT', preparedData));
   }
 
   // Deletar transação
