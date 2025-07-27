@@ -1,7 +1,7 @@
 package br.dev.mission.simplewallet.model;
 
 public enum TransactionType {
-    IN(0, "Entrada"), OUT(1, "Saída");
+    IN(0, "INCOME"), EX(1, "EXPENSE");
 
 
     private final Integer code;

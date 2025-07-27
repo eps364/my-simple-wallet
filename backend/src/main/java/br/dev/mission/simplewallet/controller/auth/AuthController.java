@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.dev.mission.simplewallet.dto.ApiResponse;
 import br.dev.mission.simplewallet.dto.auth.LoginRequest;
 import br.dev.mission.simplewallet.dto.auth.LoginResponse;
+import br.dev.mission.simplewallet.dto.auth.RefreshRequest;
 import br.dev.mission.simplewallet.dto.user.UserRequestCreate;
 import br.dev.mission.simplewallet.dto.user.UserResponse;
 import br.dev.mission.simplewallet.model.User;
@@ -50,7 +51,56 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(401, "Usuário ou senha inválidos", null));
         }
-        String token = jwtUtil.generateToken(userOpt.get().getUsername());
-        return ResponseEntity.ok(new ApiResponse<>(200, "Login realizado com sucesso", new LoginResponse(token)));
+        
+        User user = userOpt.get();
+        String token = jwtUtil.generateToken(user.getUsername());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+        long expiresIn = jwtUtil.getExpirationInSeconds();
+        String expiresAt = jwtUtil.getExpirationDateISO();
+        
+        LoginResponse loginResponse = new LoginResponse(token, refreshToken, expiresIn, expiresAt, "Bearer");
+        return ResponseEntity.ok(new ApiResponse<>(200, "Login realizado com sucesso", loginResponse));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@RequestBody RefreshRequest request) {
+        // Validação básica do refresh token
+        if (request.refreshToken() == null || request.refreshToken().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(400, "Refresh token é obrigatório", null));
+        }
+
+        // Extrai o username do refresh token (formato: refresh_username_timestamp)
+        try {
+            String[] parts = request.refreshToken().split("_");
+            if (parts.length < 3 || !parts[0].equals("refresh")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(401, "Refresh token inválido", null));
+            }
+            
+            String username = parts[1];
+            
+            // Verifica se o usuário ainda existe
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(401, "Usuário não encontrado", null));
+            }
+            
+            User user = userOpt.get();
+            
+            // Gera novos tokens
+            String newToken = jwtUtil.generateToken(user.getUsername());
+            String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+            long expiresIn = jwtUtil.getExpirationInSeconds();
+            String expiresAt = jwtUtil.getExpirationDateISO();
+            
+            LoginResponse loginResponse = new LoginResponse(newToken, newRefreshToken, expiresIn, expiresAt, "Bearer");
+            return ResponseEntity.ok(new ApiResponse<>(200, "Token renovado com sucesso", loginResponse));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>(401, "Refresh token inválido", null));
+        }
     }
 }

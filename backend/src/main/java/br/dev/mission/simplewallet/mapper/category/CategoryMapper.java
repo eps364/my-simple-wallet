@@ -12,6 +12,7 @@ public class CategoryMapper {
         category.setCategory(request.category());
         category.setType(request.type());
         category.setUserId(userId);
+        category.setColor(request.color());
         return category;
     }
 
@@ -19,11 +20,15 @@ public class CategoryMapper {
         return new CategoryResponse(
             category.getId(),
             category.getCategory(),
-            category.getType()
+            category.getType(),
+            category.getColor()
         );
     }
 
     public void updateEntity(Category category, CategoryRequest request) {
         category.setCategory(request.category());
+        if (request.color() != null) {
+            category.setColor(request.color());
+        }
     }
 }

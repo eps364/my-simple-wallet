@@ -1,0 +1,28 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Caderno/Clipboard base -->
+  <rect x="6" y="4" width="18" height="24" rx="2" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <rect x="8" y="6" width="14" height="20" rx="1" fill="#FFFFFF"/>
+  
+  <!-- Header do caderno -->
+  <rect x="8" y="6" width="14" height="3" fill="#3B82F6"/>
+  
+  <!-- Linhas do caderno -->
+  <line x1="10" y1="12" x2="20" y2="12" stroke="#E2E8F0" stroke-width="1"/>
+  <line x1="10" y1="15" x2="18" y2="15" stroke="#E2E8F0" stroke-width="1"/>
+  <line x1="10" y1="18" x2="19" y2="18" stroke="#E2E8F0" stroke-width="1"/>
+  
+  <!-- Gráfico de barras -->
+  <rect x="10" y="20" width="2" height="4" fill="#10B981"/>
+  <rect x="13" y="18" width="2" height="6" fill="#3B82F6"/>
+  <rect x="16" y="21" width="2" height="3" fill="#EF4444"/>
+  <rect x="19" y="19" width="2" height="5" fill="#F59E0B"/>
+  
+  <!-- Lápis -->
+  <path d="M23 8L26 5L27 6L24 9L23 8Z" fill="#F59E0B"/>
+  <rect x="22" y="8" width="1" height="6" fill="#92400E" transform="rotate(45 22.5 11)"/>
+  <circle cx="25.5" cy="5.5" r="1" fill="#DC2626"/>
+  
+  <!-- Símbolo de dinheiro -->
+  <circle cx="12" cy="14" r="1.5" fill="#10B981" stroke="#FFFFFF" stroke-width="0.5"/>
+  <text x="12" y="15" font-family="Arial, sans-serif" font-size="2" font-weight="bold" text-anchor="middle" fill="#FFFFFF">$</text>
+</svg>

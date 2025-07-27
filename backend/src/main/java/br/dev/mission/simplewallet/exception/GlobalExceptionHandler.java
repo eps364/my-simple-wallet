@@ -27,9 +27,15 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("erro", "DataIntegrityViolationException");
-        // Mensagem amigável
-        String msg = messageSource.getMessage("user.create.error", null, locale);
-        body.put("message", msg);
+        
+        String message = ex.getMessage();
+        if (message != null && message.contains("transações vinculadas")) {
+            body.put("message", message);
+        } else {
+            String msg = messageSource.getMessage("user.create.error", null, locale);
+            body.put("message", msg);
+        }
+        
         // Loga detalhes técnicos no console
         ex.printStackTrace();
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);

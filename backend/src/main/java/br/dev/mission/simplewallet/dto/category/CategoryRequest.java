@@ -4,5 +4,6 @@ import br.dev.mission.simplewallet.model.TransactionType;
 
 public record CategoryRequest(
     String category, 
-    TransactionType type
+    TransactionType type,
+    String color
 ) {}
