@@ -108,7 +108,8 @@ export default function CategoryModal({
       onSuccess();
     } catch (error) {
       console.error('Erro ao excluir categoria:', error);
-      setError('Erro ao excluir categoria. Tente novamente.');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir categoria. Tente novamente.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -181,8 +182,9 @@ export default function CategoryModal({
         Cancelar
       </button>
       <button
-        type="submit"
-        form="category-form"
+        type={mode === 'delete' ? 'button' : 'submit'}
+        form={mode === 'delete' ? undefined : 'category-form'}
+        onClick={mode === 'delete' ? handleSubmit : undefined}
         disabled={isLoading}
         className={`px-4 py-2 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${getSubmitButtonColor()}`}
       >

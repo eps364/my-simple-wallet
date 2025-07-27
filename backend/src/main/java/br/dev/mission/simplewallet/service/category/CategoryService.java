@@ -50,7 +50,7 @@ public class CategoryService {
         return categoryRepository.findById(id)
                 .filter(cat -> cat.getUserId().equals(userId))
                 .map(cat -> {
-                    if (transactionRepository.existsByCategory(cat)) {
+                    if (transactionRepository.existsByCategory(cat.getId())) {
                         throw new DataIntegrityViolationException("Não é possível remover a categoria pois existem transações vinculadas.");
                     }
                     categoryRepository.delete(cat);
