@@ -40,6 +40,11 @@ export default function UserForm(props: UserFormProps) {
   const handleSubmit = async () => {
     try {
       setErrors('');
+
+      if (!formData.name.trim()) {
+        setErrors('Nome é obrigatório');
+        return;
+      }
       
       if (!isEditMode && !formData.username.trim()) {
         setErrors('Nome de usuário é obrigatório');
@@ -50,6 +55,8 @@ export default function UserForm(props: UserFormProps) {
         setErrors('Email é obrigatório');
         return;
       }
+
+
 
       if (!isEditMode && !formData.password) {
         setErrors('Senha é obrigatória');
@@ -75,7 +82,7 @@ export default function UserForm(props: UserFormProps) {
       if (isEditMode) {
         const submitData: UserUpdateRequest = {
           email: formData.email,
-          name: formData.name || undefined,
+          name: formData.name,
           password: formData.password || undefined
         };
         await (onSubmit as (data: UserUpdateRequest) => Promise<void>)(submitData);
@@ -84,13 +91,14 @@ export default function UserForm(props: UserFormProps) {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          name: formData.name || undefined
+          name: formData.name
         };
         await (onSubmit as (data: UserCreateRequest) => Promise<void>)(submitData);
       }
 
       handleClose();
     } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
       setErrors('Erro ao salvar usuário. Tente novamente.');
     }
   };
@@ -153,12 +161,13 @@ export default function UserForm(props: UserFormProps) {
         />
 
         <FormField
-          label="Nome Completo"
+          label="Nome"
           name="name"
           type="text"
           value={formData.name}
           onChange={updateFormData('name')}
-          placeholder="Seu nome completo (opcional)"
+          required
+          placeholder="Seu nome de identificação"
           disabled={isLoading}
         />
 
@@ -190,8 +199,8 @@ export default function UserForm(props: UserFormProps) {
           submitLabel={isEditMode ? 'Atualizar Perfil' : 'Criar Usuário'}
           isLoading={isLoading}
           disabled={
-            (props.mode === "create" && (!formData.username.trim() || !formData.email.trim() || !formData.password)) ||
-            (props.mode === "edit" && !formData.email.trim()) ||
+            (props.mode === "create" && (!formData.username.trim() || !formData.email.trim() || !formData.name.trim() || !formData.password)) ||
+            (props.mode === "edit" && (!formData.email.trim() || !formData.name.trim())) ||
             (!!formData.password && formData.password !== formData.confirmPassword)
           }
         />

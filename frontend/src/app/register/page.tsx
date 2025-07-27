@@ -8,6 +8,7 @@ import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,17 +18,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const styles = useThemeStyles();
 
-export default function RegisterPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [autoLoggingIn, setAutoLoggingIn] = useState(false);
-  const router = useRouter();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,6 +25,12 @@ export default function RegisterPage() {
     setSuccess(false);
 
     // Validação básica
+    if (!name.trim()) {
+      setError('Nome é obrigatório');
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('As senhas não coincidem');
       setLoading(false);
@@ -48,7 +44,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await authService.register(username, email, password);
+      await authService.register(username, email, name, password);
       
       setSuccess(true);
       
@@ -187,6 +183,31 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
+
+            <div>
+              <label 
+                htmlFor="name" 
+                className="block text-sm font-medium mb-2"
+                style={styles.text}
+              >
+                Nome
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition-colors"
+                style={{
+                  ...styles.surface,
+                  ...styles.border,
+                  color: styles.text.color
+                }}
+                placeholder="Seu nome de identificação"
+              />
+            </div>
 
             <div>
               <label 

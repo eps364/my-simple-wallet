@@ -30,6 +30,13 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
   const router = useRouter();
   const styles = useThemeStyles();
 
+  const getDisplayFirstName = (user: User): string => {
+    if (user.name) {
+      return user.name.trim().split(' ')[0];
+    }
+    return user.username;
+  };
+
   const loadUserProfile = useCallback(async () => {
     try {
       const userData = await usersService.getProfile();
@@ -144,7 +151,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
           className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
           style={{ backgroundColor: 'var(--color-primary)' }}
         >
-          {user.username.charAt(0).toUpperCase()}
+          {getDisplayFirstName(user).charAt(0).toUpperCase()}
         </div>
         
         
@@ -153,7 +160,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
             ? 'var(--color-success)' 
             : styles.text.color
         }} className="font-medium transition-colors">
-          {user.username}
+          {getDisplayFirstName(user)}
         </span>
         
         
@@ -198,7 +205,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
               className="font-medium"
               style={{ color: 'var(--color-text)' }}
             >
-              {user.username}
+              {getDisplayFirstName(user)}
             </p>
             {user.email && (
               <p 

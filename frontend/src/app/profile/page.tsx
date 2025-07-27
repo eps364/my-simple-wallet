@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const [showRemoveParentModal, setShowRemoveParentModal] = useState(false);
   
   // Estados para formulários
-  const [editData, setEditData] = useState({ username: '', email: '' });
+  const [editData, setEditData] = useState({ username: '', email: '', name: '' });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [parentId, setParentId] = useState('');
@@ -50,7 +50,8 @@ export default function ProfilePage() {
       setChildren(userChildren);
       setEditData({
         username: userProfile.username,
-        email: userProfile.email || ''
+        email: userProfile.email || '',
+        name: userProfile.name || ''
       });
     } catch {
       setError('Erro ao carregar dados do perfil');
@@ -638,6 +639,40 @@ export default function ProfilePage() {
               
               <form onSubmit={handleUpdateProfile}>
                 <div className="space-y-4">
+                  <div>
+                    <label 
+                      htmlFor="edit-name" 
+                      style={{ color: styles.textSecondary.color }}
+                      className="block text-sm font-medium mb-2"
+                    >
+                      Nome
+                    </label>
+                    <input
+                      id="edit-name"
+                      type="text"
+                      value={editData.name}
+                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      style={{
+                        backgroundColor: 'var(--color-surface)',
+                        borderColor: 'var(--color-border)',
+                        color: 'var(--color-text)',
+                        borderWidth: '1px',
+                        borderStyle: 'solid'
+                      }}
+                      className="w-full px-3 py-2 rounded-md transition-all focus:outline-none"
+                      required
+                      placeholder="Seu nome de identificação"
+                      onFocus={(e) => {
+                        e.target.style.borderColor = 'var(--color-primary)';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'var(--color-border)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+
                   <div>
                     <label 
                       htmlFor="edit-username" 

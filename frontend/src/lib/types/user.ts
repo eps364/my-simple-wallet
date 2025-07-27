@@ -4,7 +4,7 @@ export interface User {
   id: string; // API retorna UUID como string
   username: string;
   email?: string;
-  name?: string;
+  name: string; // Tornar obrigatório
   createdAt?: string;
   updatedAt?: string;
   parentId?: string | null;
@@ -15,7 +15,7 @@ export interface UserCreateRequest {
   username: string;
   email: string;
   password: string;
-  name?: string;
+  name: string; // Tornar obrigatório
 }
 
 export interface UserUpdateRequest {

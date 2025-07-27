@@ -52,13 +52,13 @@ export class AuthService {
   }
 
   // Registro
-  async register(username: string, email: string, password: string): Promise<RegisterResponse> {
+  async register(username: string, email: string, name: string, password: string): Promise<RegisterResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ username, email, password })
+      body: JSON.stringify({ username, email, name, password })
     });
 
     if (!response.ok) {
