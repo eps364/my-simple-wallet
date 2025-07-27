@@ -214,24 +214,6 @@ export default function AccountsPage() {
                   )}
                 </div>
               </div>
-
-              {/* Quick Actions */}
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => openModal('edit', account)}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => openModal('delete', account)}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
             </div>
           ))}
         </div>
