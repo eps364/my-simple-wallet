@@ -8,7 +8,7 @@ import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { TransactionFilters, StatusFilter, SortOrder } from '@/components/ui';
+import { TransactionFilters, StatusFilter } from '@/components/ui';
 import IncomeChart from '@/components/reports/IncomeChart';
 import ExpenseChart from '@/components/reports/ExpenseChart';
 import PayableChart from '@/components/reports/PayableChart';
@@ -31,7 +31,6 @@ export default function ReportsPage() {
   
   // Estado do filtro - apenas status
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // Função para verificar se o gerenciamento familiar está ativo
   const getFamilyManagementEnabled = (): boolean => {
@@ -39,14 +38,9 @@ export default function ReportsPage() {
     return localStorage.getItem('familyManagementEnabled') === 'true';
   };
 
-  // Função para aplicar todos os filtros
+  // Função para aplicar filtro de status apenas
   const applyFilters = useCallback((data: Transaction[]) => {
     let filtered = [...data];
-
-    // Filtro por usuário
-    if (selectedUser !== 'all') {
-      filtered = filtered.filter(t => t.username === selectedUser);
-    }
 
     // Filtro por status
     if (statusFilter !== 'all') {
@@ -57,79 +51,18 @@ export default function ReportsPage() {
       }
     }
 
-    // Filtro por conta
-    if (selectedAccount !== 'all') {
-      filtered = filtered.filter(t => t.accountId.toString() === selectedAccount);
-    }
-
-    // Filtro por categoria
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(t => t.categoryId && t.categoryId.toString() === selectedCategory);
-    }
-
-    // Filtro por data
-    if (startDate) {
-      filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.dueDate);
-        return transactionDate >= new Date(startDate);
-      });
-    }
-
-    if (endDate) {
-      filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.dueDate);
-        return transactionDate <= new Date(endDate);
-      });
-    }
-
-    // Aplicar ordenação
+    // Ordenação padrão por data de vencimento (mais recente primeiro)
     filtered.sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case 'dueDate':
-          comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-          break;
-        case 'amount':
-          comparison = a.amount - b.amount;
-          break;
-        case 'description':
-          comparison = a.description.localeCompare(b.description);
-          break;
-      }
-
-      return sortOrder === 'asc' ? comparison : -comparison;
+      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
     });
 
     setFilteredTransactions(filtered);
     setTransactions(filtered);
-  }, [selectedUser, statusFilter, selectedAccount, selectedCategory, startDate, endDate, sortBy, sortOrder]);
+  }, [statusFilter]);
 
-  // Funções para lidar com mudanças nos filtros
-  const handleUserFilterChange = (user: string) => {
-    setSelectedUser(user);
-  };
-
+  // Função para lidar com mudança no filtro de status
   const handleStatusFilterChange = (status: StatusFilter) => {
     setStatusFilter(status);
-  };
-
-  const handleAccountFilterChange = (accountId: string) => {
-    setSelectedAccount(accountId);
-  };
-
-  const handleCategoryFilterChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-  };
-
-  const handleDateRangeChange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
-
-  const handleSortChange = (newSortBy: string, newSortOrder: SortOrder) => {
-    setSortBy(newSortBy);
-    setSortOrder(newSortOrder);
   };
 
   // Aplicar filtros sempre que algum filtro mudar
@@ -151,11 +84,6 @@ export default function ReportsPage() {
       setAllTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);
-      
-      // Extrair usuários únicos das transações
-      const users = Array.from(new Set(transactionsData.map(t => t.username).filter(Boolean))) as string[];
-      const sortedUsers = users.toSorted((a, b) => a.localeCompare(b));
-      setAvailableUsers(sortedUsers);
     } catch (err) {
       setError('Erro ao carregar dados');
       console.error('Erro ao carregar dados:', err);
@@ -270,45 +198,10 @@ export default function ReportsPage() {
           <div className="mb-6">
             <TransactionFilters
               config={{
-                user: availableUsers.length > 0 ? {
-                  enabled: true,
-                  selectedUser,
-                  availableUsers,
-                  onUserChange: handleUserFilterChange
-                } : undefined,
                 status: {
                   enabled: true,
                   selectedStatus: statusFilter,
                   onStatusChange: handleStatusFilterChange
-                },
-                account: accounts.length > 0 ? {
-                  enabled: true,
-                  selectedAccount,
-                  availableAccounts: accounts,
-                  onAccountChange: handleAccountFilterChange
-                } : undefined,
-                category: categories.length > 0 ? {
-                  enabled: true,
-                  selectedCategory,
-                  availableCategories: categories,
-                  onCategoryChange: handleCategoryFilterChange
-                } : undefined,
-                dateRange: {
-                  enabled: true,
-                  startDate,
-                  endDate,
-                  onDateRangeChange: handleDateRangeChange
-                },
-                sort: {
-                  enabled: true,
-                  sortBy,
-                  sortOrder,
-                  sortOptions: [
-                    { value: 'dueDate', label: 'Data de Vencimento' },
-                    { value: 'amount', label: 'Valor' },
-                    { value: 'description', label: 'Descrição' }
-                  ],
-                  onSortChange: handleSortChange
                 }
               }}
               familyManagementEnabled={familyManagementEnabled}
