@@ -54,7 +54,7 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody @Valid UserRequestUpdate request) {
         String id = getLoggedUserId();
-        UserRequestUpdate reqWithId = new UserRequestUpdate(id, request.username(), request.email());
+        UserRequestUpdate reqWithId = new UserRequestUpdate(id, request.username(), request.email(), request.name());
         UserResponse response = userService.update(reqWithId);
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(200, getMessage("user.update.success"), response);
         return ResponseEntity.ok(apiResponse);
