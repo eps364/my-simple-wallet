@@ -1,11 +1,21 @@
+import { QuickActions } from '@/components/ui';
+
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 pt-20">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
             Dashboard - Simple Wallet
           </h1>
+
+          {/* Ações Rápidas */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Ações Rápidas
+            </h2>
+            <QuickActions />
+          </div>
           
           <div className="grid md:grid-cols-3 gap-6">
             {/* Card de Saldo Total */}

@@ -18,7 +18,15 @@ export interface UserCreateRequest {
 }
 
 export interface UserUpdateRequest {
+  username?: string;
   email?: string;
   name?: string;
-  password?: string;
+}
+
+export interface PasswordUpdateRequest {
+  password: string;
+}
+
+export interface ParentUpdateRequest {
+  parentId: string | null;
 }
