@@ -1,9 +1,8 @@
 "use client";
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { clearAuthData } from '@/lib/apiService';
+import UserMenu from './UserMenu';
 
 function isAuthenticated() {
   if (typeof window === "undefined") return false;
@@ -12,7 +11,6 @@ function isAuthenticated() {
 
 export default function Header() {
   const [logged, setLogged] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     function handleStorage() {
@@ -22,12 +20,6 @@ export default function Header() {
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
-
-  function handleLogout() {
-    clearAuthData();
-    setLogged(false);
-    router.push("/login");
-  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-700">
@@ -84,15 +76,7 @@ export default function Header() {
             
             {/* Botão de Login/Logout */}
             {logged ? (
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Logout
-              </button>
+              <UserMenu onLogout={() => setLogged(false)} />
             ) : (
               <div className="flex items-center gap-3">
                 <Link

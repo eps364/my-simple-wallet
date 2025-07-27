@@ -11,7 +11,7 @@ export class UsersService {
 
   // Buscar usuário atual (perfil)
   async getProfile(): Promise<User> {
-    return apiRequest<User>(`${this.endpoint}/profile`, fetchConfig());
+    return apiRequest<User>(`${this.endpoint}/me`, fetchConfig());
   }
 
   // Atualizar perfil do usuário
