@@ -295,16 +295,21 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {/* Seção de Gerenciamento para Parents */}
+          </div>
+
+          {/* Coluna da direita - Gerenciamento e Contas Gerenciadas */}
+          <div className="space-y-6">
+            {/* Gerenciamento Familiar */}
             {user.isParent && (
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-600">
+              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                  Gerenciamento Familiar
+                </h2>
+                
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      Gerenciamento Familiar
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Ative para gerenciar as finanças dos seus filhos
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Ativar gerenciamento de contas
                     </p>
                   </div>
                   
@@ -331,52 +336,52 @@ export default function ProfilePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-                        Gerenciamento ativado! Você pode visualizar as finanças dos seus filhos.
+                        Gerenciamento ativado! Você pode visualizar as finanças das contas gerenciadas.
                       </span>
                     </div>
                   </div>
                 )}
               </div>
             )}
-          </div>
 
-          {/* Usuários Filhos */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-              Usuários Filhos ({children.length})
-            </h2>
+            {/* Contas Gerenciadas */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                Contas Gerenciadas ({children.length})
+              </h2>
 
-            {children.length === 0 ? (
-              <div className="text-center py-8">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Você não possui usuários filhos
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {children.map((child) => (
-                  <div
-                    key={child.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {child.username}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {child.email}
-                      </p>
+              {children.length === 0 ? (
+                <div className="text-center py-8">
+                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Você não possui contas gerenciadas
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {children.map((child) => (
+                    <div
+                      key={child.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {child.username}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {child.email}
+                        </p>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        ID: {child.id.substring(0, 8)}...
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      ID: {child.id.substring(0, 8)}...
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
