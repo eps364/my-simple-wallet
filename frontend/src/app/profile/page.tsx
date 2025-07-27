@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
 import { User } from '@/lib/types/user';
-import { LoadingSpinner } from '@/components/ui';
+import { LoadingSpinner, QRCodeGenerator, QRCodeReader } from '@/components/ui';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,11 +16,15 @@ export default function ProfilePage() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showParentModal, setShowParentModal] = useState(false);
+  const [showRemoveParentModal, setShowRemoveParentModal] = useState(false);
   
   // Estados para formulários
   const [editData, setEditData] = useState({ username: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [parentId, setParentId] = useState('');
+  const [useQRScanner, setUseQRScanner] = useState(false);
+  const [parentData, setParentData] = useState<{ username: string; email: string } | null>(null);
   
   const router = useRouter();
 
@@ -69,11 +73,20 @@ export default function ProfilePage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar se as senhas coincidem
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     try {
       setError('');
       await usersService.updatePassword(newPassword);
       setShowChangePassword(false);
       setNewPassword('');
+      setConfirmPassword('');
       setSuccess('Senha alterada com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
@@ -82,14 +95,14 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAddParent = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddParent = async () => {
     try {
       setError('');
       const updatedUser = await usersService.updateParent(parentId);
       setUser(updatedUser);
       setShowParentModal(false);
       setParentId('');
+      setUseQRScanner(false);
       setSuccess('Parent adicionado com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
@@ -98,16 +111,48 @@ export default function ProfilePage() {
     }
   };
 
+  const handleQRScan = (scannedId: string) => {
+    setParentId(scannedId);
+    setUseQRScanner(false);
+    setSuccess('QR Code lido com sucesso! Verifique o ID e confirme.');
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
+  const handleQRError = (error: string) => {
+    setError(error);
+    setTimeout(() => setError(''), 3000);
+  };
+
   const handleRemoveParent = async () => {
     try {
       setError('');
       const updatedUser = await usersService.removeParent();
       setUser(updatedUser);
+      setShowRemoveParentModal(false);
+      setParentData(null);
       setSuccess('Parent removido com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Erro ao remover parent:', error);
       setError('Erro ao remover parent');
+    }
+  };
+
+  const handleOpenRemoveParentModal = async () => {
+    if (!user?.parentId) return;
+    
+    try {
+      setError('');
+      // Buscar dados do parent
+      const parentUser = await usersService.getUserById(user.parentId);
+      setParentData({
+        username: parentUser.username,
+        email: parentUser.email || 'Email não informado'
+      });
+      setShowRemoveParentModal(true);
+    } catch (error) {
+      console.error('Erro ao buscar dados do parent:', error);
+      setError('Erro ao buscar dados do parent');
     }
   };
 
@@ -181,51 +226,63 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Username
-                </span>
-                <p className="text-gray-900 dark:text-white font-medium">{user.username}</p>
+            <div className="flex gap-6">
+              {/* QR Code na esquerda */}
+              <div className="flex-shrink-0">
+                <QRCodeGenerator 
+                  value={user.id} 
+                  size={120}
+                  className=""
+                />
               </div>
+              
+              {/* Informações do usuário na direita */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Username
+                  </span>
+                  <p className="text-gray-900 dark:text-white font-medium">{user.username}</p>
+                </div>
 
-              <div>
-                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email
-                </span>
-                <p className="text-gray-900 dark:text-white">{user.email || 'Não informado'}</p>
-              </div>
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Email
+                  </span>
+                  <p className="text-gray-900 dark:text-white">{user.email || 'Não informado'}</p>
+                </div>
 
-              <div>
-                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  ID do Usuário
-                </span>
-                <p className="text-gray-600 dark:text-gray-400 text-sm font-mono">{user.id}</p>
-              </div>
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    ID do Usuário
+                  </span>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm font-mono">{user.id}</p>
+                </div>
 
-              <div>
-                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Parent ID
-                </span>
-                <div className="flex items-center gap-2">
-                  <p className="text-gray-900 dark:text-white">
-                    {user.parentId || 'Nenhum parent definido'}
-                  </p>
-                  {user.parentId ? (
-                    <button
-                      onClick={handleRemoveParent}
-                      className="text-red-600 hover:text-red-700 text-sm"
-                    >
-                      Remover
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setShowParentModal(true)}
-                      className="text-blue-600 hover:text-blue-700 text-sm"
-                    >
-                      Adicionar
-                    </button>
-                  )}
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Parent ID
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <p className="text-gray-900 dark:text-white">
+                      {user.parentId || 'Nenhum parent definido'}
+                    </p>
+                    {user.parentId ? (
+                      <button
+                        onClick={handleOpenRemoveParentModal}
+                        className="text-red-600 hover:text-red-700 text-sm"
+                      >
+                        Remover
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShowParentModal(true)}
+                        className="text-blue-600 hover:text-blue-700 text-sm"
+                      >
+                        Adicionar
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,32 +408,70 @@ export default function ProfilePage() {
               </h3>
               
               <form onSubmit={handleChangePassword}>
-                <div>
-                  <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nova Senha
-                  </label>
-                  <input
-                    id="new-password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    required
-                    minLength={6}
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Nova Senha
+                    </label>
+                    <input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      required
+                      minLength={6}
+                      placeholder="Digite sua nova senha"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Confirmar Nova Senha
+                    </label>
+                    <input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      required
+                      minLength={6}
+                      placeholder="Confirme sua nova senha"
+                    />
+                  </div>
+
+                  {/* Indicador visual de compatibilidade das senhas */}
+                  {newPassword && confirmPassword && (
+                    <div className={`text-sm ${
+                      newPassword === confirmPassword 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-red-600 dark:text-red-400'
+                    }`}>
+                      {newPassword === confirmPassword 
+                        ? '✓ As senhas coincidem' 
+                        : '✗ As senhas não coincidem'
+                      }
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     type="button"
-                    onClick={() => setShowChangePassword(false)}
+                    onClick={() => {
+                      setShowChangePassword(false);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    }}
                     className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    disabled={!newPassword || !confirmPassword || newPassword !== confirmPassword}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     Alterar Senha
                   </button>
@@ -394,38 +489,151 @@ export default function ProfilePage() {
                 Adicionar Parent
               </h3>
               
-              <form onSubmit={handleAddParent}>
-                <div>
-                  <label htmlFor="parent-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ID do Parent
-                  </label>
-                  <input
-                    id="parent-id"
-                    type="text"
-                    value={parentId}
-                    onChange={(e) => setParentId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    placeholder="Digite o ID do usuário parent"
-                    required
-                  />
-                </div>
+              {/* Toggle entre input manual e QR scanner */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setUseQRScanner(false)}
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                    !useQRScanner 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  Digite o ID
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUseQRScanner(true)}
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                    useQRScanner 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  Escanear QR
+                </button>
+              </div>
 
-                <div className="flex justify-end gap-3 mt-6">
+              {useQRScanner ? (
+                /* Interface do QR Scanner */
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Aponte a câmera para o QR code do usuário parent:
+                  </p>
+                  <QRCodeReader
+                    onScan={handleQRScan}
+                    onError={handleQRError}
+                    isActive={useQRScanner}
+                    className="w-full"
+                  />
+                  {parentId && (
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        ID detectado: <span className="font-mono">{parentId}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Interface do input manual */
+                <form onSubmit={(e) => { e.preventDefault(); handleAddParent(); }}>
+                  <div>
+                    <label htmlFor="parent-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      ID do Parent
+                    </label>
+                    <input
+                      id="parent-id"
+                      type="text"
+                      value={parentId}
+                      onChange={(e) => setParentId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      placeholder="Digite o ID do usuário parent"
+                      required
+                    />
+                  </div>
+                  
+                  {/* Botão submit invisível para funcionar com Enter */}
+                  <button type="submit" className="hidden" />
+                </form>
+              )}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowParentModal(false);
+                    setUseQRScanner(false);
+                    setParentId('');
+                  }}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  Cancelar
+                </button>
+                {parentId && (
                   <button
                     type="button"
-                    onClick={() => setShowParentModal(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
+                    onClick={handleAddParent}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
-                    Adicionar
+                    Adicionar Parent
                   </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Confirmar Remoção de Parent */}
+        {showRemoveParentModal && parentData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Confirmar Remoção de Parent
+              </h3>
+              
+              <div className="mb-6">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  Tem certeza que deseja remover o seguinte usuário como seu parent?
+                </p>
+                
+                <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Username:</span>
+                      <p className="text-gray-900 dark:text-white font-medium">{parentData.username}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Email:</span>
+                      <p className="text-gray-900 dark:text-white">{parentData.email}</p>
+                    </div>
+                  </div>
                 </div>
-              </form>
+                
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
+                  Esta ação não pode ser desfeita.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRemoveParentModal(false);
+                    setParentData(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveParent}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Confirmar Remoção
+                </button>
+              </div>
             </div>
           </div>
         )}

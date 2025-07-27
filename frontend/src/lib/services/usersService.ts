@@ -14,6 +14,11 @@ export class UsersService {
     return apiRequest<User>(`${this.endpoint}/me`, fetchConfig());
   }
 
+  // Buscar usuário por ID
+  async getUserById(id: string): Promise<User> {
+    return apiRequest<User>(`${this.endpoint}/${id}`, fetchConfig());
+  }
+
   // Atualizar perfil do usuário (username e email)
   async updateProfile(data: UserUpdateRequest): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/me`, fetchConfig('PUT', data));
