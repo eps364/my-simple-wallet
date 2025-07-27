@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, FormField } from '../ui';
 import { Category, CategoryCreateRequest, CategoryUpdateRequest, CATEGORY_TYPE_REVERSE_MAP, CATEGORY_COLORS } from '@/lib/types/category';
 import { categoriesService } from '@/lib/services/categoriesService';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 interface CategoryModalProps {
   readonly isOpen: boolean;
@@ -28,6 +29,7 @@ export default function CategoryModal({
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const styles = useThemeStyles();
 
   useEffect(() => {
     if (category && (mode === 'edit' || mode === 'delete')) {
@@ -171,7 +173,30 @@ export default function CategoryModal({
       <button
         type="button"
         onClick={onClose}
-        className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+        style={{
+          ...styles.surface,
+          borderColor: styles.border.borderColor,
+          color: styles.text.color
+        }}
+        className="px-4 py-2 border rounded-lg hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all"
+        onMouseEnter={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = styles.background.backgroundColor;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = styles.surface.backgroundColor;
+          }
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-primary)';
+          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = styles.border.borderColor;
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       >
         Cancelar
       </button>
@@ -180,7 +205,21 @@ export default function CategoryModal({
         form={mode === 'delete' ? undefined : 'category-form'}
         onClick={mode === 'delete' ? handleSubmit : undefined}
         disabled={isLoading}
-        className={`px-4 py-2 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${getSubmitButtonColor()}`}
+        style={{
+          backgroundColor: mode === 'delete' ? 'var(--color-error)' : 'var(--color-primary)',
+          color: 'white'
+        }}
+        className="px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all hover:opacity-90"
+        onMouseEnter={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = mode === 'delete' ? 'var(--color-error)' : 'var(--color-primary-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = mode === 'delete' ? 'var(--color-error)' : 'var(--color-primary)';
+          }
+        }}
       >
         {getSubmitButtonText()}
       </button>
@@ -197,23 +236,50 @@ export default function CategoryModal({
       footer={renderFooter()}
     >
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        <div 
+          style={{
+            backgroundColor: 'var(--color-error)',
+            borderColor: 'var(--color-error)',
+            color: 'white',
+            opacity: 0.9
+          }}
+          className="mb-6 p-4 border rounded-lg"
+        >
           {error}
         </div>
       )}
 
       {mode === 'delete' ? (
         <div className="space-y-6">
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <div 
+            style={{
+              backgroundColor: 'var(--color-warning)',
+              borderColor: 'var(--color-warning)',
+              opacity: 0.1
+            }}
+            className="p-4 border rounded-lg"
+          >
             <div className="flex items-start space-x-3">
-              <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg 
+                style={{ color: 'var(--color-warning)' }}
+                className="w-6 h-6 mt-0.5 flex-shrink-0" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div>
-                <h4 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">
+                <h4 
+                  style={{ color: 'var(--color-warning)' }}
+                  className="text-lg font-medium"
+                >
                   Confirmar Exclusão
                 </h4>
-                <p className="text-yellow-700 dark:text-yellow-300 mt-1">
+                <p 
+                  style={{ color: styles.text.color }}
+                  className="mt-1"
+                >
                   Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita.
                 </p>
               </div>
@@ -221,22 +287,42 @@ export default function CategoryModal({
           </div>
 
           {category && (
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-              <h5 className="font-medium text-gray-900 dark:text-white mb-3">
+            <div 
+              style={{
+                ...styles.background,
+                borderColor: styles.border.borderColor
+              }}
+              className="rounded-lg p-4 border"
+            >
+              <h5 
+                style={{ color: styles.text.color }}
+                className="font-medium mb-3"
+              >
                 Categoria a ser excluída:
               </h5>
-              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <div 
+                style={{ color: styles.textSecondary.color }}
+                className="space-y-2 text-sm"
+              >
                 <p><span className="font-medium">ID:</span> #{category.id}</p>
                 <p><span className="font-medium">Nome:</span> {category.category}</p>
                 <p><span className="font-medium">Tipo:</span> {category.type === 'IN' ? 'Entrada' : 'Saída'}</p>
                 {category.color && (
                   <p className="flex items-center gap-2">
                     <span className="font-medium">Cor:</span>
-                    <span 
-                      className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
-                      style={{ backgroundColor: category.color }}
+                    <div 
+                      style={{ 
+                        backgroundColor: category.color,
+                        borderColor: styles.border.borderColor
+                      }}
+                      className="w-4 h-4 rounded-full border"
                     />
-                    <span className="text-xs">{category.color}</span>
+                    <span 
+                      style={{ color: styles.textMuted.color }}
+                      className="font-mono"
+                    >
+                      {category.color}
+                    </span>
                   </p>
                 )}
               </div>
@@ -245,60 +331,99 @@ export default function CategoryModal({
         </div>
       ) : (
         <form id="category-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
-            <FormField
-              label="Nome da Categoria"
-              name="category"
-              type="text"
-              value={formData.category}
-              onChange={updateFormData('category')}
-              required
-              placeholder="Ex: Alimentação, Transporte, Salário"
+          <FormField
+            label="Nome da Categoria"
+            name="category"
+            type="text"
+            value={formData.category}
+            onChange={updateFormData('category')}
+            required
+            placeholder="Ex: Alimentação, Transporte, Salário"
+            disabled={isLoading}
+          />
+
+          <div className="space-y-2">
+            <label 
+              htmlFor="category-type" 
+              style={{ color: styles.text.color }}
+              className="block text-sm font-medium"
+            >
+              Tipo da Categoria
+            </label>
+            <select
+              id="category-type"
+              value={formData.type}
+              onChange={(e) => updateFormData('type')(e.target.value)}
               disabled={isLoading}
-            />
+              style={{
+                backgroundColor: 'var(--color-surface)',
+                borderColor: 'var(--color-border)',
+                color: 'var(--color-text)',
+                borderWidth: '1px',
+                borderStyle: 'solid'
+              }}
+              className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm"
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--color-primary)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--color-border)';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              <option value={0}>Entrada</option>
+              <option value={1}>Saída</option>
+            </select>
+          </div>
 
-            <div className="space-y-2">
-              <label htmlFor="category-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Tipo da Categoria
-              </label>
-              <select
-                id="category-type"
-                value={formData.type}
-                onChange={(e) => updateFormData('type')(e.target.value)}
-                disabled={isLoading}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value={0}>Entrada</option>
-                <option value={1}>Saída</option>
-              </select>
+          <div className="space-y-2">
+            <label 
+              htmlFor="category-color" 
+              style={{ color: styles.text.color }}
+              className="block text-sm font-medium"
+            >
+              Cor da Categoria
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => updateFormData('color')(color)}
+                  disabled={isLoading}
+                  style={{
+                    backgroundColor: color,
+                    borderColor: formData.color === color 
+                      ? styles.text.color 
+                      : styles.border.borderColor,
+                    borderWidth: '2px',
+                    borderStyle: 'solid'
+                  }}
+                  className={`w-8 h-8 rounded-full focus:outline-none transition-transform disabled:cursor-not-allowed ${
+                    formData.color === color 
+                      ? 'scale-110' 
+                      : 'hover:scale-105'
+                  }`}
+                  onFocus={(e) => {
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.boxShadow = 'none';
+                  }}
+                  title={color}
+                />
+              ))}
             </div>
-
-            <div className="space-y-2">
-              <label htmlFor="category-color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Cor da Categoria
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORY_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => updateFormData('color')(color)}
-                    disabled={isLoading}
-                    className={`w-8 h-8 rounded-full border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                      formData.color === color 
-                        ? 'border-gray-800 dark:border-white scale-110' 
-                        : 'border-gray-300 dark:border-gray-600 hover:scale-105'
-                    } transition-transform disabled:cursor-not-allowed`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Cor selecionada: <span className="font-medium">{formData.color}</span>
-              </p>
-            </div>
-          </form>
-        )}
+            <p 
+              style={{ color: styles.textMuted.color }}
+              className="text-xs"
+            >
+              Cor selecionada: <span className="font-medium">{formData.color}</span>
+            </p>
+          </div>
+        </form>
+      )}
     </Modal>
   );
 }

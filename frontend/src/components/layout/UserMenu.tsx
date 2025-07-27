@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
 import { clearAuthData } from '@/lib/apiService';
 import { User } from '@/lib/types/user';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 interface UserMenuProps {
   readonly onLogout?: () => void;
@@ -27,6 +28,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
   const [familyManagementEnabled, setFamilyManagementEnabledState] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const styles = useThemeStyles();
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -119,7 +121,17 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+        style={{
+          backgroundColor: styles.surface.backgroundColor,
+          borderColor: styles.border.borderColor
+        }}
+        className="flex items-center gap-2 p-2 rounded-lg hover:opacity-80 transition-all border"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--color-surface-hover)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = styles.surface.backgroundColor;
+        }}
       >
         
         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
@@ -127,11 +139,11 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
         </div>
         
         
-        <span className={`font-medium transition-colors ${
-          user.isParent && familyManagementEnabled 
-            ? 'text-green-600 dark:text-green-400' 
-            : 'text-gray-700 dark:text-gray-300'
-        }`}>
+        <span style={{
+          color: user.isParent && familyManagementEnabled 
+            ? 'var(--color-success)' 
+            : styles.text.color
+        }} className="font-medium transition-colors">
           {user.username}
         </span>
         
@@ -159,7 +171,14 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
 
       
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-600 py-1 z-50">
+                <div 
+          style={{
+            ...styles.surface,
+            borderColor: styles.border.borderColor,
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+          }}
+          className="absolute right-0 mt-2 w-64 rounded-lg border shadow-lg z-50"
+        >
           
           <div className="px-4 py-2 border-b border-gray-200 dark:border-slate-600">
             <p className="text-sm font-medium text-gray-900 dark:text-white">

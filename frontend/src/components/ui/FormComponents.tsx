@@ -1,5 +1,7 @@
 "use client";
 
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+
 interface FormFieldProps {
   readonly label: string;
   readonly name: string;
@@ -27,8 +29,21 @@ export function FormField({
   disabled = false,
   labelExtra
 }: FormFieldProps) {
-  const baseClasses = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm";
-  const disabledClasses = disabled ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed" : "";
+  const styles = useThemeStyles();
+  
+  const baseStyle = {
+    backgroundColor: 'var(--color-surface)',
+    borderColor: 'var(--color-border)',
+    color: 'var(--color-text)',
+    borderWidth: '1px',
+    borderStyle: 'solid'
+  };
+  
+  const disabledStyle = disabled ? {
+    backgroundColor: 'var(--color-background)',
+    opacity: 0.6,
+    cursor: 'not-allowed'
+  } : {};
 
   const renderInput = () => {
     switch (type) {
@@ -41,7 +56,19 @@ export function FormField({
             onChange={(e) => onChange(e.target.value)}
             required={required}
             disabled={disabled}
-            className={`${baseClasses} ${disabledClasses}`}
+            style={{
+              ...baseStyle,
+              ...disabledStyle
+            }}
+            className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm"
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--color-primary)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--color-border)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             <option value="">Selecione uma opção</option>
             {options?.map((option) => (
@@ -63,7 +90,20 @@ export function FormField({
             required={required}
             placeholder={placeholder}
             disabled={disabled}
-            className={`${baseClasses} ${disabledClasses} resize-none`}
+            style={{
+              ...baseStyle,
+              ...disabledStyle,
+              resize: 'none'
+            }}
+            className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm"
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--color-primary)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--color-border)';
+              e.target.style.boxShadow = 'none';
+            }}
           />
         );
 
@@ -78,7 +118,19 @@ export function FormField({
             required={required}
             placeholder={placeholder}
             disabled={disabled}
-            className={`${baseClasses} ${disabledClasses}`}
+            style={{
+              ...baseStyle,
+              ...disabledStyle
+            }}
+            className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm"
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--color-primary)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--color-border)';
+              e.target.style.boxShadow = 'none';
+            }}
           />
         );
     }
@@ -87,9 +139,9 @@ export function FormField({
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-1">
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={name} style={{ color: styles.text.color }} className="block text-sm font-medium">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span style={{ color: 'var(--color-error)' }} className="ml-1">*</span>}
         </label>
         {labelExtra && (
           <div className="text-sm">
@@ -119,13 +171,38 @@ export function FormButtons({
   isLoading = false,
   disabled = false
 }: FormButtonsProps) {
+  const styles = useThemeStyles();
+  
   return (
-    <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-200 dark:border-gray-600">
+    <div style={{ borderColor: styles.border.borderColor }} className="flex justify-end space-x-3 pt-6 mt-6 border-t">
       <button
         type="button"
         onClick={onCancel}
         disabled={isLoading}
-        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          ...styles.surface,
+          borderColor: styles.border.borderColor,
+          color: styles.text.color
+        }}
+        className="px-4 py-2 text-sm font-medium border rounded-md shadow-sm hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        onMouseEnter={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = 'var(--color-background)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = styles.surface.backgroundColor;
+          }
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-primary)';
+          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = styles.border.borderColor;
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       >
         {cancelLabel}
       </button>
@@ -133,7 +210,28 @@ export function FormButtons({
         type="button"
         onClick={onSubmit}
         disabled={disabled || isLoading}
-        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          backgroundColor: 'var(--color-primary)',
+          borderColor: 'transparent',
+          color: 'white'
+        }}
+        className="px-4 py-2 text-sm font-medium border rounded-md shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        onMouseEnter={(e) => {
+          if (!disabled && !isLoading) {
+            e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!disabled && !isLoading) {
+            e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+          }
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       >
         {isLoading ? (
           <>
