@@ -9,9 +9,9 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dark',
+  theme: 'dracula-dark',
   setTheme: () => {},
-  colors: themes.dark,
+  colors: themes['dracula-dark'],
 });
 
 interface ThemeProviderProps {
@@ -19,7 +19,7 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('dracula-dark');
 
   useEffect(() => {
     // Carrega o tema do localStorage
