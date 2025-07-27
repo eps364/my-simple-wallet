@@ -1,17 +1,34 @@
+"use client";
 import { QuickActions } from '@/components/ui';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 export default function DashboardPage() {
+  const styles = useThemeStyles();
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 pt-20">
+    <div 
+      className="min-h-screen pt-20"
+      style={{
+        background: `linear-gradient(135deg, 
+          ${styles.surface.backgroundColor}CC 0%, 
+          ${styles.primary.backgroundColor}22 100%)`
+      }}
+    >
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+          <h1 
+            className="text-3xl font-bold mb-8"
+            style={styles.text}
+          >
             Dashboard - Simple Wallet
           </h1>
 
           {/* Ações Rápidas */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 
+              className="text-xl font-semibold mb-4"
+              style={styles.text}
+            >
               Ações Rápidas
             </h2>
             <QuickActions />
@@ -19,14 +36,29 @@ export default function DashboardPage() {
           
           <div className="grid md:grid-cols-3 gap-6">
             {/* Card de Saldo Total */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+            <div 
+              className="p-6 rounded-lg shadow-lg border"
+              style={{
+                ...styles.surface,
+                ...styles.border,
+              }}
+            >
+              <h3 
+                className="text-lg font-semibold mb-2"
+                style={styles.text}
+              >
                 Saldo Total
               </h3>
-              <p className="text-3xl font-bold text-green-600">
+              <p 
+                className="text-3xl font-bold"
+                style={styles.success}
+              >
                 R$ 2.450,00
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p 
+                className="text-sm mt-1"
+                style={styles.textMuted}
+              >
                 +R$ 150,00 este mês
               </p>
             </div>

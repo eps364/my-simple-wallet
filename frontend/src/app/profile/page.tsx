@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
 import { User } from '@/lib/types/user';
-import { LoadingSpinner, QRCodeGenerator, QRCodeReader, MonitoringToggle } from '@/components/ui';
+import { LoadingSpinner, QRCodeGenerator, QRCodeReader, MonitoringToggle, ThemeSelector } from '@/components/ui';
 import { useFamilyManagement } from '@/lib/hooks/useParentMonitoring';
 
 export default function ProfilePage() {
@@ -297,8 +297,16 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Coluna da direita - Gerenciamento e Contas Gerenciadas */}
+          {/* Coluna da direita - Tema, Gerenciamento e Contas Gerenciadas */}
           <div className="space-y-6">
+            {/* Preferências de Tema */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                Preferências de Interface
+              </h2>
+              <ThemeSelector />
+            </div>
+
             {/* Gerenciamento Familiar */}
             {user.isParent && (
               <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
