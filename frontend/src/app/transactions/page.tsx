@@ -359,9 +359,9 @@ export default function TransactionsPage() {
                     {getAccountName(transaction.accountId)}
                   </p>
                 </div>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getTransactionTypeColor(transaction.type)}`}>
+                {/* <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getTransactionTypeColor(transaction.type)}`}>
                   {transaction.type === TransactionType.INCOME ? 'Receita' : 'Despesa'}
-                </span>
+                </span> */}
               </div>
 
               {/* Main Amount */}
