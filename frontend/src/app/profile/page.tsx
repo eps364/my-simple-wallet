@@ -14,13 +14,13 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // Estados para modais de edição
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showParentModal, setShowParentModal] = useState(false);
   const [showRemoveParentModal, setShowRemoveParentModal] = useState(false);
+  const [showRemoveChildModal, setShowRemoveChildModal] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<User | null>(null);
   
-  // Estados para formulários
   const [editData, setEditData] = useState({ username: '', email: '', name: '' });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -143,7 +143,6 @@ export default function ProfilePage() {
     
     try {
       setError('');
-      // Buscar dados do parent
       const parentUser = await usersService.getUserById(user.parentId);
       setParentData({
         username: parentUser.username,
@@ -152,6 +151,27 @@ export default function ProfilePage() {
       setShowRemoveParentModal(true);
     } catch {
       setError('Erro ao buscar dados do parent');
+    }
+  };
+
+  const handleOpenRemoveChildModal = (child: User) => {
+    setSelectedChild(child);
+    setShowRemoveChildModal(true);
+  };
+
+  const handleRemoveChild = async () => {
+    if (!selectedChild) return;
+    
+    try {
+      setError('');
+      await usersService.removeChild(selectedChild.id);
+      setChildren(children.filter(child => child.id !== selectedChild.id));
+      setShowRemoveChildModal(false);
+      setSelectedChild(null);
+      setSuccess('Usuário removido do seu gerenciamento com sucesso!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch {
+      setError('Erro ao remover usuário gerenciado');
     }
   };
 
@@ -590,7 +610,7 @@ export default function ProfilePage() {
                       }}
                       className="flex items-center justify-between p-3 rounded-lg"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p 
                           style={{ color: styles.text.color }}
                           className="font-medium"
@@ -603,12 +623,32 @@ export default function ProfilePage() {
                         >
                           {child.email}
                         </p>
+                        <p 
+                          style={{ color: styles.textMuted.color }}
+                          className="text-xs font-mono mt-1"
+                        >
+                          {child.id}
+                        </p>
                       </div>
-                      <div 
-                        style={{ color: styles.textMuted.color }}
-                        className="text-xs"
-                      >
-                        {child.id}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenRemoveChildModal(child)}
+                          style={{ color: 'var(--color-error)' }}
+                          className="flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-all hover:bg-red-50 dark:hover:bg-red-900/20"
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--color-error)';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = 'var(--color-error)';
+                          }}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Remover
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1251,6 +1291,135 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleRemoveParent}
+                  style={{
+                    backgroundColor: 'var(--color-error)',
+                    color: 'white'
+                  }}
+                  className="px-4 py-2 rounded-lg transition-all"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  Confirmar Remoção
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Confirmar Remoção de Usuário Gerenciado */}
+        {showRemoveChildModal && selectedChild && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div 
+              style={{
+                ...styles.surface,
+                borderColor: styles.border.borderColor,
+                borderWidth: '1px',
+                borderStyle: 'solid'
+              }}
+              className="rounded-lg max-w-md w-full p-6"
+            >
+              <h3 
+                style={{ color: styles.text.color }}
+                className="text-lg font-semibold mb-4"
+              >
+                Confirmar Remoção de Gerenciamento
+              </h3>
+              
+              <div className="mb-6">
+                <p 
+                  style={{ color: styles.textSecondary.color }}
+                  className="mb-4"
+                >
+                  Tem certeza que deseja remover o seguinte usuário do seu gerenciamento?
+                </p>
+                
+                <div 
+                  style={{
+                    backgroundColor: styles.background.backgroundColor,
+                    borderColor: styles.border.borderColor,
+                    borderWidth: '1px',
+                    borderStyle: 'solid'
+                  }}
+                  className="p-4 rounded-lg"
+                >
+                  <div className="space-y-2">
+                    <div>
+                      <span 
+                        style={{ color: styles.textSecondary.color }}
+                        className="text-sm font-medium"
+                      >
+                        Username:
+                      </span>
+                      <p 
+                        style={{ color: styles.text.color }}
+                        className="font-medium"
+                      >
+                        {selectedChild.username}
+                      </p>
+                    </div>
+                    <div>
+                      <span 
+                        style={{ color: styles.textSecondary.color }}
+                        className="text-sm font-medium"
+                      >
+                        Email:
+                      </span>
+                      <p 
+                        style={{ color: styles.text.color }}
+                      >
+                        {selectedChild.email}
+                      </p>
+                    </div>
+                    <div>
+                      <span 
+                        style={{ color: styles.textSecondary.color }}
+                        className="text-sm font-medium"
+                      >
+                        ID:
+                      </span>
+                      <p 
+                        style={{ color: styles.textMuted.color }}
+                        className="text-xs font-mono"
+                      >
+                        {selectedChild.id}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <p 
+                  style={{ color: styles.textMuted.color }}
+                  className="text-sm mt-4"
+                >
+                  O usuário não será mais gerenciado por você e você perderá acesso às suas informações financeiras.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRemoveChildModal(false);
+                    setSelectedChild(null);
+                  }}
+                  style={{ color: styles.textSecondary.color }}
+                  className="px-4 py-2 transition-colors"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = styles.text.color;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = styles.textSecondary.color;
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveChild}
                   style={{
                     backgroundColor: 'var(--color-error)',
                     color: 'white'

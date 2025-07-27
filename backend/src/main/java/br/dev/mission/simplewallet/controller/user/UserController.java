@@ -2,6 +2,7 @@ package br.dev.mission.simplewallet.controller.user;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.MessageSource;
@@ -105,6 +106,19 @@ public class UserController {
     @PatchMapping("/{childId}/parent")
     public ResponseEntity<ApiResponse<UserResponse>> updateChildParent(@PathVariable String childId, @RequestBody @Valid UserRequestUpdateChildParent request) {
         UUID parentId = request.parentId();
+        String loggedUserId = getLoggedUserId();
+        
+        if (parentId == null) {
+            Optional<UserResponse> childUser = userService.findById(childId);
+            if (childUser.isEmpty()) {
+                return ResponseEntity.ok(new ApiResponse<>(404, getMessage("user.notfound"), null));
+            }
+            
+            UUID currentParentId = childUser.get().parentId();
+            if (currentParentId == null || !UUID.fromString(loggedUserId).equals(currentParentId)) {
+                return ResponseEntity.ok(new ApiResponse<>(403, getMessage("user.permission.denied"), null));
+            }
+        }
         
         UserRequestUpdateParent reqWithIds = new UserRequestUpdateParent(childId, parentId);
         UserResponse response = userService.updateParent(reqWithIds);
