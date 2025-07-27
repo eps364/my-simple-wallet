@@ -63,7 +63,12 @@ export default function AccountForm({
   const loadAccounts = async () => {
     try {
       setIsLoadingAccounts(true);
-      const accountsData = await accountsService.getAll();
+      // Verificar se o gerenciamento familiar está ativo
+      const shouldUseParentMode = typeof window !== 'undefined' 
+        ? localStorage.getItem('familyManagementEnabled') === 'true'
+        : false;
+      
+      const accountsData = await accountsService.getAll(shouldUseParentMode);
       setAccounts(accountsData);
     } catch (error) {
     } finally {

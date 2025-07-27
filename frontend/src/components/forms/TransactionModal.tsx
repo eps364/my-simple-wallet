@@ -90,9 +90,14 @@ export default function TransactionModal({
   const loadAccountsAndCategories = async () => {
     try {
       setIsLoadingData(true);
+      // Verificar se o gerenciamento familiar está ativo
+      const shouldUseParentMode = typeof window !== 'undefined' 
+        ? localStorage.getItem('familyManagementEnabled') === 'true'
+        : false;
+      
       const [accountsData, categoriesData] = await Promise.all([
-        accountsService.getAll(),
-        categoriesService.getAll()
+        accountsService.getAll(shouldUseParentMode),
+        categoriesService.getAll(shouldUseParentMode)
       ]);
       setAccounts(accountsData);
       setCategories(categoriesData);

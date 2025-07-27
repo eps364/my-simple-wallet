@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Account } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
@@ -12,6 +12,7 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     mode: 'create' | 'edit' | 'delete';
@@ -22,9 +23,48 @@ export default function AccountsPage() {
   });
   const styles = useThemeStyles();
 
+  // Função para buscar estado do gerenciamento familiar do localStorage
+  const getFamilyManagementEnabled = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem('familyManagementEnabled');
+    return stored === 'true';
+  };
+
+  const loadAccounts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      // Enviar isParent=true quando o gerenciamento familiar estiver ativo
+      const shouldUseParentMode = getFamilyManagementEnabled();
+      const accountsData = await accountsService.getAll(shouldUseParentMode);
+      setAccounts(accountsData);
+    } catch {
+      setError('Erro ao carregar contas. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadAccounts();
-  }, []);
+  }, [loadAccounts]);
+
+  useEffect(() => {
+    setFamilyManagementEnabled(getFamilyManagementEnabled());
+    const handleStorageChange = () => {
+      const newValue = getFamilyManagementEnabled();
+      setFamilyManagementEnabled(newValue);
+      loadAccounts();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('familyManagementChanged', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('familyManagementChanged', handleStorageChange);
+    };
+  }, [loadAccounts]);
 
   // Verificar se deve abrir o modal de criação automaticamente
   useEffect(() => {
@@ -36,19 +76,6 @@ export default function AccountsPage() {
       });
     }
   }, [searchParams]);
-
-  const loadAccounts = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      const accountsData = await accountsService.getAll();
-      setAccounts(accountsData);
-    } catch {
-      setError('Erro ao carregar contas. Tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const openModal = (mode: 'create' | 'edit' | 'delete', account?: Account) => {
     setModalState({

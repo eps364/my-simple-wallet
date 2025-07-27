@@ -10,19 +10,22 @@ import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { usersService } from '@/lib/services/usersService';
 import TransactionModal from '@/components/forms/TransactionModal';
+import { TransactionFilters, StatusFilter } from '@/components/ui';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'liquidated' | 'pending'>('all');
-  const [sortBy, setSortBy] = useState<'dueDate' | 'amount' | 'description' | 'category' | 'status' | 'effectiveDate'>('dueDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
+  
+  // Estado do filtro - apenas status
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -40,6 +43,46 @@ export default function TransactionsPage() {
     return stored === 'true';
   };
 
+  // Função para obter o nome da categoria
+  const getCategoryName = useCallback((categoryId?: number): string => {
+    if (!categoryId) return 'Sem categoria';
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.category || 'Categoria não encontrada';
+  }, [categories]);
+
+  // Função para aplicar filtro de status apenas
+  const applyFilters = useCallback((data: Transaction[]) => {
+    let filtered = [...data];
+
+    // Filtro por status
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'liquidated') {
+        filtered = filtered.filter(t => t.effectiveDate);
+      } else if (statusFilter === 'pending') {
+        filtered = filtered.filter(t => !t.effectiveDate);
+      }
+    }
+
+    // Ordenação padrão por data de vencimento (mais recente primeiro)
+    filtered.sort((a, b) => {
+      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+    });
+
+    setTransactions(filtered);
+  }, [statusFilter]);
+
+  // Função para lidar com mudança no filtro de status
+  const handleStatusFilterChange = (status: StatusFilter) => {
+    setStatusFilter(status);
+  };
+
+  // Aplicar filtros sempre que algum filtro mudar
+  useEffect(() => {
+    if (allTransactions.length > 0) {
+      applyFilters(allTransactions);
+    }
+  }, [allTransactions, applyFilters]);
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -55,7 +98,7 @@ export default function TransactionsPage() {
         usersService.getProfile()
       ]);
       
-      setTransactions(transactionsData);
+      setAllTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
@@ -64,7 +107,7 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Remover dependência desnecessária
+  }, []);
 
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
@@ -122,13 +165,6 @@ export default function TransactionsPage() {
     return account?.description || 'Conta não encontrada';
   };
 
-  // Função para obter nome da categoria
-  const getCategoryName = (categoryId?: number): string => {
-    if (!categoryId) return 'Sem categoria';
-    const category = categories.find(cat => cat.id === categoryId);
-    return category?.category || 'Categoria não encontrada';
-  };
-
   // Verificar se uma transação pode ser editada/deletada (apenas transações do usuário logado)
   const canEditTransaction = (transaction: Transaction): boolean => {
     return currentUser ? transaction.username === currentUser.username : false;
@@ -151,66 +187,8 @@ export default function TransactionsPage() {
     }
   };
 
-  // Função para filtrar transações
-  const getFilteredTransactions = (): Transaction[] => {
-    switch (statusFilter) {
-      case 'liquidated':
-        return transactions.filter(transaction => transaction.effectiveDate);
-      case 'pending':
-        return transactions.filter(transaction => !transaction.effectiveDate);
-      default:
-        return transactions;
-    }
-  };
-
-  const getSortedTransactions = (transactionsToSort: Transaction[]): Transaction[] => {
-    const parseDate = (dateString: string | undefined): number => {
-      if (!dateString) return 0;
-      
-      if (dateString.includes('/')) {
-        const [day, month, year] = dateString.split('/');
-        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
-      }
-      
-      return new Date(dateString).getTime();
-    };
-
-    return [...transactionsToSort].sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case 'dueDate':
-          comparison = parseDate(a.dueDate) - parseDate(b.dueDate);
-          break;
-        case 'amount':
-          comparison = a.amount - b.amount;
-          break;
-        case 'description':
-          comparison = a.description.localeCompare(b.description);
-          break;
-        case 'category': {
-          const categoryA = getCategoryName(a.categoryId);
-          const categoryB = getCategoryName(b.categoryId);
-          comparison = categoryA.localeCompare(categoryB);
-          break;
-        }
-        case 'status': {
-          const statusA = a.effectiveDate ? 1 : 0; // liquidada = 1, pendente = 0
-          const statusB = b.effectiveDate ? 1 : 0;
-          comparison = statusA - statusB;
-          break;
-        }
-        case 'effectiveDate':
-          comparison = parseDate(a.effectiveDate) - parseDate(b.effectiveDate);
-          break;
-      }
-
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
-  };
-
   const getEmptyStateTexts = () => {
-    if (transactions.length === 0) {
+    if (allTransactions.length === 0) {
       return {
         title: 'Nenhuma transação encontrada',
         description: 'Comece adicionando sua primeira receita ou despesa.',
@@ -218,24 +196,12 @@ export default function TransactionsPage() {
       };
     }
 
-    let statusText = '';
-    if (statusFilter === 'liquidated') {
-      statusText = 'liquidada';
-    } else if (statusFilter === 'pending') {
-      statusText = 'pendente';
-    }
-
-    const oppositeText = statusFilter === 'liquidated' ? 'transações pendentes' : 'transações liquidadas';
-    
     return {
-      title: `Nenhuma transação ${statusText} encontrada`,
-      description: `Altere o filtro para ver ${oppositeText} ou todas as transações.`,
+      title: 'Nenhuma transação encontrada com os filtros aplicados',
+      description: 'Tente ajustar os filtros para ver mais transações.',
       showButton: false
     };
   };
-
-  const filteredTransactions = getFilteredTransactions();
-  const sortedAndFilteredTransactions = getSortedTransactions(filteredTransactions);
 
   if (isLoading) {
     return (
@@ -311,137 +277,29 @@ export default function TransactionsPage() {
         </button>
       </div>
 
-      {/* Filter and Sort Section */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        {/* Status Filter */}
-        <div className="flex items-center space-x-2">
-          <label 
-            htmlFor="status-filter" 
-            style={{ color: styles.text.color }}
-            className="text-sm font-medium"
-          >
-            Filtrar por status:
-          </label>
-          <select
-            id="status-filter"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'liquidated' | 'pending')}
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              borderColor: 'var(--color-border)',
-              color: 'var(--color-text)',
-              borderWidth: '1px',
-              borderStyle: 'solid'
-            }}
-            className="px-3 py-2 rounded-lg focus:outline-none text-sm transition-all"
-            onFocus={(e) => {
-              e.target.style.borderColor = 'var(--color-primary)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'var(--color-border)';
-              e.target.style.boxShadow = 'none';
-            }}
-          >
-            <option value="all">Todas as Transações</option>
-            <option value="liquidated">Liquidadas</option>
-            <option value="pending">Pendentes</option>
-          </select>
-        </div>
-
-        {/* Sort Controls */}
-        <div className="flex items-center space-x-2">
-          <label 
-            htmlFor="sort-by" 
-            style={{ color: styles.text.color }}
-            className="text-sm font-medium"
-          >
-            Ordenar por:
-          </label>
-          <select
-            id="sort-by"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'amount' | 'description' | 'category' | 'status' | 'effectiveDate')}
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              borderColor: 'var(--color-border)',
-              color: 'var(--color-text)',
-              borderWidth: '1px',
-              borderStyle: 'solid'
-            }}
-            className="px-3 py-2 rounded-lg focus:outline-none text-sm transition-all"
-            onFocus={(e) => {
-              e.target.style.borderColor = 'var(--color-primary)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'var(--color-border)';
-              e.target.style.boxShadow = 'none';
-            }}
-          >
-            <option value="dueDate">Data de Vencimento</option>
-            <option value="amount">Valor</option>
-            <option value="description">Descrição</option>
-            <option value="category">Categoria</option>
-            <option value="status">Status</option>
-            <option value="effectiveDate">Data Efetiva</option>
-          </select>
-        </div>
-
-        {/* Sort Order */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            style={{
-              ...styles.surface,
-              borderColor: styles.border.borderColor,
-              color: styles.text.color,
-              borderWidth: '1px',
-              borderStyle: 'solid'
-            }}
-            className="flex items-center px-3 py-2 rounded-lg focus:outline-none text-sm transition-all"
-            title={`Ordenação ${sortOrder === 'asc' ? 'crescente' : 'decrescente'} - Clique para alternar`}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = styles.background.backgroundColor;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = styles.surface.backgroundColor;
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = styles.border.borderColor;
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            {sortOrder === 'asc' ? (
-              <>
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                </svg>
-                A-Z
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
-                </svg>
-                Z-A
-              </>
-            )}
-          </button>
-        </div>
-
+      {/* Filter Section */}
+      <div className="mb-6">
+        <TransactionFilters
+          config={{
+            status: {
+              enabled: true,
+              selectedStatus: statusFilter,
+              onStatusChange: handleStatusFilterChange
+            }
+          }}
+          familyManagementEnabled={familyManagementEnabled}
+        />
+        
         {/* Results Counter */}
-        <div 
-          style={{ color: styles.textMuted.color }}
-          className="flex items-center text-sm lg:ml-auto"
-        >
-          <span>
-            Mostrando {sortedAndFilteredTransactions.length} de {transactions.length} transações
-          </span>
+        <div className="mt-4 flex justify-end">
+          <div 
+            style={{ color: styles.textMuted.color }}
+            className="text-sm"
+          >
+            <span>
+              Mostrando {transactions.length} de {allTransactions.length} transações
+            </span>
+          </div>
         </div>
       </div>
 
@@ -474,7 +332,7 @@ export default function TransactionsPage() {
       )}
 
       {/* Transactions List */}
-      {sortedAndFilteredTransactions.length === 0 ? (
+      {transactions.length === 0 ? (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto">
             <svg 
@@ -526,7 +384,7 @@ export default function TransactionsPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sortedAndFilteredTransactions.map((transaction) => (
+          {transactions.map((transaction: Transaction) => (
             <div
               key={transaction.id}
               style={{

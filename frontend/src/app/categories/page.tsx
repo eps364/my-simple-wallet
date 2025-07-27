@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Category } from '@/lib/types/category';
 import { categoriesService } from '@/lib/services/categoriesService';
@@ -14,13 +14,59 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const styles = useThemeStyles();
 
+  // Função para buscar estado do gerenciamento familiar do localStorage
+  const getFamilyManagementEnabled = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem('familyManagementEnabled');
+    return stored === 'true';
+  };
+
+  const loadCategories = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      // Enviar isParent=true quando o gerenciamento familiar estiver ativo
+      const shouldUseParentMode = getFamilyManagementEnabled();
+      const categoriesData = await categoriesService.getAll(shouldUseParentMode);
+      setCategories(categoriesData);
+    } catch {
+      setError('Erro ao carregar categorias. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [loadCategories]);
+
+  useEffect(() => {
+    // Sincronizar com localStorage na inicialização
+    setFamilyManagementEnabled(getFamilyManagementEnabled());
+    
+    // Listener para mudanças no localStorage
+    const handleStorageChange = () => {
+      const newValue = getFamilyManagementEnabled();
+      setFamilyManagementEnabled(newValue);
+      // Recarregar dados quando o estado mudar
+      loadCategories();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listener customizado para mudanças feitas na mesma aba
+    window.addEventListener('familyManagementChanged', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('familyManagementChanged', handleStorageChange);
+    };
+  }, [loadCategories]);
 
   useEffect(() => {
     const action = searchParams.get('action');
@@ -28,19 +74,6 @@ export default function CategoriesPage() {
       setModalMode('create');
     }
   }, [searchParams]);
-
-  const loadCategories = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      const categoriesData = await categoriesService.getAll();
-      setCategories(categoriesData);
-    } catch {
-      setError('Erro ao carregar categorias. Tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const openModal = (mode: ModalMode, category?: Category) => {
     setModalMode(mode);
