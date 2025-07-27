@@ -57,6 +57,15 @@ export class TransactionsService {
   async delete(id: number): Promise<void> {
     return apiRequest<void>(`${this.endpoint}/${id}`, fetchConfig('DELETE'));
   }
+
+  // Liquidar transação (settle)
+  async settle(id: number, data: { effectiveDate: string; effectiveAmount: number }): Promise<Transaction> {
+    const preparedData = {
+      effectiveDate: this.formatDateForBackend(data.effectiveDate),
+      effectiveAmount: data.effectiveAmount
+    };
+    return apiRequest<Transaction>(`${this.endpoint}/${id}/effective`, fetchConfig('PATCH', preparedData));
+  }
 }
 
 // Instância singleton do serviço de transações

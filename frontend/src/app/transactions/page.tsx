@@ -17,7 +17,7 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string>('');
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    mode: 'create' | 'edit' | 'delete';
+    mode: 'create' | 'edit' | 'delete' | 'settle';
     transaction?: Transaction;
   }>({
     isOpen: false,
@@ -52,7 +52,7 @@ export default function TransactionsPage() {
     }
   };
 
-  const openModal = (mode: 'create' | 'edit' | 'delete', transaction?: Transaction) => {
+  const openModal = (mode: 'create' | 'edit' | 'delete' | 'settle', transaction?: Transaction) => {
     setModalState({
       isOpen: true,
       mode,
@@ -269,7 +269,7 @@ export default function TransactionsPage() {
 
                   {/* Ações */}
                   <div className="col-span-1">
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
                       <button
                         onClick={() => openModal('edit', transaction)}
                         className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -279,6 +279,17 @@ export default function TransactionsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
+                      {!transaction.effectiveDate && (
+                        <button
+                          onClick={() => openModal('settle', transaction)}
+                          className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                          title="Liquidar transação"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      )}
                       <button
                         onClick={() => openModal('delete', transaction)}
                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"

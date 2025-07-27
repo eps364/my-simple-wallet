@@ -11,7 +11,7 @@ import { categoriesService } from '@/lib/services/categoriesService';
 
 interface TransactionModalProps {
   readonly isOpen: boolean;
-  readonly mode: 'create' | 'edit' | 'delete';
+  readonly mode: 'create' | 'edit' | 'delete' | 'settle';
   readonly transaction?: Transaction;
   readonly onClose: () => void;
   readonly onSuccess: () => void;
@@ -50,7 +50,7 @@ export default function TransactionModal({
 
   // Atualizar formulário quando transaction prop mudar
   useEffect(() => {
-    if (transaction && (mode === 'edit' || mode === 'delete')) {
+    if (transaction && (mode === 'edit' || mode === 'delete' || mode === 'settle')) {
       // Converte datas do formato DD/MM/YYYY para YYYY-MM-DD se necessário
       const convertDateToInputFormat = (dateStr: string) => {
         if (!dateStr) return '';
@@ -67,8 +67,8 @@ export default function TransactionModal({
         amount: transaction.amount,
         type: transaction.type,
         dueDate: convertDateToInputFormat(transaction.dueDate),
-        effectiveDate: convertDateToInputFormat(transaction.effectiveDate || ''),
-        effectiveAmount: transaction.effectiveAmount,
+        effectiveDate: mode === 'settle' ? new Date().toISOString().split('T')[0] : convertDateToInputFormat(transaction.effectiveDate || ''),
+        effectiveAmount: mode === 'settle' ? transaction.amount : transaction.effectiveAmount,
         accountId: transaction.accountId,
         categoryId: transaction.categoryId
       });
@@ -214,6 +214,37 @@ export default function TransactionModal({
     }
   };
 
+  const handleSettle = async () => {
+    if (!transaction) return;
+
+    try {
+      setError('');
+      setIsLoading(true);
+
+      // Validações para liquidação
+      if (!formData.effectiveDate) {
+        setError('Data efetiva é obrigatória para liquidação');
+        return;
+      }
+
+      if (!formData.effectiveAmount || formData.effectiveAmount <= 0) {
+        setError('Valor efetivo deve ser maior que zero');
+        return;
+      }
+
+      await transactionsService.settle(transaction.id, {
+        effectiveDate: formData.effectiveDate,
+        effectiveAmount: formData.effectiveAmount
+      });
+      onSuccess();
+    } catch (error) {
+      console.error('Erro ao liquidar transação:', error);
+      setError('Erro ao liquidar transação. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -223,6 +254,8 @@ export default function TransactionModal({
       await handleUpdate();
     } else if (mode === 'delete') {
       await handleDelete();
+    } else if (mode === 'settle') {
+      await handleSettle();
     }
   };
 
@@ -246,6 +279,7 @@ export default function TransactionModal({
     if (mode === 'create') return 'Adicionar Nova Transação';
     if (mode === 'edit') return 'Editar Transação';
     if (mode === 'delete') return 'Excluir Transação';
+    if (mode === 'settle') return 'Liquidar Transação';
     return 'Transação';
   };
 
@@ -254,6 +288,7 @@ export default function TransactionModal({
     if (mode === 'create') return 'Adicionar';
     if (mode === 'edit') return 'Salvar';
     if (mode === 'delete') return 'Excluir';
+    if (mode === 'settle') return 'Liquidar';
     return 'Confirmar';
   };
 
@@ -280,126 +315,177 @@ export default function TransactionModal({
           </div>
         )}
 
-        {mode === 'delete' ? (
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              Tem certeza que deseja excluir esta transação?
-            </p>
-            {transaction && (
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  {transaction.description}
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {transaction.type === TransactionType.INCOME ? 'Receita' : 'Despesa'}: 
-                  R$ {transaction.amount.toFixed(2)}
+        {(() => {
+          if (mode === 'delete') {
+            return (
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300">
+                  Tem certeza que deseja excluir esta transação?
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Vencimento: {transaction.dueDate}
-                </p>
-                {transaction.effectiveDate && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Data Efetiva: {transaction.effectiveDate}
-                  </p>
+                {transaction && (
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      {transaction.description}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {transaction.type === TransactionType.INCOME ? 'Receita' : 'Despesa'}: 
+                      R$ {transaction.amount.toFixed(2)}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Vencimento: {transaction.dueDate}
+                    </p>
+                    {transaction.effectiveDate && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Data Efetiva: {transaction.effectiveDate}
+                      </p>
+                    )}
+                  </div>
                 )}
+                <p className="text-sm text-red-600">
+                  Esta ação não pode ser desfeita.
+                </p>
               </div>
-            )}
-            <p className="text-sm text-red-600">
-              Esta ação não pode ser desfeita.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <FormField
-              label="Conta"
-              name="accountId"
-              type="select"
-              value={formData.accountId}
-              onChange={(value) => handleChange('accountId', parseInt(value))}
-              options={accounts.map(account => ({
-                value: account.id,
-                label: account.description
-              }))}
-              required
-            />
+            );
+          }
 
-            <FormField
-              label="Descrição"
-              name="description"
-              type="text"
-              value={formData.description}
-              onChange={(value) => handleChange('description', value)}
-              placeholder="Ex: Supermercado, Salário, etc."
-              required
-            />
+          if (mode === 'settle') {
+            return (
+              <div className="space-y-6">
+                {transaction && (
+                  <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                      Liquidar Transação
+                    </h4>
+                    <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                      <p><strong>Descrição:</strong> {transaction.description}</p>
+                      <p><strong>Valor Planejado:</strong> R$ {transaction.amount.toFixed(2)}</p>
+                      <p><strong>Vencimento:</strong> {transaction.dueDate}</p>
+                      <p><strong>Conta:</strong> {transaction.account}</p>
+                      {transaction.category && (
+                        <p><strong>Categoria:</strong> {transaction.category}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <FormField
+                    label="Data Efetiva"
+                    name="effectiveDate"
+                    type="date"
+                    value={formData.effectiveDate || ''}
+                    onChange={(value) => handleChange('effectiveDate', value)}
+                    required
+                  />
+
+                  <FormField
+                    label="Valor Efetivo"
+                    name="effectiveAmount"
+                    type="number"
+                    value={formData.effectiveAmount || ''}
+                    onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+              </div>
+            );
+          }
+
+          // Modo create ou edit
+          return (
+            <div className="space-y-6">
               <FormField
-                label="Valor"
-                name="amount"
-                type="number"
-                value={formData.amount}
-                onChange={(value) => handleChange('amount', parseFloat(value) || 0)}
-                placeholder="0.00"
+                label="Conta"
+                name="accountId"
+                type="select"
+                value={formData.accountId}
+                onChange={(value) => handleChange('accountId', parseInt(value))}
+                options={accounts.map(account => ({
+                  value: account.id,
+                  label: account.description
+                }))}
                 required
               />
 
               <FormField
-                label="Tipo"
-                name="type"
-                type="select"
-                value={formData.type.toString()}
-                onChange={(value) => handleChange('type', parseInt(value) as TransactionType)}
-                options={[
-                  { value: TransactionType.INCOME.toString(), label: 'Receita' },
-                  { value: TransactionType.EXPENSE.toString(), label: 'Despesa' }
-                ]}
+                label="Descrição"
+                name="description"
+                type="text"
+                value={formData.description}
+                onChange={(value) => handleChange('description', value)}
+                placeholder="Ex: Supermercado, Salário, etc."
                 required
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  label="Valor"
+                  name="amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={(value) => handleChange('amount', parseFloat(value) || 0)}
+                  placeholder="0.00"
+                  required
+                />
+
+                <FormField
+                  label="Tipo"
+                  name="type"
+                  type="select"
+                  value={formData.type.toString()}
+                  onChange={(value) => handleChange('type', parseInt(value) as TransactionType)}
+                  options={[
+                    { value: TransactionType.INCOME.toString(), label: 'Receita' },
+                    { value: TransactionType.EXPENSE.toString(), label: 'Despesa' }
+                  ]}
+                  required
+                />
+              </div>
+
+              <FormField
+                label="Categoria (Opcional)"
+                name="categoryId"
+                type="select"
+                value={formData.categoryId || ''}
+                onChange={(value) => handleChange('categoryId', value ? parseInt(value) : undefined)}
+                options={[
+                  { value: '', label: 'Nenhuma categoria' },
+                  ...getFilteredCategories().map(category => ({
+                    value: category.id,
+                    label: category.category
+                  }))
+                ]}
+              />
+
+              <FormField
+                label="Data de Vencimento"
+                name="dueDate"
+                type="date"
+                value={formData.dueDate}
+                onChange={(value) => handleChange('dueDate', value)}
+                required
+              />
+
+              <FormField
+                label="Data Efetiva (Opcional)"
+                name="effectiveDate"
+                type="date"
+                value={formData.effectiveDate || ''}
+                onChange={(value) => handleChange('effectiveDate', value || undefined)}
+              />
+
+              <FormField
+                label="Valor Efetivo (Opcional)"
+                name="effectiveAmount"
+                type="number"
+                value={formData.effectiveAmount || ''}
+                onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
+                placeholder="0.00"
               />
             </div>
-
-            <FormField
-              label="Categoria (Opcional)"
-              name="categoryId"
-              type="select"
-              value={formData.categoryId || ''}
-              onChange={(value) => handleChange('categoryId', value ? parseInt(value) : undefined)}
-              options={[
-                { value: '', label: 'Nenhuma categoria' },
-                ...getFilteredCategories().map(category => ({
-                  value: category.id,
-                  label: category.category
-                }))
-              ]}
-            />
-
-            <FormField
-              label="Data de Vencimento"
-              name="dueDate"
-              type="date"
-              value={formData.dueDate}
-              onChange={(value) => handleChange('dueDate', value)}
-              required
-            />
-
-            <FormField
-              label="Data Efetiva (Opcional)"
-              name="effectiveDate"
-              type="date"
-              value={formData.effectiveDate || ''}
-              onChange={(value) => handleChange('effectiveDate', value || undefined)}
-            />
-
-            <FormField
-              label="Valor Efetivo (Opcional)"
-              name="effectiveAmount"
-              type="number"
-              value={formData.effectiveAmount || ''}
-              onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
-              placeholder="0.00"
-            />
-          </div>
-        )}
+          );
+        })()}
 
         <div className="flex justify-end space-x-3 pt-4">
           <button
