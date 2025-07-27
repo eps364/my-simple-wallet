@@ -166,65 +166,91 @@ export default function CategoryModal({
     return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
   };
 
+  const getModalVariant = () => {
+    if (mode === 'delete') return 'danger';
+    return 'default';
+  };
+
+  const renderFooter = () => (
+    <div className="flex justify-end space-x-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        form="category-form"
+        disabled={isLoading}
+        className={`px-4 py-2 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${getSubmitButtonColor()}`}
+      >
+        {getSubmitButtonText()}
+      </button>
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={getModalTitle()}
-      size="lg"
+      size="md"
+      variant={getModalVariant()}
+      footer={renderFooter()}
     >
-      <div className="space-y-6">
-        {error && (
-          <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
 
-        {mode === 'delete' ? (
-          // Delete confirmation
-          <div className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <svg className="w-6 h-6 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <div>
-                  <h4 className="text-lg font-medium text-yellow-800">
-                    Confirmar Exclusão
-                  </h4>
-                  <p className="text-yellow-700 mt-1">
-                    Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita.
-                  </p>
-                </div>
+      {mode === 'delete' ? (
+        // Delete confirmation
+        <div className="space-y-6">
+          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h4 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">
+                  Confirmar Exclusão
+                </h4>
+                <p className="text-yellow-700 dark:text-yellow-300 mt-1">
+                  Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita.
+                </p>
               </div>
             </div>
-
-            {category && (
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h5 className="font-medium text-gray-900 dark:text-white mb-2">
-                  Categoria a ser excluída:
-                </h5>
-                <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <p><span className="font-medium">ID:</span> #{category.id}</p>
-                  <p><span className="font-medium">Nome:</span> {category.category}</p>
-                  <p><span className="font-medium">Tipo:</span> {category.type === 'IN' ? 'Entrada' : 'Saída'}</p>
-                  {category.color && (
-                    <p className="flex items-center gap-2">
-                      <span className="font-medium">Cor:</span>
-                      <span 
-                        className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className="text-xs">{category.color}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
-        ) : (
-          // Create/Edit form
-          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
+
+          {category && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <h5 className="font-medium text-gray-900 dark:text-white mb-3">
+                Categoria a ser excluída:
+              </h5>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <p><span className="font-medium">ID:</span> #{category.id}</p>
+                <p><span className="font-medium">Nome:</span> {category.category}</p>
+                <p><span className="font-medium">Tipo:</span> {category.type === 'IN' ? 'Entrada' : 'Saída'}</p>
+                {category.color && (
+                  <p className="flex items-center gap-2">
+                    <span className="font-medium">Cor:</span>
+                    <span 
+                      className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <span className="text-xs">{category.color}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Create/Edit form
+        <form id="category-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
             <FormField
               label="Nome da Categoria"
               name="category"
@@ -279,37 +305,6 @@ export default function CategoryModal({
             </div>
           </form>
         )}
-
-        {/* Buttons */}
-        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-600">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isLoading}
-            className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading || (mode !== 'delete' && !formData.category.trim())}
-            className={`px-6 py-3 text-sm font-medium text-white border border-transparent rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${getSubmitButtonColor()}`}
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {getSubmitButtonText()}
-              </>
-            ) : (
-              getSubmitButtonText()
-            )}
-          </button>
-        </div>
-      </div>
     </Modal>
   );
 }

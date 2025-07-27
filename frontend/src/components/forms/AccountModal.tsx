@@ -179,19 +179,45 @@ export default function AccountModal({
     return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
   };
 
+  const getModalVariant = () => {
+    if (mode === 'delete') return 'danger';
+    return 'default';
+  };
+
+  const renderFooter = () => (
+    <div className="flex justify-end space-x-3">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        form="account-form"
+        disabled={isLoading}
+        className={`px-4 py-2 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${getSubmitButtonColor()}`}
+      >
+        {getSubmitButtonText()}
+      </button>
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={getModalTitle()}
-      size="lg"
+      size="md"
+      variant={getModalVariant()}
+      footer={renderFooter()}
     >
-      <div className="space-y-6">
-        {error && (
-          <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
 
         {mode === 'delete' ? (
           // Delete confirmation
@@ -233,7 +259,7 @@ export default function AccountModal({
           </div>
         ) : (
           // Create/Edit form
-          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
+          <form id="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
             <FormField
               label="Descrição da Conta"
               name="description"
@@ -278,37 +304,6 @@ export default function AccountModal({
             />
           </form>
         )}
-
-        {/* Buttons */}
-        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-600">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isLoading}
-            className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Fechar Modal
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading || (mode !== 'delete' && !formData.description.trim())}
-            className={`px-6 py-3 text-sm font-medium text-white border border-transparent rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${getSubmitButtonColor()}`}
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {getSubmitButtonText()}
-              </>
-            ) : (
-              getSubmitButtonText()
-            )}
-          </button>
-        </div>
-      </div>
     </Modal>
   );
 }
