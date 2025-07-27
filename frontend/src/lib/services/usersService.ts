@@ -55,6 +55,18 @@ export class UsersService {
     return apiRequest<User>(`${this.endpoint}/me/parent`, fetchConfig('PATCH', { parentId: null }));
   }
 
+  // Adicionar um filho (vincular uma conta como child)
+  async addChild(childId: string): Promise<User> {
+    // Primeiro, precisamos obter nosso próprio ID
+    const currentUser = await this.getProfile();
+    return apiRequest<User>(`${this.endpoint}/${childId}/parent`, fetchConfig('PATCH', { parentId: currentUser.id }));
+  }
+
+  // Remover um filho (remover vinculação parent-child)
+  async removeChild(childId: string): Promise<User> {
+    return apiRequest<User>(`${this.endpoint}/${childId}/parent`, fetchConfig('PATCH', { parentId: null }));
+  }
+
   // Criar novo usuário (registro)
   async create(data: UserCreateRequest): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/register`, fetchConfig('POST', data));

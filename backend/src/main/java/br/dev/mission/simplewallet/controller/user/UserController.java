@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.dev.mission.simplewallet.dto.ApiResponse;
 import br.dev.mission.simplewallet.dto.user.UserRequestUpdate;
+import br.dev.mission.simplewallet.dto.user.UserRequestUpdateChildParent;
 import br.dev.mission.simplewallet.dto.user.UserRequestUpdateParent;
 import br.dev.mission.simplewallet.dto.user.UserRequestUpdatePassword;
 import br.dev.mission.simplewallet.dto.user.UserResponse;
@@ -99,5 +100,17 @@ public class UserController {
         return userService.findById(id)
                 .map(user -> ResponseEntity.ok(new ApiResponse<>(200, getMessage("user.found.success"), user)))
                 .orElse(ResponseEntity.ok(new ApiResponse<>(404, getMessage("user.notfound"), null)));
+    }
+
+    @PatchMapping("/{childId}/parent")
+    public ResponseEntity<ApiResponse<UserResponse>> updateChildParent(@PathVariable String childId, @RequestBody @Valid UserRequestUpdateChildParent request) {
+        UUID parentId = request.parentId();
+        
+        UserRequestUpdateParent reqWithIds = new UserRequestUpdateParent(childId, parentId);
+        UserResponse response = userService.updateParent(reqWithIds);
+        
+        String messageKey = parentId != null ? "user.child.add.success" : "user.child.remove.success";
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(200, getMessage(messageKey), response);
+        return ResponseEntity.ok(apiResponse);
     }
 }
