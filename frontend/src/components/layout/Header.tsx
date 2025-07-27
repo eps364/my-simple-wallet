@@ -67,6 +67,12 @@ export default function Header() {
                 >
                   Contas
                 </Link>
+                <Link
+                  href="/categories"
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
+                >
+                  Categorias
+                </Link>
               </nav>
             )}
             

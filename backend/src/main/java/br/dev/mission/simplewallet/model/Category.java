@@ -27,6 +27,9 @@ public class Category {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Column(name = "color", nullable = true)
+    private String color;
+
     public Long getId() {
         return id;
     }
@@ -57,5 +60,13 @@ public class Category {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 }

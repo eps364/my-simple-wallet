@@ -2,25 +2,42 @@
 
 export interface Category {
   id: number;
-  name: string;
-  description?: string;
+  category: string;
+  type: CategoryType;
   color?: string;
-  userId: number;
+  userId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CategoryCreateRequest {
-  name: string;
-  description?: string;
+  category: string;
+  type: number; // 0 para IN, 1 para OUT
   color?: string;
 }
 
 export interface CategoryUpdateRequest {
-  name?: string;
-  description?: string;
+  category?: string;
+  type?: number;
   color?: string;
 }
+
+// Enum para tipos de categoria
+export enum CategoryType {
+  IN = 'IN',
+  EX = 'EX'
+}
+
+// Mapeamento dos números para os tipos
+export const CATEGORY_TYPE_MAP = {
+  0: CategoryType.IN,
+  1: CategoryType.EX
+} as const;
+
+export const CATEGORY_TYPE_REVERSE_MAP = {
+  [CategoryType.IN]: 0,
+  [CategoryType.EX]: 1
+} as const;
 
 // Cores predefinidas para categorias
 export const CATEGORY_COLORS = [

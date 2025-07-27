@@ -41,4 +41,9 @@ export type {
   CategoryUpdateRequest, 
   CategoryColor 
 } from './category';
-export { CATEGORY_COLORS } from './category';
+export { 
+  CategoryType, 
+  CATEGORY_COLORS, 
+  CATEGORY_TYPE_MAP, 
+  CATEGORY_TYPE_REVERSE_MAP 
+} from './category';
