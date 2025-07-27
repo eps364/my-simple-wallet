@@ -12,7 +12,7 @@ export interface Transaction {
   account?: string;
   categoryId?: number;
   category?: string;
-  userId?: number;
+  username?: string;
   createdAt?: string;
   updatedAt?: string;
 }

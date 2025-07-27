@@ -10,8 +10,9 @@ export class AccountsService {
   private readonly endpoint = '/accounts';
 
   // Listar todas as contas
-  async getAll(): Promise<Account[]> {
-    return apiRequest<Account[]>(this.endpoint, fetchConfig());
+  async getAll(isParent?: boolean): Promise<Account[]> {
+    const params = isParent ? '?isParent=true' : '';
+    return apiRequest<Account[]>(`${this.endpoint}${params}`, fetchConfig());
   }
 
   // Buscar conta por ID

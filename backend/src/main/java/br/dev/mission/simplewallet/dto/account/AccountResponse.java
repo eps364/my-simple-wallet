@@ -7,5 +7,7 @@ public record AccountResponse(
     String description,
     BigDecimal balance,
     BigDecimal credit,
-    Integer dueDate
+    Integer dueDate,
+    String userId,
+    String username
 ) {}

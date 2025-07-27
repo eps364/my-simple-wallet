@@ -6,12 +6,14 @@ import br.dev.mission.simplewallet.mapper.category.CategoryMapper;
 import br.dev.mission.simplewallet.model.Category;
 import br.dev.mission.simplewallet.repository.category.CategoryRepository;
 import br.dev.mission.simplewallet.repository.transaction.TransactionRepository;
+import br.dev.mission.simplewallet.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class CategoryService {
@@ -21,6 +23,8 @@ public class CategoryService {
     private CategoryMapper categoryMapper;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public CategoryResponse create(CategoryRequest request, String userId) {
         Category category = categoryMapper.toEntity(request, userId);
@@ -29,6 +33,24 @@ public class CategoryService {
 
     public List<CategoryResponse> findByUserId(String userId) {
         return categoryRepository.findByUserId(userId).stream().map(categoryMapper::toResponse).toList();
+    }
+
+    public List<CategoryResponse> findAllForFamily(String userId) {
+        // Criar lista com o userId atual
+        List<String> userIds = new java.util.ArrayList<>();
+        userIds.add(userId);
+        
+        // Buscar todos os filhos (usuários que têm este usuário como parent) e adicionar à lista
+        List<String> childrenIds = userRepository.findByParentId(UUID.fromString(userId))
+                .stream()
+                .map(user -> user.getId().toString())
+                .toList();
+        userIds.addAll(childrenIds);
+        
+        // Buscar todas as categorias em uma única consulta
+        List<Category> categories = categoryRepository.findByUserIdIn(userIds);
+        
+        return categories.stream().map(categoryMapper::toResponse).toList();
     }
 
     public Optional<CategoryResponse> findById(Long id, String userId) {

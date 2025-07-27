@@ -32,8 +32,9 @@ export class TransactionsService {
   }
 
   // Listar todas as transações
-  async getAll(): Promise<Transaction[]> {
-    return apiRequest<Transaction[]>(this.endpoint, fetchConfig());
+  async getAll(isParent?: boolean): Promise<Transaction[]> {
+    const params = isParent ? '?isParent=true' : '';
+    return apiRequest<Transaction[]>(`${this.endpoint}${params}`, fetchConfig());
   }
 
   // Buscar transação por ID

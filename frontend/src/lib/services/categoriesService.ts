@@ -10,8 +10,9 @@ export class CategoriesService {
   private readonly endpoint = '/categories';
 
   // Listar todas as categorias
-  async getAll(): Promise<Category[]> {
-    return apiRequest<Category[]>(this.endpoint, fetchConfig());
+  async getAll(isParent?: boolean): Promise<Category[]> {
+    const params = isParent ? '?isParent=true' : '';
+    return apiRequest<Category[]>(`${this.endpoint}${params}`, fetchConfig());
   }
 
   // Buscar categoria por ID

@@ -6,5 +6,7 @@ public record CategoryResponse(
     Long id, 
     String category, 
     TransactionType type,
-    String color
+    String color,
+    String userId,
+    String username
 ) {}

@@ -22,6 +22,7 @@ export interface UserUpdateRequest {
   username?: string;
   email?: string;
   name?: string;
+  password?: string;
 }
 
 export interface PasswordUpdateRequest {

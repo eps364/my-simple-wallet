@@ -37,9 +37,16 @@ public class AccountController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AccountResponse>>> list() {
+    public ResponseEntity<ApiResponse<List<AccountResponse>>> list(@RequestParam(required = false) Boolean isParent) {
         String userId = getLoggedUserId();
-        List<AccountResponse> accounts = accountService.findByUserId(userId);
+        List<AccountResponse> accounts;
+        
+        if (Boolean.TRUE.equals(isParent)) {
+            accounts = accountService.findAllForFamily(userId);
+        } else {
+            accounts = accountService.findByUserId(userId);
+        }
+        
         return ResponseEntity.ok(new ApiResponse<>(200, "Contas encontradas", accounts));
     }
 

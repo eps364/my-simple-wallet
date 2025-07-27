@@ -4,20 +4,25 @@ import { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/lib/types/transaction';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
+import { User } from '@/lib/types/user';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
+import { usersService } from '@/lib/services/usersService';
+import { useFamilyManagement } from '@/lib/hooks/useParentMonitoring';
 import TransactionModal from '@/components/forms/TransactionModal';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'liquidated' | 'pending'>('all');
   const [sortBy, setSortBy] = useState<'dueDate' | 'amount' | 'description' | 'category' | 'status' | 'effectiveDate'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const { isManagementEnabled } = useFamilyManagement();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     mode: 'create' | 'edit' | 'delete' | 'settle';
@@ -31,22 +36,35 @@ export default function TransactionsPage() {
     loadData();
   }, []);
 
+  // Recarregar dados quando o gerenciamento familiar for alterado
+  useEffect(() => {
+    if (currentUser) {
+      loadData();
+    }
+  }, [isManagementEnabled]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
       setError('');
       console.log('Carregando dados da API...');
       
-      const [transactionsData, accountsData, categoriesData] = await Promise.all([
-        transactionsService.getAll(),
-        accountsService.getAll(),
-        categoriesService.getAll()
+      // Enviar isParent=true quando o gerenciamento familiar estiver ativo
+      const shouldUseParentMode = isManagementEnabled;
+      console.log('Gerenciamento Familiar ativo:', shouldUseParentMode);
+      
+      const [transactionsData, accountsData, categoriesData, userData] = await Promise.all([
+        transactionsService.getAll(shouldUseParentMode),
+        accountsService.getAll(shouldUseParentMode),
+        categoriesService.getAll(shouldUseParentMode),
+        usersService.getProfile()
       ]);
       
-      console.log('Dados carregados:', { transactionsData, accountsData, categoriesData });
+      console.log('Dados carregados:', { transactionsData, accountsData, categoriesData, userData });
       setTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);
+      setCurrentUser(userData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setError('Erro ao carregar dados. Tente novamente.');
@@ -86,6 +104,11 @@ export default function TransactionsPage() {
     if (!categoryId) return 'Sem categoria';
     const category = categories.find(cat => cat.id === categoryId);
     return category?.category || 'Categoria não encontrada';
+  };
+
+  // Verificar se uma transação pode ser editada/deletada (apenas transações do usuário logado)
+  const canEditTransaction = (transaction: Transaction): boolean => {
+    return currentUser ? transaction.username === currentUser.username : false;
   };
 
   // Função para gerar cor baseada no tipo de transação
@@ -442,38 +465,67 @@ export default function TransactionsPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex space-x-2 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <button
-                  onClick={() => openModal('edit', transaction)}
-                  className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center"
-                  title="Editar transação"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Editar
-                </button>
-                {!transaction.effectiveDate && (
-                  <button
-                    onClick={() => openModal('settle', transaction)}
-                    className="flex-1 px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors flex items-center justify-center"
-                    title="Liquidar transação"
-                  >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Liquidar
-                  </button>
-                )}
-                <button
-                  onClick={() => openModal('delete', transaction)}
-                  className="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  title="Excluir transação"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
+                {/* Username (lado esquerdo) */}
+                <div className="flex items-center min-w-0">
+                  {isManagementEnabled && currentUser?.isParent && transaction.username && (
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {transaction.username}
+                    </span>
+                  )}
+                </div>
+
+                {/* Botões de ação (lado direito) */}
+                <div className="flex space-x-2">
+                  {canEditTransaction(transaction) ? (
+                    <>
+                      <button
+                        onClick={() => openModal('edit', transaction)}
+                        className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center"
+                        title="Editar transação"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Editar
+                      </button>
+                      {!transaction.effectiveDate && (
+                        <button
+                          onClick={() => openModal('settle', transaction)}
+                          className="px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors flex items-center justify-center"
+                          title="Liquidar transação"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Liquidar
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openModal('delete', transaction)}
+                        className="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Excluir transação"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 text-center rounded-lg bg-gray-50 dark:bg-gray-700">
+                      <span className="flex items-center justify-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Apenas Visualização
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
