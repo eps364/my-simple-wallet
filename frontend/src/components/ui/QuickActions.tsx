@@ -1,12 +1,13 @@
 "use client";
 import Link from 'next/link';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 interface QuickAction {
   readonly href: string;
   readonly icon: React.ReactNode;
   readonly title: string;
   readonly description: string;
-  readonly color: 'blue' | 'green' | 'purple' | 'orange' | 'red';
+  readonly color: 'primary' | 'success' | 'secondary' | 'warning' | 'error';
 }
 
 interface QuickActionsProps {
