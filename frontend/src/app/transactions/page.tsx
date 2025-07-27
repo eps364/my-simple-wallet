@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Transaction, TransactionType } from '@/lib/types/transaction';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
@@ -9,7 +9,6 @@ import { transactionsService } from '@/lib/services/transactionsService';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { usersService } from '@/lib/services/usersService';
-import { useFamilyManagement } from '@/lib/hooks/useParentMonitoring';
 import TransactionModal from '@/components/forms/TransactionModal';
 
 export default function TransactionsPage() {
@@ -22,7 +21,7 @@ export default function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'liquidated' | 'pending'>('all');
   const [sortBy, setSortBy] = useState<'dueDate' | 'amount' | 'description' | 'category' | 'status' | 'effectiveDate'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const { isManagementEnabled } = useFamilyManagement();
+  const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     mode: 'create' | 'edit' | 'delete' | 'settle';
@@ -32,25 +31,21 @@ export default function TransactionsPage() {
     mode: 'create'
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Função para buscar estado do gerenciamento familiar do localStorage
+  const getFamilyManagementEnabled = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem('familyManagementEnabled');
+    return stored === 'true';
+  };
 
-  // Recarregar dados quando o gerenciamento familiar for alterado
-  useEffect(() => {
-    if (currentUser) {
-      loadData();
-    }
-  }, [isManagementEnabled]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
       console.log('Carregando dados da API...');
       
       // Enviar isParent=true quando o gerenciamento familiar estiver ativo
-      const shouldUseParentMode = isManagementEnabled;
+      const shouldUseParentMode = getFamilyManagementEnabled();
       console.log('Gerenciamento Familiar ativo:', shouldUseParentMode);
       
       const [transactionsData, accountsData, categoriesData, userData] = await Promise.all([
@@ -71,7 +66,37 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Remover dependência desnecessária
+
+  useEffect(() => {
+    // Sincronizar com localStorage na inicialização
+    setFamilyManagementEnabled(getFamilyManagementEnabled());
+    
+    // Listener para mudanças no localStorage
+    const handleStorageChange = () => {
+      const newValue = getFamilyManagementEnabled();
+      setFamilyManagementEnabled(newValue);
+      // Recarregar dados quando o estado mudar
+      if (currentUser) {
+        loadData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listener customizado para mudanças feitas na mesma aba
+    window.addEventListener('familyManagementChanged', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('familyManagementChanged', handleStorageChange);
+    };
+  }, [currentUser, loadData]);
+
+  // Carregar dados inicialmente
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const openModal = (mode: 'create' | 'edit' | 'delete' | 'settle', transaction?: Transaction) => {
     setModalState({
@@ -109,13 +134,6 @@ export default function TransactionsPage() {
   // Verificar se uma transação pode ser editada/deletada (apenas transações do usuário logado)
   const canEditTransaction = (transaction: Transaction): boolean => {
     return currentUser ? transaction.username === currentUser.username : false;
-  };
-
-  // Função para gerar cor baseada no tipo de transação
-  const getTransactionTypeColor = (type: TransactionType): string => {
-    return type === TransactionType.INCOME 
-      ? 'bg-green-100 text-green-800 border-green-200'
-      : 'bg-red-100 text-red-800 border-red-200';
   };
 
   // Função para formatar data
@@ -468,7 +486,7 @@ export default function TransactionsPage() {
               <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
                 {/* Username (lado esquerdo) */}
                 <div className="flex items-center min-w-0">
-                  {isManagementEnabled && currentUser?.isParent && transaction.username && (
+                  {familyManagementEnabled && currentUser?.isParent && transaction.username && (
                     <span className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

@@ -4,19 +4,32 @@ import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
 import { clearAuthData } from '@/lib/apiService';
 import { User } from '@/lib/types/user';
-import { useFamilyManagement } from '@/lib/hooks/useParentMonitoring';
 
 interface UserMenuProps {
   readonly onLogout?: () => void;
 }
 
+// Função para acessar diretamente o localStorage
+const getFamilyManagementEnabled = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('familyManagementEnabled') === 'true';
+};
+
+// Função para alterar o estado no localStorage
+const setFamilyManagementEnabled = (enabled: boolean): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('familyManagementEnabled', enabled.toString());
+  // Disparar evento customizado para notificar outras abas/componentes
+  window.dispatchEvent(new CustomEvent('familyManagementChanged'));
+};
+
 export default function UserMenu({ onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [familyManagementEnabled, setFamilyManagementEnabledState] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { isManagementEnabled } = useFamilyManagement();
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -33,6 +46,22 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
 
   useEffect(() => {
     loadUserProfile();
+    
+    // Sincronizar com localStorage na inicialização
+    setFamilyManagementEnabledState(getFamilyManagementEnabled());
+    
+    // Listener para mudanças no localStorage
+    const handleStorageChange = () => {
+      setFamilyManagementEnabledState(getFamilyManagementEnabled());
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('familyManagementChanged', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('familyManagementChanged', handleStorageChange);
+    };
   }, [loadUserProfile]);
 
   // Fechar menu ao clicar fora
@@ -74,6 +103,12 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
     router.push('/transactions');
   };
 
+  const handleToggleFamilyManagement = () => {
+    const newValue = !familyManagementEnabled;
+    setFamilyManagementEnabled(newValue);
+    setFamilyManagementEnabledState(newValue);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2">
@@ -100,7 +135,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
         
         {/* Username */}
         <span className={`font-medium transition-colors ${
-          user.isParent && isManagementEnabled 
+          user.isParent && familyManagementEnabled 
             ? 'text-green-600 dark:text-green-400' 
             : 'text-gray-700 dark:text-gray-300'
         }`}>
@@ -110,11 +145,11 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
         {/* Indicador de gerenciamento para Parents */}
         {user.isParent && (
           <div className={`w-2 h-2 rounded-full transition-colors ${
-            isManagementEnabled 
+            familyManagementEnabled 
               ? 'bg-green-500 animate-pulse' 
               : 'bg-gray-400'
           }`} 
-          title={isManagementEnabled ? 'Gerenciamento Ativo' : 'Gerenciamento Inativo'}
+          title={familyManagementEnabled ? 'Gerenciamento Ativo' : 'Gerenciamento Inativo'}
           />
         )}
         
@@ -154,6 +189,28 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
             </svg>
             Meu Perfil
           </button>
+
+          {/* Toggle de Gerenciamento Familiar - apenas para Parents */}
+          {user.isParent && (
+            <button
+              onClick={handleToggleFamilyManagement}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Gerenciamento Familiar
+              </div>
+              <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                familyManagementEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+              }`}>
+                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                  familyManagementEnabled ? 'translate-x-5' : 'translate-x-1'
+                }`} />
+              </div>
+            </button>
+          )}
 
           <hr className="border-gray-200 dark:border-slate-600" />
 
