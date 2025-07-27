@@ -24,6 +24,8 @@ export default function CategoriesPage() {
       setError('');
       const categoriesData = await categoriesService.getAll();
       setCategories(categoriesData);
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
       setError('Erro ao carregar categorias. Tente novamente.');
     } finally {
       setIsLoading(false);
