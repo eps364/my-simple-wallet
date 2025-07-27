@@ -42,11 +42,9 @@ export default function TransactionsPage() {
     try {
       setIsLoading(true);
       setError('');
-      console.log('Carregando dados da API...');
       
       // Enviar isParent=true quando o gerenciamento familiar estiver ativo
       const shouldUseParentMode = getFamilyManagementEnabled();
-      console.log('Gerenciamento Familiar ativo:', shouldUseParentMode);
       
       const [transactionsData, accountsData, categoriesData, userData] = await Promise.all([
         transactionsService.getAll(shouldUseParentMode),
@@ -55,13 +53,11 @@ export default function TransactionsPage() {
         usersService.getProfile()
       ]);
       
-      console.log('Dados carregados:', { transactionsData, accountsData, categoriesData, userData });
       setTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+    } catch {
       setError('Erro ao carregar dados. Tente novamente.');
     } finally {
       setIsLoading(false);

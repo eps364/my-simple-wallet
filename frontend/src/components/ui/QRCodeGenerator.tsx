@@ -24,10 +24,8 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
         }
       })
       .then(() => {
-        console.log('QR Code gerado com sucesso');
       })
       .catch((error: unknown) => {
-        console.error('Erro ao gerar QR Code:', error);
       });
     }
   }, [value, size]);
@@ -38,7 +36,6 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Erro ao copiar para área de transferência:', error);
       // Fallback para navegadores que não suportam clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = value;
@@ -52,7 +49,6 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (fallbackError) {
-        console.error('Fallback copy failed:', fallbackError);
       }
       document.body.removeChild(textArea);
     }

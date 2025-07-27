@@ -97,7 +97,6 @@ export default function TransactionModal({
       setAccounts(accountsData);
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
       setError('Erro ao carregar contas e categorias');
     } finally {
       setIsLoadingData(false);
@@ -142,7 +141,6 @@ export default function TransactionModal({
       await transactionsService.create(formData);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao criar transação:', error);
       setError('Erro ao criar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -191,7 +189,6 @@ export default function TransactionModal({
       await transactionsService.update(transaction.id, updateData);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao atualizar transação:', error);
       setError('Erro ao atualizar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -207,7 +204,6 @@ export default function TransactionModal({
       await transactionsService.delete(transaction.id);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao excluir transação:', error);
       setError('Erro ao excluir transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -238,7 +234,6 @@ export default function TransactionModal({
       });
       onSuccess();
     } catch (error) {
-      console.error('Erro ao liquidar transação:', error);
       setError('Erro ao liquidar transação. Tente novamente.');
     } finally {
       setIsLoading(false);

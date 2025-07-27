@@ -95,7 +95,6 @@ export default function UserForm(props: UserFormProps) {
       handleClose();
     } catch (error) {
       setErrors('Erro ao salvar usuário. Tente novamente.');
-      console.error('Erro ao salvar usuário:', error);
     }
   };
 

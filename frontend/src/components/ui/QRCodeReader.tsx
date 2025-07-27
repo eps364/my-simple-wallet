@@ -44,8 +44,7 @@ export default function QRCodeReader({ onScan, onError, isActive, className = ''
         return;
       }
 
-      scanner.start().catch((error) => {
-        console.error('Error starting QR scanner:', error);
+      scanner.start().catch(() => {
         onError?.('Erro ao iniciar a câmera');
       });
     });
@@ -60,8 +59,7 @@ export default function QRCodeReader({ onScan, onError, isActive, className = ''
     if (!qrScanner) return;
 
     if (isActive) {
-      qrScanner.start().catch((error) => {
-        console.error('Error starting QR scanner:', error);
+      qrScanner.start().catch(() => {
         onError?.('Erro ao iniciar a câmera');
       });
     } else {

@@ -71,8 +71,7 @@ export default function AccountModal({
 
       await accountsService.create(dataToSend);
       onSuccess();
-    } catch (error) {
-      console.error('Erro ao criar conta:', error);
+    } catch {
       setError('Erro ao criar conta. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -102,8 +101,7 @@ export default function AccountModal({
 
       await accountsService.update(account.id, updateData);
       onSuccess();
-    } catch (error) {
-      console.error('Erro ao atualizar conta:', error);
+    } catch {
       setError('Erro ao atualizar conta. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -119,8 +117,7 @@ export default function AccountModal({
 
       await accountsService.delete(account.id);
       onSuccess();
-    } catch (error) {
-      console.error('Erro ao excluir conta:', error);
+    } catch {
       setError('Erro ao excluir conta. Tente novamente.');
     } finally {
       setIsLoading(false);

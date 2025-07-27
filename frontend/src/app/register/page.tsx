@@ -34,80 +34,42 @@ export default function RegisterPage() {
       return;
     }
 
-    console.log('📝 Iniciando processo de registro...', { username, email });
-
     try {
-      console.log('📡 Enviando requisição para API de registro...');
-      const data = await authService.register(username, email, password);
-      
-      console.log('✅ Registro realizado com sucesso!', {
-        userId: data.id,
-        username: data.username,
-        email: data.email
-      });
+      await authService.register(username, email, password);
       
       setSuccess(true);
       
       // Faz login automaticamente após o registro
-      console.log('🔐 Fazendo login automático após registro...');
       setAutoLoggingIn(true);
       try {
         const loginData = await authService.login(username, password);
         
-        console.log('✅ Login automático realizado com sucesso!', {
-          tokenReceived: !!loginData.token,
-          refreshTokenReceived: !!loginData.refreshToken,
-          tokenType: loginData.tokenType,
-          expiresAt: loginData.expiresAt,
-          expiresIn: loginData.expiresIn
-        });
-        
         if (loginData.token) {
-          console.log('💾 Dados de autenticação armazenados no localStorage');
-          
           // Dispara evento de storage para atualizar o Header
           window.dispatchEvent(new Event('storage'));
-          console.log('📢 Evento de storage disparado para atualizar UI');
           
           // Espera 1 segundo para mostrar o sucesso e depois redireciona
           setTimeout(() => {
-            console.log('🔄 Redirecionando para dashboard...');
             router.push('/dashboard');
           }, 1000);
         } else {
           // Se o login automático falhar, redireciona para a página de login
           setTimeout(() => {
-            console.log('🔄 Login automático falhou, redirecionando para página de login...');
             router.push('/login');
           }, 2000);
         }
-      } catch (loginError) {
-        console.error('💥 Erro no login automático:', loginError);
+      } catch {
         // Se o login automático falhar, redireciona para a página de login
         setTimeout(() => {
-          console.log('🔄 Login automático falhou, redirecionando para página de login...');
           router.push('/login');
         }, 2000);
       }
       
     } catch (error) {
-      console.error('💥 Erro ao fazer registro:', error);
-      
-      // Log detalhado do erro
-      if (error instanceof Error) {
-        console.error('📋 Detalhes do erro:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        });
-      }
-      
       const errorMessage = error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
-      console.error('🚨 Mensagem de erro para usuário:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
-      console.log('🏁 Processo de registro finalizado');
     }
   };
 

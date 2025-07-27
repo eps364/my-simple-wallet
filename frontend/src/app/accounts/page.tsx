@@ -39,12 +39,9 @@ export default function AccountsPage() {
     try {
       setIsLoading(true);
       setError('');
-      console.log('Carregando contas da API...', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/accounts`);
       const accountsData = await accountsService.getAll();
-      console.log('Contas carregadas:', accountsData);
       setAccounts(accountsData);
-    } catch (error) {
-      console.error('Erro ao carregar contas:', error);
+    } catch {
       setError('Erro ao carregar contas. Tente novamente.');
     } finally {
       setIsLoading(false);

@@ -35,8 +35,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
     try {
       const userData = await usersService.getProfile();
       setUser(userData);
-    } catch (error) {
-      console.error('Erro ao carregar perfil do usuário:', error);
+    } catch {
       clearAuthData();
       if (onLogout) onLogout();
     } finally {

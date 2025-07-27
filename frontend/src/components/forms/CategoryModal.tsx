@@ -61,7 +61,6 @@ export default function CategoryModal({
       await categoriesService.create(formData);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao criar categoria:', error);
       setError('Erro ao criar categoria. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -90,7 +89,6 @@ export default function CategoryModal({
       await categoriesService.update(category.id, updateData);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao atualizar categoria:', error);
       setError('Erro ao atualizar categoria. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -107,7 +105,6 @@ export default function CategoryModal({
       await categoriesService.delete(category.id);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao excluir categoria:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir categoria. Tente novamente.';
       setError(errorMessage);
     } finally {

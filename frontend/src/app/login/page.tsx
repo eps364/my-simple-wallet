@@ -16,53 +16,24 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    console.log('🔐 Iniciando processo de login...', { username });
-
     try {
       // Chamada para a API de autenticação usando o authService corrigido
-      console.log('📡 Enviando requisição para API de login...');
       const data = await authService.login(username, password);
       
-      console.log('✅ Login realizado com sucesso!', {
-        tokenReceived: !!data.token,
-        refreshTokenReceived: !!data.refreshToken,
-        tokenType: data.tokenType,
-        expiresAt: data.expiresAt,
-        expiresIn: data.expiresIn
-      });
-      
       if (data.token) {
-        console.log('💾 Dados de autenticação armazenados no localStorage');
-        
         // Dispara evento de storage para atualizar o Header
         window.dispatchEvent(new Event('storage'));
-        console.log('📢 Evento de storage disparado para atualizar UI');
         
-        console.log('🔄 Redirecionando para dashboard...');
         router.push('/dashboard');
       } else {
         const errorMsg = 'Token não recebido da API';
-        console.error('❌ Erro no login:', errorMsg);
         setError(errorMsg);
       }
     } catch (error) {
-      console.error('💥 Erro ao fazer login:', error);
-      
-      // Log detalhado do erro
-      if (error instanceof Error) {
-        console.error('📋 Detalhes do erro:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        });
-      }
-      
       const errorMessage = error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
-      console.error('🚨 Mensagem de erro para usuário:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
-      console.log('🏁 Processo de login finalizado');
     }
   };
 

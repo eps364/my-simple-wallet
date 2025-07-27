@@ -50,8 +50,7 @@ export default function ProfilePage() {
         username: userProfile.username,
         email: userProfile.email || ''
       });
-    } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
+    } catch {
       setError('Erro ao carregar dados do perfil');
     } finally {
       setLoading(false);
@@ -67,8 +66,7 @@ export default function ProfilePage() {
       setShowEditProfile(false);
       setSuccess('Perfil atualizado com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+    } catch {
       setError('Erro ao atualizar perfil');
     }
   };
@@ -91,8 +89,7 @@ export default function ProfilePage() {
       setConfirmPassword('');
       setSuccess('Senha alterada com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      console.error('Erro ao alterar senha:', error);
+    } catch {
       setError('Erro ao alterar senha');
     }
   };
@@ -107,8 +104,7 @@ export default function ProfilePage() {
       setUseQRScanner(false);
       setSuccess('Parent adicionado com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      console.error('Erro ao adicionar parent:', error);
+    } catch {
       setError('Erro ao adicionar parent');
     }
   };
@@ -134,8 +130,7 @@ export default function ProfilePage() {
       setParentData(null);
       setSuccess('Parent removido com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      console.error('Erro ao remover parent:', error);
+    } catch {
       setError('Erro ao remover parent');
     }
   };
@@ -152,8 +147,7 @@ export default function ProfilePage() {
         email: parentUser.email || 'Email não informado'
       });
       setShowRemoveParentModal(true);
-    } catch (error) {
-      console.error('Erro ao buscar dados do parent:', error);
+    } catch {
       setError('Erro ao buscar dados do parent');
     }
   };
