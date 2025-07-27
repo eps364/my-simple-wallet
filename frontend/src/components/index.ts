@@ -9,3 +9,6 @@ export * from './layout';
 
 // Authentication Components - Protected routes and auth guards
 export * from './auth';
+
+// Reports Components - Charts and analytics components
+export * from './reports';
