@@ -25,18 +25,16 @@ export default function QRCodeReader({ onScan, onError, isActive, className = ''
       },
       {
         onDecodeError: (error) => {
-          // Não precisamos logar todos os erros de decode, apenas quando não consegue ler
           console.debug('QR decode error:', error);
         },
         highlightScanRegion: true,
         highlightCodeOutline: true,
-        preferredCamera: 'environment' // Prefer back camera
+        preferredCamera: 'environment' 
       }
     );
 
     setQrScanner(scanner);
 
-    // Verificar se há câmera disponível
     QrScanner.hasCamera().then((hasCamera) => {
       setHasCamera(hasCamera);
       if (!hasCamera) {

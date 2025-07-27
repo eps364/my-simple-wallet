@@ -32,7 +32,7 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-700">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo e Nome */}
+          
           <Link 
             href={logged ? "/dashboard" : "/"} 
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -49,9 +49,9 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Menu de ações e Botão de Login/Logout */}
+          
           <div className="flex items-center gap-3">
-            {/* Navigation - apenas para usuários logados em desktop */}
+            
             {logged && (
               <nav className="hidden lg:flex items-center gap-4 mr-4">
                 <Link 
@@ -67,7 +67,7 @@ export default function Header() {
               </nav>
             )}
             
-            {/* Desktop: Botão de Login/Logout ou UserMenu */}
+            
             <div className="hidden lg:flex">
               {logged ? (
                 <UserMenu onLogout={handleLogout} />
@@ -95,7 +95,7 @@ export default function Header() {
               )}
             </div>
 
-            {/* Mobile: Botão do menu hamburger */}
+            
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="lg:hidden p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
@@ -108,7 +108,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      
       <MobileMenu 
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}

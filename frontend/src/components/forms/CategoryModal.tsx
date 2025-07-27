@@ -23,13 +23,12 @@ export default function CategoryModal({
   const [formData, setFormData] = useState<CategoryCreateRequest>({
     category: '',
     type: 0,
-    color: CATEGORY_COLORS[0] // Cor padrão
+    color: CATEGORY_COLORS[0] 
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // Atualizar formulário quando category prop mudar
   useEffect(() => {
     if (category && (mode === 'edit' || mode === 'delete')) {
       setFormData({
@@ -52,7 +51,6 @@ export default function CategoryModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.category.trim()) {
         setError('Nome da categoria é obrigatório');
         return;
@@ -74,7 +72,6 @@ export default function CategoryModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.category.trim()) {
         setError('Nome da categoria é obrigatório');
         return;
@@ -206,7 +203,6 @@ export default function CategoryModal({
       )}
 
       {mode === 'delete' ? (
-        // Delete confirmation
         <div className="space-y-6">
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <div className="flex items-start space-x-3">
@@ -248,7 +244,6 @@ export default function CategoryModal({
           )}
         </div>
       ) : (
-        // Create/Edit form
         <form id="category-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
             <FormField
               label="Nome da Categoria"

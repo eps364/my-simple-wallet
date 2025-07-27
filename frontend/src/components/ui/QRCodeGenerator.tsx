@@ -36,7 +36,6 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      // Fallback para navegadores que não suportam clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = value;
       textArea.style.position = 'fixed';
@@ -44,7 +43,6 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
       document.body.appendChild(textArea);
       textArea.select();
       try {
-        // Fallback method for older browsers
         document.execCommand('copy');
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);

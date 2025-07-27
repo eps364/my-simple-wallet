@@ -9,17 +9,14 @@ interface UserMenuProps {
   readonly onLogout?: () => void;
 }
 
-// Função para acessar diretamente o localStorage
 const getFamilyManagementEnabled = (): boolean => {
   if (typeof window === 'undefined') return false;
   return localStorage.getItem('familyManagementEnabled') === 'true';
 };
 
-// Função para alterar o estado no localStorage
 const setFamilyManagementEnabled = (enabled: boolean): void => {
   if (typeof window === 'undefined') return;
   localStorage.setItem('familyManagementEnabled', enabled.toString());
-  // Disparar evento customizado para notificar outras abas/componentes
   window.dispatchEvent(new CustomEvent('familyManagementChanged'));
 };
 
@@ -46,10 +43,8 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
   useEffect(() => {
     loadUserProfile();
     
-    // Sincronizar com localStorage na inicialização
     setFamilyManagementEnabledState(getFamilyManagementEnabled());
     
-    // Listener para mudanças no localStorage
     const handleStorageChange = () => {
       setFamilyManagementEnabledState(getFamilyManagementEnabled());
     };
@@ -63,7 +58,6 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
     };
   }, [loadUserProfile]);
 
-  // Fechar menu ao clicar fora
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -127,12 +121,12 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
       >
-        {/* Avatar inicial */}
+        
         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
           {user.username.charAt(0).toUpperCase()}
         </div>
         
-        {/* Username */}
+        
         <span className={`font-medium transition-colors ${
           user.isParent && familyManagementEnabled 
             ? 'text-green-600 dark:text-green-400' 
@@ -141,7 +135,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
           {user.username}
         </span>
         
-        {/* Indicador de gerenciamento para Parents */}
+        
         {user.isParent && (
           <div className={`w-2 h-2 rounded-full transition-colors ${
             familyManagementEnabled 
@@ -152,7 +146,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
           />
         )}
         
-        {/* Ícone dropdown */}
+        
         <svg 
           className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none" 
@@ -163,10 +157,10 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
         </svg>
       </button>
 
-      {/* Dropdown Menu */}
+      
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-600 py-1 z-50">
-          {/* Informações do usuário */}
+          
           <div className="px-4 py-2 border-b border-gray-200 dark:border-slate-600">
             <p className="text-sm font-medium text-gray-900 dark:text-white">
               {user.username}
@@ -178,7 +172,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
             )}
           </div>
 
-          {/* Opções do menu */}
+          
           <button
             onClick={handleProfileClick}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-2"
@@ -189,7 +183,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
             Meu Perfil
           </button>
 
-          {/* Toggle de Gerenciamento Familiar - apenas para Parents */}
+          
           {user.isParent && (
             <button
               onClick={handleToggleFamilyManagement}
@@ -213,7 +207,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
 
           <hr className="border-gray-200 dark:border-slate-600" />
 
-          {/* Navegação rápida */}
+          
           <button
             onClick={handleAccountsClick}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-2"

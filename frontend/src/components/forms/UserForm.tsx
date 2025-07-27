@@ -41,7 +41,6 @@ export default function UserForm(props: UserFormProps) {
     try {
       setErrors('');
       
-      // Validações básicas
       if (!isEditMode && !formData.username.trim()) {
         setErrors('Nome de usuário é obrigatório');
         return;
@@ -67,14 +66,12 @@ export default function UserForm(props: UserFormProps) {
         return;
       }
 
-      // Validação básica de email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
         setErrors('Email inválido');
         return;
       }
 
-      // Prepara os dados para envio
       if (isEditMode) {
         const submitData: UserUpdateRequest = {
           email: formData.email,

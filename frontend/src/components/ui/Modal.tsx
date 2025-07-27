@@ -22,7 +22,6 @@ export default function Modal({
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Fecha o modal quando pressiona ESC
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -32,10 +31,8 @@ export default function Modal({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      // Previne scroll do body quando modal está aberto
       document.body.style.overflow = 'hidden';
       
-      // Focus no modal quando abrir
       setTimeout(() => {
         modalRef.current?.focus();
       }, 100);
@@ -49,23 +46,21 @@ export default function Modal({
 
   if (!isOpen) return null;
 
-  // Define a largura do painel
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
-        return 'w-80'; // 320px
+        return 'w-80'; 
       case 'md':
-        return 'w-96'; // 384px
+        return 'w-96'; 
       case 'lg':
-        return 'w-[32rem]'; // 512px
+        return 'w-[32rem]'; 
       case 'xl':
-        return 'w-[40rem]'; // 640px
+        return 'w-[40rem]'; 
       default:
-        return 'w-96'; // 384px
+        return 'w-96'; 
     }
   };
 
-  // Define as cores do header baseado na variante
   const getHeaderClasses = () => {
     const baseClasses = 'px-6 py-5 border-b border-gray-200 dark:border-gray-600 flex-shrink-0';
     
@@ -81,7 +76,6 @@ export default function Modal({
     }
   };
 
-  // Define as cores do título baseado na variante
   const getTitleClasses = () => {
     const baseClasses = 'text-lg font-semibold leading-6';
     
@@ -97,7 +91,6 @@ export default function Modal({
     }
   };
 
-  // Define o ícone baseado na variante
   const getVariantIcon = () => {
     switch (variant) {
       case 'danger':
@@ -129,7 +122,7 @@ export default function Modal({
       className="fixed inset-0 z-50 overflow-hidden bg-transparent"
       aria-labelledby="modal-title"
     >
-      {/* Backdrop */}
+      
       <div 
         className={`fixed inset-0 bg-gray-500 transition-opacity duration-300 ${
           isOpen ? 'bg-opacity-75' : 'bg-opacity-0'
@@ -138,7 +131,7 @@ export default function Modal({
         onClick={onClose}
       ></div>
 
-      {/* Slide Panel */}
+      
       <div className="fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
         <div 
           ref={modalRef}
@@ -147,7 +140,7 @@ export default function Modal({
           } relative z-10 bg-white dark:bg-slate-800 shadow-2xl flex flex-col h-full ${getSizeClasses()}`}
           tabIndex={-1}
         >
-          {/* Header */}
+          
           <div className={getHeaderClasses()}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -182,12 +175,12 @@ export default function Modal({
             </div>
           </div>
 
-          {/* Content */}
+          
           <div className="flex-1 overflow-y-auto px-6 py-6">
             {children}
           </div>
 
-          {/* Footer */}
+          
           {footer && (
             <div className="bg-gray-50 dark:bg-slate-700 px-6 py-5 border-t border-gray-200 dark:border-gray-600 flex-shrink-0">
               {footer}

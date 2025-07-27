@@ -20,7 +20,7 @@ export default function MobileMenu({ isOpen, onClose, isLoggedIn, onLogout }: Mo
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      {/* Overlay */}
+      
       <button 
         className="fixed inset-0 bg-black bg-opacity-50 cursor-default" 
         onClick={onClose}
@@ -28,7 +28,7 @@ export default function MobileMenu({ isOpen, onClose, isLoggedIn, onLogout }: Mo
         type="button"
       />
       
-      {/* Menu */}
+      
       <div className="fixed top-0 right-0 h-full w-64 bg-white dark:bg-slate-800 shadow-lg">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-600">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -47,7 +47,7 @@ export default function MobileMenu({ isOpen, onClose, isLoggedIn, onLogout }: Mo
         <nav className="p-4 space-y-2">
           {isLoggedIn ? (
             <>
-              {/* Menu para usuários logados */}
+              
               <button
                 onClick={() => handleNavigation('/dashboard')}
                 className="w-full text-left p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg flex items-center gap-3"
@@ -91,7 +91,7 @@ export default function MobileMenu({ isOpen, onClose, isLoggedIn, onLogout }: Mo
 
               <hr className="border-gray-200 dark:border-slate-600 my-3" />
 
-              {/* Seção de Perfil */}
+              
               <div className="px-3 mb-2">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Perfil & Configurações
@@ -122,7 +122,7 @@ export default function MobileMenu({ isOpen, onClose, isLoggedIn, onLogout }: Mo
             </>
           ) : (
             <>
-              {/* Menu para usuários não logados */}
+              
               <button
                 onClick={() => handleNavigation('/')}
                 className="w-full text-left p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg flex items-center gap-3"

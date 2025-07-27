@@ -30,7 +30,6 @@ export default function AccountModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // Atualizar formulário quando account prop mudar
   useEffect(() => {
     if (account && (mode === 'edit' || mode === 'delete')) {
       setFormData({
@@ -55,13 +54,11 @@ export default function AccountModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.description.trim()) {
         setError('Descrição da conta é obrigatória');
         return;
       }
 
-      // Preparar dados com valores padrão quando não preenchidos
       const dataToSend = {
         description: formData.description.trim(),
         balance: formData.balance || 0.00,
@@ -85,13 +82,11 @@ export default function AccountModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.description.trim()) {
         setError('Descrição da conta é obrigatória');
         return;
       }
 
-      // Preparar dados com valores padrão quando não preenchidos
       const updateData: AccountUpdateRequest = {
         description: formData.description.trim(),
         balance: formData.balance || 0.00,
@@ -217,7 +212,6 @@ export default function AccountModal({
       )}
 
         {mode === 'delete' ? (
-          // Delete confirmation
           <div className="space-y-4">
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-start space-x-3">
@@ -255,7 +249,6 @@ export default function AccountModal({
             )}
           </div>
         ) : (
-          // Create/Edit form
           <form id="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
             <FormField
               label="Descrição da Conta"
