@@ -11,7 +11,18 @@ export class UsersService {
 
   // Buscar usuário atual (perfil)
   async getProfile(): Promise<User> {
-    return apiRequest<User>(`${this.endpoint}/me`, fetchConfig());
+    const user = await apiRequest<User>(`${this.endpoint}/me`, fetchConfig());
+    
+    // Verificar se o usuário tem filhos (é parent)
+    try {
+      const children = await this.getChildren();
+      user.isParent = children.length > 0;
+    } catch {
+      // Se não conseguir buscar filhos, assume que não é parent
+      user.isParent = false;
+    }
+    
+    return user;
   }
 
   // Buscar usuário por ID

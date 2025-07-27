@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
 import { User } from '@/lib/types/user';
-import { LoadingSpinner, QRCodeGenerator, QRCodeReader } from '@/components/ui';
+import { LoadingSpinner, QRCodeGenerator, QRCodeReader, MonitoringToggle } from '@/components/ui';
+import { useFamilyManagement } from '@/lib/hooks/useParentMonitoring';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,6 +28,7 @@ export default function ProfilePage() {
   const [parentData, setParentData] = useState<{ username: string; email: string } | null>(null);
   
   const router = useRouter();
+  const { isManagementEnabled, toggleManagement } = useFamilyManagement();
 
   useEffect(() => {
     loadUserData();
@@ -298,6 +300,50 @@ export default function ProfilePage() {
                 Alterar Senha
               </button>
             </div>
+
+            {/* Seção de Gerenciamento para Parents */}
+            {user.isParent && (
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-600">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Gerenciamento Familiar
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Ative para gerenciar as finanças dos seus filhos
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm font-medium ${
+                      isManagementEnabled 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {isManagementEnabled ? 'Ativo' : 'Inativo'}
+                    </span>
+                    
+                    <MonitoringToggle
+                      isEnabled={isManagementEnabled}
+                      onToggle={toggleManagement}
+                    />
+                  </div>
+                </div>
+                
+                {isManagementEnabled && (
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                        Gerenciamento ativado! Você pode visualizar as finanças dos seus filhos.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Usuários Filhos */}

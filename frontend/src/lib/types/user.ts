@@ -8,6 +8,7 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
   parentId?: string | null;
+  isParent?: boolean; // Indica se o usuário é parent de alguém
 }
 
 export interface UserCreateRequest {

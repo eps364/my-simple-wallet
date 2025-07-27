@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
 import { clearAuthData } from '@/lib/apiService';
 import { User } from '@/lib/types/user';
+import { useFamilyManagement } from '@/lib/hooks/useParentMonitoring';
 
 interface UserMenuProps {
   readonly onLogout?: () => void;
@@ -15,6 +16,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { isManagementEnabled } = useFamilyManagement();
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -22,7 +24,6 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
       setUser(userData);
     } catch (error) {
       console.error('Erro ao carregar perfil do usuário:', error);
-      // Se não conseguir carregar o perfil, pode ser token inválido
       clearAuthData();
       if (onLogout) onLogout();
     } finally {
@@ -98,9 +99,24 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
         </div>
         
         {/* Username */}
-        <span className="text-gray-700 dark:text-gray-300 font-medium">
+        <span className={`font-medium transition-colors ${
+          user.isParent && isManagementEnabled 
+            ? 'text-green-600 dark:text-green-400' 
+            : 'text-gray-700 dark:text-gray-300'
+        }`}>
           {user.username}
         </span>
+        
+        {/* Indicador de gerenciamento para Parents */}
+        {user.isParent && (
+          <div className={`w-2 h-2 rounded-full transition-colors ${
+            isManagementEnabled 
+              ? 'bg-green-500 animate-pulse' 
+              : 'bg-gray-400'
+          }`} 
+          title={isManagementEnabled ? 'Gerenciamento Ativo' : 'Gerenciamento Inativo'}
+          />
+        )}
         
         {/* Ícone dropdown */}
         <svg 
