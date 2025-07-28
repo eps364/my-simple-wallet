@@ -6,6 +6,7 @@ import { Category } from '@/lib/types/category';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { CategoryModal } from '@/components/forms';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { usersService } from '@/lib/services/usersService';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
@@ -14,7 +15,6 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const styles = useThemeStyles();
@@ -30,10 +30,14 @@ export default function CategoriesPage() {
     try {
       setIsLoading(true);
       setError('');
-      // Enviar isParent=true quando o gerenciamento familiar estiver ativo
+      // Buscar usuário logado
+      const user = await usersService.getProfile();
+      // Buscar categorias
       const shouldUseParentMode = getFamilyManagementEnabled();
       const categoriesData = await categoriesService.getAll(shouldUseParentMode);
-      setCategories(categoriesData);
+      // Filtrar apenas categorias do usuário logado
+      const myCategories = categoriesData.filter(cat => String(cat.userId) === user.id);
+      setCategories(myCategories);
     } catch {
       setError('Erro ao carregar categorias. Tente novamente.');
     } finally {
@@ -47,12 +51,9 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
-    setFamilyManagementEnabled(getFamilyManagementEnabled());
     
     // Listener para mudanças no localStorage
     const handleStorageChange = () => {
-      const newValue = getFamilyManagementEnabled();
-      setFamilyManagementEnabled(newValue);
       // Recarregar dados quando o estado mudar
       loadCategories();
     };
@@ -102,11 +103,6 @@ export default function CategoriesPage() {
     return colors[id % colors.length];
   };
 
-  const getTypeColor = (type: string): string => {
-    return type === 'IN' 
-      ? 'bg-green-100 text-green-800 border-green-200' 
-      : 'bg-red-100 text-red-800 border-red-200';
-  };
 
   if (isLoading) {
     return (
