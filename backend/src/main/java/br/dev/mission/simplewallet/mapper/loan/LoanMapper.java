@@ -1,4 +1,3 @@
-
 package br.dev.mission.simplewallet.mapper.loan;
 
 import org.springframework.stereotype.Component;
@@ -29,10 +28,10 @@ public class LoanMapper {
         return new TransactionRequest(
             loan.dueDate(),
             loan.description(),
-            loan.amountLoan(),
+            loan.amount(),
             loan.type(),
             loan.effectiveDate(),
-            loan.amountLoan(),
+            loan.amount(),
             loan.accountId(),
             loan.categoryId()
         );
@@ -42,10 +41,10 @@ public class LoanMapper {
         return new TransactionRequest(
             loan.dueDateLoan(),
             loan.descriptionLoan(),
-            loan.amountLoan(),
+            loan.amountInstallment(),
             loan.typeLoan(),
-            loan.effectiveDateLoan(),
-            loan.amountLoan(),
+            null,
+            loan.amountInstallment(),
             loan.accountIdLoan(),
             loan.categoryIdLoan()
         );

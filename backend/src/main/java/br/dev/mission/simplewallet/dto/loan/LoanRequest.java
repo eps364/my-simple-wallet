@@ -15,14 +15,12 @@ public record LoanRequest(
     @JsonFormat(pattern = LocalDateConverter.DATE_FORMAT) LocalDate effectiveDate,
     Long accountId,
     Long categoryId,
-
     String descriptionLoan,
     Integer qtdeInstallments,
-    BigDecimal amountLoan,
+    BigDecimal amountInstallment,
     BigDecimal effectiveAmountLoan,
     Integer typeLoan,
     @JsonFormat(pattern = LocalDateConverter.DATE_FORMAT) LocalDate dueDateLoan,
-    @JsonFormat(pattern = LocalDateConverter.DATE_FORMAT) LocalDate effectiveDateLoan,
     Long accountIdLoan,
     Long categoryIdLoan
 ) {}

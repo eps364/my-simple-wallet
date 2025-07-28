@@ -2,7 +2,6 @@ package br.dev.mission.simplewallet.service.loan;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.dev.mission.simplewallet.dto.loan.LoanRequest;
@@ -14,11 +13,13 @@ import br.dev.mission.simplewallet.service.transaction.TransactionService;
 @Service
 public class LoanService {
 
-    @Autowired
-    TransactionService transactionService;
+    private final TransactionService transactionService;
+    private final LoanMapper loanMapper;
 
-    @Autowired
-    LoanMapper loanMapper;
+    public LoanService(TransactionService transactionService, LoanMapper loanMapper) {
+        this.transactionService = transactionService;
+        this.loanMapper = loanMapper;
+    }
 
     public LoanResponse createLoan(LoanRequest request, String userId) {
 
