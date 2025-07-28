@@ -6,13 +6,14 @@ import { Account } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
 import AccountModal from '@/components/forms/AccountModal';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { useAuth } from '@/context/AuthContext';
+import { usersService } from '@/lib/services/usersService';
 
 export default function AccountsPage() {
   const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     mode: 'create' | 'edit' | 'delete';
@@ -34,10 +35,11 @@ export default function AccountsPage() {
     try {
       setIsLoading(true);
       setError('');
-      // Enviar isParent=true quando o gerenciamento familiar estiver ativo
+      const user = await usersService.getProfile();
       const shouldUseParentMode = getFamilyManagementEnabled();
       const accountsData = await accountsService.getAll(shouldUseParentMode);
-      setAccounts(accountsData);
+      const myAccounts = accountsData.filter(acc => String(acc.userId) === user.id);
+      setAccounts(myAccounts);
     } catch {
       setError('Erro ao carregar contas. Tente novamente.');
     } finally {
@@ -50,10 +52,7 @@ export default function AccountsPage() {
   }, [loadAccounts]);
 
   useEffect(() => {
-    setFamilyManagementEnabled(getFamilyManagementEnabled());
     const handleStorageChange = () => {
-      const newValue = getFamilyManagementEnabled();
-      setFamilyManagementEnabled(newValue);
       loadAccounts();
     };
 
