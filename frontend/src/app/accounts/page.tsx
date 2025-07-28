@@ -24,7 +24,6 @@ export default function AccountsPage() {
   });
   const styles = useThemeStyles();
 
-  // Função para buscar estado do gerenciamento familiar do localStorage
   const getFamilyManagementEnabled = (): boolean => {
     if (typeof window === 'undefined') return false;
     const stored = localStorage.getItem('familyManagementEnabled');
@@ -65,7 +64,6 @@ export default function AccountsPage() {
     };
   }, [loadAccounts]);
 
-  // Verificar se deve abrir o modal de criação automaticamente
   useEffect(() => {
     const action = searchParams.get('action');
     if (action === 'create') {
@@ -93,10 +91,9 @@ export default function AccountsPage() {
 
   const handleModalSuccess = () => {
     closeModal();
-    loadAccounts(); // Recarregar a lista após operação bem-sucedida
+    loadAccounts();
   };
 
-  // Função para gerar cor baseada no ID
   const getAccountColor = (id: number): string => {
     const colors = [
       'bg-blue-100 text-blue-800 border-blue-200',
@@ -294,7 +291,6 @@ export default function AccountsPage() {
                 </div>
               </div>
 
-              {/* Account Details */}
               <div className="space-y-3">
                 <h3 style={{ color: styles.text.color }} className="text-lg font-semibold truncate">
                   {account.description}
