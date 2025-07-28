@@ -24,13 +24,11 @@ interface UserExpenseDistributionChartProps {
 export default function UserExpenseDistributionChart({ transactions }: UserExpenseDistributionChartProps) {
   const chartRef = useRef<ChartJS<"pie">>(null);
 
-  // Processar dados para o gráfico
   const processData = () => {
     const expenseTransactions = transactions.filter(t => 
       t.type === TransactionType.EXPENSE && t.effectiveDate && t.username
     );
     
-    // Agrupar por usuário
     const userExpenses: { [key: string]: number } = {};
     
     expenseTransactions.forEach(transaction => {
@@ -44,24 +42,22 @@ export default function UserExpenseDistributionChart({ transactions }: UserExpen
       }
     });
 
-    // Ordenar por valor (maior para menor)
     const sortedEntries = Object.entries(userExpenses).sort((a, b) => b[1] - a[1]);
 
     const labels = sortedEntries.map(([username]) => username);
     const data = sortedEntries.map(([, amount]) => amount);
 
-    // Cores para o gráfico (cores mais diferenciadas para usuários)
     const colors = [
-      'rgba(59, 130, 246, 0.8)',   // Azul
-      'rgba(239, 68, 68, 0.8)',    // Vermelho
-      'rgba(34, 197, 94, 0.8)',    // Verde
-      'rgba(251, 191, 36, 0.8)',   // Amarelo
-      'rgba(168, 85, 247, 0.8)',   // Roxo
-      'rgba(236, 72, 153, 0.8)',   // Rosa
-      'rgba(14, 165, 233, 0.8)',   // Azul claro
-      'rgba(245, 101, 101, 0.8)',  // Vermelho claro
-      'rgba(16, 185, 129, 0.8)',   // Verde claro
-      'rgba(139, 69, 19, 0.8)',    // Marrom
+      'rgba(59, 130, 246, 0.8)',
+      'rgba(239, 68, 68, 0.8)',
+      'rgba(34, 197, 94, 0.8)',
+      'rgba(251, 191, 36, 0.8)',
+      'rgba(168, 85, 247, 0.8)',
+      'rgba(236, 72, 153, 0.8)',
+      'rgba(14, 165, 233, 0.8)',
+      'rgba(245, 101, 101, 0.8)',
+      'rgba(16, 185, 129, 0.8)',
+      'rgba(139, 69, 19, 0.8)',
     ];
 
     const borderColors = [

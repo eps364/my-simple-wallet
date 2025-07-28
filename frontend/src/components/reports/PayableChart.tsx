@@ -28,18 +28,15 @@ interface PayableChartProps {
 export default function PayableChart({ transactions }: PayableChartProps) {
   const chartRef = useRef<ChartJS<"bar">>(null);
 
-  // Processar dados para o gráfico (contas a pagar - transações sem effectiveDate)
   const processData = () => {
     const payableTransactions = transactions.filter(t => 
       t.type === TransactionType.EXPENSE && !t.effectiveDate && t.dueDate
     );
     
-    // Agrupar por mês de vencimento
     const monthlyPayable: { [key: string]: number } = {};
     
     payableTransactions.forEach(transaction => {
       if (transaction.dueDate) {
-        // Assumindo formato DD/MM/YYYY
         const [, month, year] = transaction.dueDate.split('/');
         const monthKey = `${month}/${year}`;
         const amount = transaction.amount;
@@ -52,7 +49,6 @@ export default function PayableChart({ transactions }: PayableChartProps) {
       }
     });
 
-    // Ordenar por data
     const sortedEntries = Object.entries(monthlyPayable).sort((a, b) => {
       const [monthA, yearA] = a[0].split('/');
       const [monthB, yearB] = b[0].split('/');

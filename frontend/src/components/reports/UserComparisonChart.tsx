@@ -28,11 +28,9 @@ interface UserComparisonChartProps {
 export default function UserComparisonChart({ transactions }: UserComparisonChartProps) {
   const chartRef = useRef<ChartJS<"bar">>(null);
 
-  // Processar dados para o gráfico
   const processData = () => {
     const effectiveTransactions = transactions.filter(t => t.effectiveDate && t.username);
     
-    // Agrupar por usuário
     const userData: { [key: string]: { income: number, expense: number } } = {};
     
     effectiveTransactions.forEach(transaction => {
@@ -50,7 +48,6 @@ export default function UserComparisonChart({ transactions }: UserComparisonChar
       }
     });
 
-    // Ordenar por total de transações (income + expense)
     const sortedEntries = Object.entries(userData).sort((a, b) => {
       const totalA = a[1].income + a[1].expense;
       const totalB = b[1].income + b[1].expense;

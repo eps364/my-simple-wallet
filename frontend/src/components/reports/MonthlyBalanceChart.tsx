@@ -32,16 +32,13 @@ interface MonthlyBalanceChartProps {
 export default function MonthlyBalanceChart({ transactions }: MonthlyBalanceChartProps) {
   const chartRef = useRef<ChartJS>(null);
 
-  // Processar dados para o gráfico
   const processData = () => {
     const effectiveTransactions = transactions.filter(t => t.effectiveDate);
     
-    // Agrupar por mês
     const monthlyData: { [key: string]: { income: number, expense: number } } = {};
     
     effectiveTransactions.forEach(transaction => {
       if (transaction.effectiveDate) {
-        // Assumindo formato DD/MM/YYYY
         const [, month, year] = transaction.effectiveDate.split('/');
         const monthKey = `${month}/${year}`;
         const amount = transaction.effectiveAmount || transaction.amount;
@@ -58,7 +55,6 @@ export default function MonthlyBalanceChart({ transactions }: MonthlyBalanceChar
       }
     });
 
-    // Ordenar por data
     const sortedEntries = Object.entries(monthlyData).sort((a, b) => {
       const [monthA, yearA] = a[0].split('/');
       const [monthB, yearB] = b[0].split('/');

@@ -1,7 +1,3 @@
-/**
- * Users Service - Responsável apenas pelas operações de usuários
- * Seguindo o princípio Single Responsibility: gerencia apenas entidade User
- */
 
 import { User, UserCreateRequest, UserUpdateRequest } from '@/lib/types/user';
 import { apiRequest, fetchConfig } from './baseService';
@@ -9,69 +5,55 @@ import { apiRequest, fetchConfig } from './baseService';
 export class UsersService {
   private readonly endpoint = '/users';
 
-  // Buscar usuário atual (perfil)
   async getProfile(): Promise<User> {
     const user = await apiRequest<User>(`${this.endpoint}/me`, fetchConfig());
     
-    // Verificar se o usuário tem filhos (é parent)
     try {
       const children = await this.getChildren();
       user.isParent = children.length > 0;
     } catch {
-      // Se não conseguir buscar filhos, assume que não é parent
       user.isParent = false;
     }
     
     return user;
   }
 
-  // Buscar usuário por ID
   async getUserById(id: string): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/${id}`, fetchConfig());
   }
 
-  // Atualizar perfil do usuário (username e email)
   async updateProfile(data: UserUpdateRequest): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/me`, fetchConfig('PUT', data));
   }
 
-  // Alterar senha do usuário
   async updatePassword(password: string): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/me/password`, fetchConfig('PATCH', { password }));
   }
 
-  // Buscar usuários filhos (onde eu sou parent)
   async getChildren(): Promise<User[]> {
     return apiRequest<User[]>(`${this.endpoint}/me/parent`, fetchConfig());
   }
 
-  // Adicionar/atualizar parent na conta atual
   async updateParent(parentId: string): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/me/parent`, fetchConfig('PATCH', { parentId }));
   }
 
-  // Remover parent da conta atual
   async removeParent(): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/me/parent`, fetchConfig('PATCH', { parentId: null }));
   }
 
-  // Adicionar um filho (vincular uma conta como child)
   async addChild(childId: string): Promise<User> {
-    // Primeiro, precisamos obter nosso próprio ID
     const currentUser = await this.getProfile();
     return apiRequest<User>(`${this.endpoint}/${childId}/parent`, fetchConfig('PATCH', { parentId: currentUser.id }));
   }
 
-  // Remover um filho (remover vinculação parent-child)
   async removeChild(childId: string): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/${childId}/parent`, fetchConfig('PATCH', { parentId: null }));
   }
 
-  // Criar novo usuário (registro)
   async create(data: UserCreateRequest): Promise<User> {
     return apiRequest<User>(`${this.endpoint}/register`, fetchConfig('POST', data));
   }
 }
   
-// Instância singleton do serviço de usuários
 export const usersService = new UsersService();
