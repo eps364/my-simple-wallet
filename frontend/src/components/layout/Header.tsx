@@ -58,9 +58,9 @@ export default function Header() {
           
           <div className="flex items-center gap-3">
             
-            <div className="flex">
-              {logged ? (
-                <UserMenu onLogout={handleLogout} />
+            <div className="flex items-center gap-3">
+              {logged ? (                 
+                  <UserMenu onLogout={handleLogout} />
               ) : (
                 <div className="flex items-center gap-3">
                   <Link
