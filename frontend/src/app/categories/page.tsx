@@ -130,9 +130,9 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div 
+    <div
       style={{ backgroundColor: styles.background.backgroundColor }}
-      className="container mx-auto px-4 py-8"
+      className="container mx-auto px-4 py-8 min-h-screen max-w-5xl"
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-8">

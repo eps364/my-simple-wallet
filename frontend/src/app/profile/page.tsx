@@ -233,14 +233,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div 
-      style={{ 
-        backgroundColor: styles.background.backgroundColor,
-        minHeight: '100vh',
-        paddingTop: '80px'
-      }}
+    <div
+      className="container mx-auto px-4 py-8 min-h-screen max-w-5xl"
+      style={{ backgroundColor: styles.background.backgroundColor }}
     >
-      <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 

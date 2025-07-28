@@ -6,15 +6,15 @@ export default function Home() {
   const styles = useThemeStyles();
   
   return (
-    <div 
-      className="min-h-screen"
+    <div
+      className="container mx-auto px-4 py-8 min-h-screen max-w-5xl"
       style={{
         background: `linear-gradient(135deg, 
           ${styles.surface.backgroundColor}CC 0%, 
           ${styles.primary.backgroundColor}22 100%)`
       }}
     >
-      <main className="container mx-auto px-4 py-8">
+      <main>
         <div className="text-center max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-12 pt-8">
