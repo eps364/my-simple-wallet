@@ -28,7 +28,9 @@ public class LoanService {
         List<TransactionResponse> installments = transactionService.installments(
             loanMapper.toTransactionRequestInstallment(request), 
             request.qtdeInstallments(),
-            userId);
+            userId, 
+            creditInAccount.id()
+        );
 
         return new LoanResponse(
             creditInAccount.id(), 

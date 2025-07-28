@@ -106,7 +106,7 @@ public class TransactionService {
                 }).orElse(false);
     }
 
-    public List<TransactionResponse> installments(TransactionRequest request, Integer qtdeLoan, String userId) {
+    public List<TransactionResponse> installments(TransactionRequest request, Integer qtdeLoan, String userId, Long creditId) {
         List<TransactionResponse> installments = new ArrayList<>();
         LocalDate dueDateFirstInstallment = request.dueDate();
         
@@ -114,16 +114,16 @@ public class TransactionService {
 
             LocalDate dueDateInstallment = dueDateFirstInstallment.plusMonths(i);
 
-            TransactionRequest installmentRequest = new TransactionRequest(
-                dueDateInstallment,
-                request.description() + " - Parcela " + (i + 1) + " de " + qtdeLoan,
-                request.amount(),
-                request.type(),
-                request.effectiveDate(),
-                request.effectiveAmount(),
-                request.accountId(),
-                request.categoryId()
-            );
+        TransactionRequest installmentRequest = new TransactionRequest(
+            dueDateInstallment,
+            request.description() + " ID: " + creditId + " - " + (i + 1) + " de " + qtdeLoan,
+            request.amount(),
+            request.type(),
+            request.effectiveDate(),
+            request.effectiveAmount(),
+            request.accountId(),
+            request.categoryId()
+        );
 
             installments.add(transactionMapper.toResponse(transactionRepository.save(transactionMapper.toEntity(installmentRequest, userId))));
         }
