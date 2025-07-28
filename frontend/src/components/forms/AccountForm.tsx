@@ -63,10 +63,14 @@ export default function AccountForm({
   const loadAccounts = async () => {
     try {
       setIsLoadingAccounts(true);
-      const accountsData = await accountsService.getAll();
+      // Verificar se o gerenciamento familiar está ativo
+      const shouldUseParentMode = typeof window !== 'undefined' 
+        ? localStorage.getItem('familyManagementEnabled') === 'true'
+        : false;
+      
+      const accountsData = await accountsService.getAll(shouldUseParentMode);
       setAccounts(accountsData);
     } catch (error) {
-      console.error('Erro ao carregar contas:', error);
     } finally {
       setIsLoadingAccounts(false);
     }
@@ -92,7 +96,6 @@ export default function AccountForm({
       await accountsService.delete(accountId);
       await loadAccounts(); // Recarregar lista
     } catch (error) {
-      console.error('Erro ao excluir conta:', error);
       setErrors('Erro ao excluir conta. Tente novamente.');
     } finally {
       setActionLoading(prev => {
@@ -127,7 +130,6 @@ export default function AccountForm({
       handleClearForm();
     } catch (error) {
       setErrors('Erro ao atualizar conta. Tente novamente.');
-      console.error('Erro ao atualizar conta:', error);
     }
   };
 
@@ -164,7 +166,6 @@ export default function AccountForm({
       handleClearForm();
     } catch (error) {
       setErrors('Erro ao salvar conta. Tente novamente.');
-      console.error('Erro ao salvar conta:', error);
     }
   };
 

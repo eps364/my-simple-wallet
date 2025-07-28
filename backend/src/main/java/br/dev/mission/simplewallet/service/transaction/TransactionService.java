@@ -9,11 +9,13 @@ import br.dev.mission.simplewallet.model.Transaction;
 import br.dev.mission.simplewallet.repository.account.AccountRepository;
 import br.dev.mission.simplewallet.repository.category.CategoryRepository;
 import br.dev.mission.simplewallet.repository.transaction.TransactionRepository;
+import br.dev.mission.simplewallet.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -25,6 +27,8 @@ public class TransactionService {
     private AccountRepository accountRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public TransactionResponse create(TransactionRequest request, String userId) {
         if (!accountRepository.findById(request.accountId()).filter(acc -> acc.getUserId().equals(userId)).isPresent()) {
@@ -39,6 +43,24 @@ public class TransactionService {
 
     public List<TransactionResponse> findByUserId(String userId) {
         return transactionRepository.findByUserId(userId).stream().map(transactionMapper::toResponse).toList();
+    }
+
+    public List<TransactionResponse> findByUserIdWithChildren(String userId) {
+        // Criar lista com o userId atual
+        List<String> userIds = new java.util.ArrayList<>();
+        userIds.add(userId);
+        
+        // Buscar todos os filhos (usuários que têm este usuário como parent) e adicionar à lista
+        List<String> childrenIds = userRepository.findByParentId(UUID.fromString(userId))
+                .stream()
+                .map(user -> user.getId().toString())
+                .toList();
+        userIds.addAll(childrenIds);
+        
+        // Buscar todas as transações em uma única consulta
+        List<Transaction> transactions = transactionRepository.findByUserIdIn(userIds);
+        
+        return transactions.stream().map(transactionMapper::toResponse).toList();
     }
 
     public Optional<TransactionResponse> findById(Long id, String userId) {

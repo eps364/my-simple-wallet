@@ -38,9 +38,17 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> list() {
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> list(
+            @RequestParam(value = "isParent", required = false, defaultValue = "false") boolean isParent) {
         String userId = getLoggedUserId();
-        List<TransactionResponse> transactions = transactionService.findByUserId(userId);
+        List<TransactionResponse> transactions;
+        
+        if (isParent) {
+            transactions = transactionService.findByUserIdWithChildren(userId);
+        } else {
+            transactions = transactionService.findByUserId(userId);
+        }
+        
         return ResponseEntity.ok(new ApiResponse<>(200, "Transações encontradas", transactions));
     }
 

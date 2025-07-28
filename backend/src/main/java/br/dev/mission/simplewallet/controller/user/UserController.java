@@ -2,6 +2,7 @@ package br.dev.mission.simplewallet.controller.user;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.MessageSource;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.dev.mission.simplewallet.dto.ApiResponse;
 import br.dev.mission.simplewallet.dto.user.UserRequestUpdate;
+import br.dev.mission.simplewallet.dto.user.UserRequestUpdateChildParent;
 import br.dev.mission.simplewallet.dto.user.UserRequestUpdateParent;
 import br.dev.mission.simplewallet.dto.user.UserRequestUpdatePassword;
 import br.dev.mission.simplewallet.dto.user.UserResponse;
@@ -54,7 +56,7 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody @Valid UserRequestUpdate request) {
         String id = getLoggedUserId();
-        UserRequestUpdate reqWithId = new UserRequestUpdate(id, request.username(), request.email());
+        UserRequestUpdate reqWithId = new UserRequestUpdate(id, request.username(), request.email(), request.name());
         UserResponse response = userService.update(reqWithId);
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(200, getMessage("user.update.success"), response);
         return ResponseEntity.ok(apiResponse);
@@ -99,5 +101,30 @@ public class UserController {
         return userService.findById(id)
                 .map(user -> ResponseEntity.ok(new ApiResponse<>(200, getMessage("user.found.success"), user)))
                 .orElse(ResponseEntity.ok(new ApiResponse<>(404, getMessage("user.notfound"), null)));
+    }
+
+    @PatchMapping("/{childId}/parent")
+    public ResponseEntity<ApiResponse<UserResponse>> updateChildParent(@PathVariable String childId, @RequestBody @Valid UserRequestUpdateChildParent request) {
+        UUID parentId = request.parentId();
+        String loggedUserId = getLoggedUserId();
+        
+        if (parentId == null) {
+            Optional<UserResponse> childUser = userService.findById(childId);
+            if (childUser.isEmpty()) {
+                return ResponseEntity.ok(new ApiResponse<>(404, getMessage("user.notfound"), null));
+            }
+            
+            UUID currentParentId = childUser.get().parentId();
+            if (currentParentId == null || !UUID.fromString(loggedUserId).equals(currentParentId)) {
+                return ResponseEntity.ok(new ApiResponse<>(403, getMessage("user.permission.denied"), null));
+            }
+        }
+        
+        UserRequestUpdateParent reqWithIds = new UserRequestUpdateParent(childId, parentId);
+        UserResponse response = userService.updateParent(reqWithIds);
+        
+        String messageKey = parentId != null ? "user.child.add.success" : "user.child.remove.success";
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(200, getMessage(messageKey), response);
+        return ResponseEntity.ok(apiResponse);
     }
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from 'react';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 interface ModalProps {
   readonly isOpen: boolean;
@@ -10,7 +11,6 @@ interface ModalProps {
   readonly size?: 'sm' | 'md' | 'lg' | 'xl';
   readonly variant?: 'default' | 'danger' | 'success' | 'warning';
 }
-
 export default function Modal({ 
   isOpen, 
   onClose, 
@@ -21,8 +21,8 @@ export default function Modal({
   variant = 'default'
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const styles = useThemeStyles();
 
-  // Fecha o modal quando pressiona ESC
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -32,10 +32,8 @@ export default function Modal({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      // Previne scroll do body quando modal está aberto
       document.body.style.overflow = 'hidden';
       
-      // Focus no modal quando abrir
       setTimeout(() => {
         modalRef.current?.focus();
       }, 100);
@@ -49,55 +47,76 @@ export default function Modal({
 
   if (!isOpen) return null;
 
-  // Define a largura do painel
   const getSizeClasses = () => {
     switch (size) {
       case 'sm':
-        return 'w-80'; // 320px
+        return 'w-80'; 
       case 'md':
-        return 'w-96'; // 384px
+        return 'w-96'; 
       case 'lg':
-        return 'w-[32rem]'; // 512px
+        return 'w-[32rem]'; 
       case 'xl':
-        return 'w-[40rem]'; // 640px
+        return 'w-[40rem]'; 
       default:
-        return 'w-96'; // 384px
+        return 'w-96'; 
     }
   };
 
-  // Define as cores do header baseado na variante
-  const getHeaderClasses = () => {
-    const baseClasses = 'px-6 py-5 border-b border-gray-200 dark:border-gray-600 flex-shrink-0';
+  const getHeaderStyle = (): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      ...styles.surface,
+      borderBottomColor: styles.border.borderColor,
+      borderBottomWidth: '1px',
+      borderBottomStyle: 'solid' as const
+    };
     
     switch (variant) {
       case 'danger':
-        return `${baseClasses} bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800`;
+        return {
+          ...baseStyle,
+          backgroundColor: 'var(--color-error)',
+          color: 'white',
+          opacity: 0.1
+        };
       case 'success':
-        return `${baseClasses} bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800`;
+        return {
+          ...baseStyle,
+          backgroundColor: 'var(--color-success)',
+          color: 'white',
+          opacity: 0.1
+        };
       case 'warning':
-        return `${baseClasses} bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800`;
+        return {
+          ...baseStyle,
+          backgroundColor: 'var(--color-warning)',
+          color: 'white',
+          opacity: 0.1
+        };
       default:
-        return `${baseClasses} bg-white dark:bg-slate-800`;
+        return baseStyle;
     }
   };
 
-  // Define as cores do título baseado na variante
-  const getTitleClasses = () => {
-    const baseClasses = 'text-lg font-semibold leading-6';
+  const getTitleStyle = (): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      color: styles.text.color,
+      fontSize: '1.125rem',
+      fontWeight: '600',
+      lineHeight: '1.5'
+    };
     
     switch (variant) {
       case 'danger':
-        return `${baseClasses} text-red-900 dark:text-red-100`;
+        return { ...baseStyle, color: 'var(--color-error)' };
       case 'success':
-        return `${baseClasses} text-green-900 dark:text-green-100`;
+        return { ...baseStyle, color: 'var(--color-success)' };
       case 'warning':
-        return `${baseClasses} text-yellow-900 dark:text-yellow-100`;
+        return { ...baseStyle, color: 'var(--color-warning)' };
       default:
-        return `${baseClasses} text-gray-900 dark:text-white`;
+        return baseStyle;
     }
   };
 
-  // Define o ícone baseado na variante
   const getVariantIcon = () => {
     switch (variant) {
       case 'danger':
@@ -129,7 +148,7 @@ export default function Modal({
       className="fixed inset-0 z-50 overflow-hidden bg-transparent"
       aria-labelledby="modal-title"
     >
-      {/* Backdrop */}
+      
       <div 
         className={`fixed inset-0 bg-gray-500 transition-opacity duration-300 ${
           isOpen ? 'bg-opacity-75' : 'bg-opacity-0'
@@ -138,22 +157,30 @@ export default function Modal({
         onClick={onClose}
       ></div>
 
-      {/* Slide Panel */}
+      
       <div className="fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
         <div 
           ref={modalRef}
+          style={{
+            ...styles.surface,
+            borderColor: styles.border.borderColor,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}
           className={`transform transition-all duration-300 ease-in-out ${
             isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-          } relative z-10 bg-white dark:bg-slate-800 shadow-2xl flex flex-col h-full ${getSizeClasses()}`}
+          } relative z-10 border shadow-2xl flex flex-col h-full ${getSizeClasses()}`}
           tabIndex={-1}
         >
-          {/* Header */}
-          <div className={getHeaderClasses()}>
+          
+          <div 
+            style={getHeaderStyle()}
+            className="px-6 py-5 flex-shrink-0"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {getVariantIcon()}
                 <h3 
-                  className={getTitleClasses()} 
+                  style={getTitleStyle()}
                   id="modal-title"
                 >
                   {title}
@@ -161,7 +188,16 @@ export default function Modal({
               </div>
               <button
                 type="button"
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md p-1 transition-colors"
+                style={{
+                  color: styles.textMuted.color
+                }}
+                className="hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md p-1 transition-all"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-primary)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
                 onClick={onClose}
               >
                 <span className="sr-only">Fechar</span>
@@ -182,14 +218,22 @@ export default function Modal({
             </div>
           </div>
 
-          {/* Content */}
+          
           <div className="flex-1 overflow-y-auto px-6 py-6">
             {children}
           </div>
 
-          {/* Footer */}
+          
           {footer && (
-            <div className="bg-gray-50 dark:bg-slate-700 px-6 py-5 border-t border-gray-200 dark:border-gray-600 flex-shrink-0">
+            <div 
+              style={{
+                backgroundColor: styles.background.backgroundColor,
+                borderTopColor: styles.border.borderColor,
+                borderTopWidth: '1px',
+                borderTopStyle: 'solid' as const
+              }}
+              className="px-6 py-5 flex-shrink-0"
+            >
               {footer}
             </div>
           )}

@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findByUserId(String userId);
+    List<Transaction> findByUserIdIn(List<String> userIds);
     boolean existsByCategory(Long category);
 }

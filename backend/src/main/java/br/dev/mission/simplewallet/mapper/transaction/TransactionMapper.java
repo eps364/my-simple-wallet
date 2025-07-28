@@ -6,6 +6,7 @@ import br.dev.mission.simplewallet.model.Transaction;
 import br.dev.mission.simplewallet.model.TransactionType;
 import br.dev.mission.simplewallet.repository.account.AccountRepository;
 import br.dev.mission.simplewallet.repository.category.CategoryRepository;
+import br.dev.mission.simplewallet.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,9 @@ public class TransactionMapper {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public Transaction toEntity(TransactionRequest request, String userId) {
         Transaction transaction = new Transaction();
@@ -44,6 +48,12 @@ public class TransactionMapper {
                 .map(cat -> cat.getCategory())
                 .orElse(null);
         }
+        String username = null;
+        if (transaction.getUserId() != null) {
+            username = userRepository.findById(java.util.UUID.fromString(transaction.getUserId()))
+                .map(user -> user.getUsername())
+                .orElse(null);
+        }
         return new TransactionResponse(
             transaction.getId(),
             transaction.getDescription(),
@@ -55,7 +65,9 @@ public class TransactionMapper {
             transaction.getAccountId(),
             account,
             transaction.getCategory(),
-            category
+            category,
+            transaction.getUserId(),
+            username
         );
     }
 

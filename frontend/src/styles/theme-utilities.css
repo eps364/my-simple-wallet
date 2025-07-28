@@ -1,0 +1,70 @@
+/* Classes utilitárias para usar com o sistema de temas */
+
+/* Backgrounds */
+.bg-theme-background {
+  background-color: var(--color-background);
+}
+
+.bg-theme-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-theme-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-theme-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Text colors */
+.text-theme-primary {
+  color: var(--color-text);
+}
+
+.text-theme-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--color-text-muted);
+}
+
+/* Borders */
+.border-theme {
+  border-color: var(--color-border);
+}
+
+/* Status colors */
+.text-theme-success {
+  color: var(--color-success);
+}
+
+.text-theme-warning {
+  color: var(--color-warning);
+}
+
+.text-theme-error {
+  color: var(--color-error);
+}
+
+.text-theme-info {
+  color: var(--color-info);
+}
+
+/* Background status colors */
+.bg-theme-success {
+  background-color: var(--color-success);
+}
+
+.bg-theme-warning {
+  background-color: var(--color-warning);
+}
+
+.bg-theme-error {
+  background-color: var(--color-error);
+}
+
+.bg-theme-info {
+  background-color: var(--color-info);
+}

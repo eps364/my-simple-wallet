@@ -37,9 +37,16 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CategoryResponse>>> list() {
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> list(@RequestParam(required = false) Boolean isParent) {
         String userId = getLoggedUserId();
-        List<CategoryResponse> categories = categoryService.findByUserId(userId);
+        List<CategoryResponse> categories;
+        
+        if (Boolean.TRUE.equals(isParent)) {
+            categories = categoryService.findAllForFamily(userId);
+        } else {
+            categories = categoryService.findByUserId(userId);
+        }
+        
         return ResponseEntity.ok(new ApiResponse<>(200, "Categorias encontradas", categories));
     }
 

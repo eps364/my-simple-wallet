@@ -27,6 +27,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(name = "parent_id")
     private UUID parentId;
 
@@ -80,6 +83,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getNome() {
+        return name;
+    }
+
+    public void setNome(String nome) {
+        this.name = nome;
     }
 
     public UUID getParentId() {

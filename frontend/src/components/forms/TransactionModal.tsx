@@ -8,6 +8,7 @@ import { Category, CATEGORY_TYPE_MAP } from '@/lib/types/category';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
+import { usersService } from '@/lib/services/usersService';
 
 interface TransactionModalProps {
   readonly isOpen: boolean;
@@ -90,14 +91,23 @@ export default function TransactionModal({
   const loadAccountsAndCategories = async () => {
     try {
       setIsLoadingData(true);
+      // Verificar se o gerenciamento familiar está ativo
+      const shouldUseParentMode = typeof window !== 'undefined' 
+        ? localStorage.getItem('familyManagementEnabled') === 'true'
+        : false;
+      
+      // Buscar usuário logado
+      const user = await usersService.getProfile();
       const [accountsData, categoriesData] = await Promise.all([
-        accountsService.getAll(),
-        categoriesService.getAll()
+        accountsService.getAll(shouldUseParentMode),
+        categoriesService.getAll(shouldUseParentMode)
       ]);
-      setAccounts(accountsData);
-      setCategories(categoriesData);
+      // Filtrar apenas contas e categorias do usuário logado
+      const myAccounts = accountsData.filter(acc => String(acc.userId) === user.id);
+      const myCategories = categoriesData.filter(cat => String(cat.userId) === user.id);
+      setAccounts(myAccounts);
+      setCategories(myCategories);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
       setError('Erro ao carregar contas e categorias');
     } finally {
       setIsLoadingData(false);
@@ -142,7 +152,6 @@ export default function TransactionModal({
       await transactionsService.create(formData);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao criar transação:', error);
       setError('Erro ao criar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -191,7 +200,6 @@ export default function TransactionModal({
       await transactionsService.update(transaction.id, updateData);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao atualizar transação:', error);
       setError('Erro ao atualizar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -207,7 +215,6 @@ export default function TransactionModal({
       await transactionsService.delete(transaction.id);
       onSuccess();
     } catch (error) {
-      console.error('Erro ao excluir transação:', error);
       setError('Erro ao excluir transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -238,7 +245,6 @@ export default function TransactionModal({
       });
       onSuccess();
     } catch (error) {
-      console.error('Erro ao liquidar transação:', error);
       setError('Erro ao liquidar transação. Tente novamente.');
     } finally {
       setIsLoading(false);

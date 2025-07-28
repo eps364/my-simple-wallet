@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, FormField } from '../ui';
 import { Account, AccountCreateRequest, AccountUpdateRequest } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 interface AccountModalProps {
   readonly isOpen: boolean;
@@ -29,8 +30,8 @@ export default function AccountModal({
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const styles = useThemeStyles();
 
-  // Atualizar formulário quando account prop mudar
   useEffect(() => {
     if (account && (mode === 'edit' || mode === 'delete')) {
       setFormData({
@@ -55,13 +56,11 @@ export default function AccountModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.description.trim()) {
         setError('Descrição da conta é obrigatória');
         return;
       }
 
-      // Preparar dados com valores padrão quando não preenchidos
       const dataToSend = {
         description: formData.description.trim(),
         balance: formData.balance || 0.00,
@@ -71,8 +70,7 @@ export default function AccountModal({
 
       await accountsService.create(dataToSend);
       onSuccess();
-    } catch (error) {
-      console.error('Erro ao criar conta:', error);
+    } catch {
       setError('Erro ao criar conta. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -86,13 +84,11 @@ export default function AccountModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.description.trim()) {
         setError('Descrição da conta é obrigatória');
         return;
       }
 
-      // Preparar dados com valores padrão quando não preenchidos
       const updateData: AccountUpdateRequest = {
         description: formData.description.trim(),
         balance: formData.balance || 0.00,
@@ -102,8 +98,7 @@ export default function AccountModal({
 
       await accountsService.update(account.id, updateData);
       onSuccess();
-    } catch (error) {
-      console.error('Erro ao atualizar conta:', error);
+    } catch {
       setError('Erro ao atualizar conta. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -119,8 +114,7 @@ export default function AccountModal({
 
       await accountsService.delete(account.id);
       onSuccess();
-    } catch (error) {
-      console.error('Erro ao excluir conta:', error);
+    } catch {
       setError('Erro ao excluir conta. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -189,7 +183,24 @@ export default function AccountModal({
       <button
         type="button"
         onClick={onClose}
-        className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+        style={{
+          ...styles.surface,
+          borderColor: styles.border.borderColor,
+          color: styles.text.color
+        }}
+        className="px-4 py-2 border rounded-lg hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = styles.background.backgroundColor;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = styles.surface.backgroundColor;
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-primary)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = styles.border.borderColor;
+        }}
       >
         Cancelar
       </button>
@@ -197,7 +208,25 @@ export default function AccountModal({
         type="submit"
         form="account-form"
         disabled={isLoading}
-        className={`px-4 py-2 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${getSubmitButtonColor()}`}
+        style={{
+          backgroundColor: mode === 'delete' ? 'var(--color-error)' : 'var(--color-primary)',
+          color: 'white'
+        }}
+        className="px-4 py-2 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50"
+        onMouseEnter={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = mode === 'delete' 
+              ? 'var(--color-error)' 
+              : 'var(--color-primary-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.backgroundColor = mode === 'delete' 
+              ? 'var(--color-error)' 
+              : 'var(--color-primary)';
+          }
+        }}
       >
         {getSubmitButtonText()}
       </button>
@@ -214,24 +243,51 @@ export default function AccountModal({
       footer={renderFooter()}
     >
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        <div 
+          style={{
+            backgroundColor: 'var(--color-error)',
+            borderColor: 'var(--color-error)',
+            color: 'white',
+            opacity: 0.9
+          }}
+          className="mb-6 p-4 border rounded-lg"
+        >
           {error}
         </div>
       )}
 
         {mode === 'delete' ? (
-          // Delete confirmation
           <div className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div 
+              style={{
+                backgroundColor: 'var(--color-warning)',
+                borderColor: 'var(--color-warning)',
+                color: 'white',
+                opacity: 0.1
+              }}
+              className="p-4 border rounded-lg"
+            >
               <div className="flex items-start space-x-3">
-                <svg className="w-6 h-6 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg 
+                  style={{ color: 'var(--color-warning)' }}
+                  className="w-6 h-6 mt-0.5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
                 <div>
-                  <h4 className="text-lg font-medium text-yellow-800">
+                  <h4 
+                    style={{ color: 'var(--color-warning)' }}
+                    className="text-lg font-medium"
+                  >
                     Confirmar Exclusão
                   </h4>
-                  <p className="text-yellow-700 mt-1">
+                  <p 
+                    style={{ color: styles.text.color }}
+                    className="mt-1"
+                  >
                     Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.
                   </p>
                 </div>
@@ -239,11 +295,23 @@ export default function AccountModal({
             </div>
 
             {account && (
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h5 className="font-medium text-gray-900 dark:text-white mb-2">
+              <div 
+                style={{
+                  ...styles.background,
+                  borderColor: styles.border.borderColor
+                }}
+                className="rounded-lg p-4 border"
+              >
+                <h5 
+                  style={{ color: styles.text.color }}
+                  className="font-medium mb-2"
+                >
                   Conta a ser excluída:
                 </h5>
-                <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <div 
+                  style={{ color: styles.textSecondary.color }}
+                  className="space-y-1 text-sm"
+                >
                   <p><span className="font-medium">ID:</span> #{account.id}</p>
                   <p><span className="font-medium">Descrição:</span> {account.description}</p>
                   <p><span className="font-medium">Saldo:</span> R$ {account.balance?.toFixed(2) || '0.00'}</p>
@@ -258,7 +326,6 @@ export default function AccountModal({
             )}
           </div>
         ) : (
-          // Create/Edit form
           <form id="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
             <FormField
               label="Descrição da Conta"
