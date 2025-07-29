@@ -10,6 +10,7 @@ import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { usersService } from '@/lib/services/usersService';
 import TransactionModal from '@/components/forms/TransactionModal';
+import LoanModal from '@/components/forms/LoanModal';
 import { TransactionFilters, StatusFilter } from '@/components/ui';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
@@ -35,6 +36,7 @@ export default function TransactionsPage() {
     isOpen: false,
     mode: 'create'
   });
+  const [loanModalOpen, setLoanModalOpen] = useState(false);
 
   // Função para buscar estado do gerenciamento familiar do localStorage
   const getFamilyManagementEnabled = (): boolean => {
@@ -203,6 +205,13 @@ export default function TransactionsPage() {
     };
   };
 
+  // Adicione os IDs de conta e categoria que serão usados para o empréstimo
+  // Aqui, exemplo usando o primeiro account e category disponíveis
+  const accountId = accounts.length > 0 ? accounts[0].id : 0;
+  const categoryId = categories.length > 0 ? categories[0].id : 0;
+  const accountIdLoan = accounts.length > 1 ? accounts[1].id : accountId;
+  const categoryIdLoan = categories.length > 1 ? categories[1].id : categoryId;
+
   if (isLoading) {
     return (
       <div 
@@ -253,28 +262,40 @@ export default function TransactionsPage() {
             Visualize e gerencie todas as suas receitas e despesas
           </p>
         </div>
-        <button
-          onClick={() => openModal('create')}
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            color: 'white'
-          }}
-          className="px-6 py-3 font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          + Adicionar Nova Transação
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => openModal('create')}
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: 'white'
+            }}
+            className="px-6 py-3 font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            + Transação
+          </button>
+          <button
+            onClick={() => setLoanModalOpen(true)}
+            style={{
+              backgroundColor: 'var(--color-success)',
+              color: 'white'
+            }}
+            className="px-6 py-3 font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2"
+          >
+            + Empréstimo
+          </button>
+        </div>
       </div>
 
       {/* Filter Section */}
@@ -690,6 +711,16 @@ export default function TransactionsPage() {
         transaction={modalState.transaction}
         onClose={closeModal}
         onSuccess={handleModalSuccess}
+      />
+
+      {/* Modal de Empréstimo */}
+      <LoanModal
+        isOpen={loanModalOpen}
+        onClose={() => setLoanModalOpen(false)}
+        onSuccess={handleModalSuccess}
+        accounts={accounts.filter(acc => acc.userId === currentUser?.id)}
+        categories={categories.filter(cat => cat.userId === currentUser?.id)}
+        currentUser={currentUser}
       />
     </div>
   );
