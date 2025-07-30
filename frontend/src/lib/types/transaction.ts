@@ -27,6 +27,7 @@ export interface TransactionCreateRequest {
   effectiveAmount?: number;
   accountId: number;
   categoryId?: number;
+  qtdeInstallments?: number; 
 }
 
 export interface TransactionUpdateRequest {

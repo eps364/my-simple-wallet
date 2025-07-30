@@ -67,6 +67,11 @@ export class TransactionsService {
     };
     return apiRequest<Transaction>(`${this.endpoint}/${id}/effective`, fetchConfig('PATCH', preparedData));
   }
+
+  async createBatch(data: TransactionCreateRequest[]): Promise<Transaction[]> {
+    const preparedData = data.map(item => this.prepareDataForBackend(item));
+    return apiRequest<Transaction[]>(`${this.endpoint}/batch`, fetchConfig('POST', preparedData));
+  }
 }
 
 // Instância singleton do serviço de transações

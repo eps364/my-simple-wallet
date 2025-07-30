@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -18,12 +19,12 @@ interface TransactionModalProps {
   readonly onSuccess: () => void;
 }
 
-export default function TransactionModal({ 
-  isOpen, 
-  mode, 
-  transaction, 
-  onClose, 
-  onSuccess 
+export default function TransactionModal({
+  isOpen,
+  mode,
+  transaction,
+  onClose,
+  onSuccess
 }: TransactionModalProps) {
   const [formData, setFormData] = useState<TransactionCreateRequest>({
     description: '',
@@ -41,6 +42,10 @@ export default function TransactionModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [error, setError] = useState<string>('');
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchFields, setBatchFields] = useState({
+    qtdeInstallments: null as number | null,
+  });
 
   // Carregar accounts e categories quando o modal abrir
   useEffect(() => {
@@ -92,10 +97,10 @@ export default function TransactionModal({
     try {
       setIsLoadingData(true);
       // Verificar se o gerenciamento familiar está ativo
-      const shouldUseParentMode = typeof window !== 'undefined' 
+      const shouldUseParentMode = typeof window !== 'undefined'
         ? localStorage.getItem('familyManagementEnabled') === 'true'
         : false;
-      
+
       // Buscar usuário logado
       const user = await usersService.getProfile();
       const [accountsData, categoriesData] = await Promise.all([
@@ -107,7 +112,7 @@ export default function TransactionModal({
       const myCategories = categoriesData.filter(cat => String(cat.userId) === user.id);
       setAccounts(myAccounts);
       setCategories(myCategories);
-    } catch (error) {
+    } catch {
       setError('Erro ao carregar contas e categorias');
     } finally {
       setIsLoadingData(false);
@@ -149,9 +154,48 @@ export default function TransactionModal({
         return;
       }
 
+      if (batchMode) {
+        if (!batchFields.qtdeInstallments || batchFields.qtdeInstallments < 2) {
+          setError('Quantidade de parcelas deve ser maior que 1');
+          return;
+        }
+        if (!formData.dueDate) {
+          setError('Data do vencimento é obrigatória');
+          return;
+        }
+        // Montar payload para batch
+        // Formatar dueDate para DD/MM/YYYY
+        const formatDateToBR = (dateStr: string) => {
+          if (!dateStr) return '';
+          const [year, month, day] = dateStr.split('-');
+          return `${day}/${month}/${year}`;
+        };
+        const payload = {
+          ...formData,
+          dueDate: formatDateToBR(formData.dueDate),
+          qtdeInstallments: batchFields.qtdeInstallments,
+          effectiveAmount: formData.effectiveAmount ?? ''
+        };
+        // Pega o token JWT do localStorage (ajuste conforme seu fluxo de auth)
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        await fetch('/api/transactions/batch', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        onSuccess();
+        return;
+      }
+
       await transactionsService.create(formData);
       onSuccess();
-    } catch (error) {
+    } catch {
       setError('Erro ao criar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -199,7 +243,7 @@ export default function TransactionModal({
 
       await transactionsService.update(transaction.id, updateData);
       onSuccess();
-    } catch (error) {
+    } catch {
       setError('Erro ao atualizar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -214,7 +258,7 @@ export default function TransactionModal({
       setIsLoading(true);
       await transactionsService.delete(transaction.id);
       onSuccess();
-    } catch (error) {
+    } catch {
       setError('Erro ao excluir transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -244,7 +288,7 @@ export default function TransactionModal({
         effectiveAmount: formData.effectiveAmount
       });
       onSuccess();
-    } catch (error) {
+    } catch {
       setError('Erro ao liquidar transação. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -253,7 +297,7 @@ export default function TransactionModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (mode === 'create') {
       await handleCreate();
     } else if (mode === 'edit') {
@@ -271,12 +315,12 @@ export default function TransactionModal({
         ...prev,
         [field]: value
       };
-      
+
       // Se o tipo mudou, limpar a categoria selecionada
       if (field === 'type') {
         newData.categoryId = undefined;
       }
-      
+
       return newData;
     });
   };
@@ -291,7 +335,10 @@ export default function TransactionModal({
 
   const getSubmitButtonText = () => {
     if (isLoading) return 'Carregando...';
-    if (mode === 'create') return 'Adicionar';
+    if (mode === 'create') {
+      if (batchMode) return 'Enviar e salvar';
+      return 'Adicionar';
+    }
     if (mode === 'edit') return 'Salvar';
     if (mode === 'delete') return 'Excluir';
     if (mode === 'settle') return 'Liquidar';
@@ -333,10 +380,10 @@ export default function TransactionModal({
   );
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title={getModalTitle()} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={getModalTitle()}
       size="lg"
       variant={getModalVariant()}
       footer={renderFooter()}
@@ -362,121 +409,110 @@ export default function TransactionModal({
 
         {(() => {
           if (mode === 'delete') {
+            // ...existing code...
             return (
               <div className="space-y-4">
-                <p className="text-gray-700 dark:text-gray-300">
-                  Tem certeza que deseja excluir esta transação?
-                </p>
-                {transaction && (
-                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      {transaction.description}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {transaction.type === TransactionType.INCOME ? 'Receita' : 'Despesa'}: 
-                      R$ {transaction.amount.toFixed(2)}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Vencimento: {transaction.dueDate}
-                    </p>
-                    {transaction.effectiveDate && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Data Efetiva: {transaction.effectiveDate}
-                      </p>
-                    )}
-                  </div>
-                )}
-                <p className="text-sm text-red-600">
-                  Esta ação não pode ser desfeita.
-                </p>
+                {/* ...existing code... */}
               </div>
             );
           }
-
           if (mode === 'settle') {
+            // ...existing code...
             return (
               <div className="space-y-6">
-                {transaction && (
-                  <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                      Liquidar Transação
-                    </h4>
-                    <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-                      <p><strong>Descrição:</strong> {transaction.description}</p>
-                      <p><strong>Valor Planejado:</strong> R$ {transaction.amount.toFixed(2)}</p>
-                      <p><strong>Vencimento:</strong> {transaction.dueDate}</p>
-                      <p><strong>Conta:</strong> {transaction.account}</p>
-                      {transaction.category && (
-                        <p><strong>Categoria:</strong> {transaction.category}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <FormField
-                    label="Data Efetiva"
-                    name="effectiveDate"
-                    type="date"
-                    value={formData.effectiveDate || ''}
-                    onChange={(value) => handleChange('effectiveDate', value)}
-                    required
-                  />
-
-                  <FormField
-                    label="Valor Efetivo"
-                    name="effectiveAmount"
-                    type="number"
-                    value={formData.effectiveAmount || ''}
-                    onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
+                {/* ...existing code... */}
               </div>
             );
           }
-
           // Modo create ou edit
           return (
             <div className="space-y-6">
-              <FormField
-                label="Conta"
-                name="accountId"
-                type="select"
-                value={formData.accountId}
-                onChange={(value) => handleChange('accountId', parseInt(value))}
-                options={accounts.map(account => ({
-                  value: account.id,
-                  label: account.description
-                }))}
-                required
-                labelExtra={
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const url = '/accounts?action=create';
-                      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-                      if (newWindow) {
-                        newWindow.focus();
-                      } else {
-                        // Fallback se popup foi bloqueado
-                        window.location.href = url;
-                      }
-                    }}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors"
-                    title="Abrir página de contas em nova aba"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Adicionar
-                  </button>
-                }
-              />
-
+              {/* Ativar lançamento múltiplo */}
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="batchMode"
+                  checked={batchMode}
+                  onChange={e => {
+                    const checked = e.target.checked;
+                    setBatchMode(checked);
+                    if (checked) {
+                  setBatchFields({ qtdeInstallments: null });
+                      setFormData(f => ({ ...f, effectiveDate: '', effectiveAmount: undefined }));
+                    } else {
+                    setBatchFields({ qtdeInstallments: null });
+                    }
+                  }}
+                  className="form-checkbox h-4 w-4 text-blue-600"
+                />
+                <label htmlFor="batchMode" className="text-sm text-gray-700 dark:text-gray-300 select-none">
+                  Ativar lançamento múltiplo
+                </label>
+              </div>
+              {batchMode && (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    label="Qtde de parcelas"
+                    name="qtdeInstallments"
+                    type="number"
+                    value={batchFields.qtdeInstallments ?? ''}
+                    onChange={v => setBatchFields(f => ({ ...f, qtdeInstallments: v ? parseInt(v) : null }))}
+                    required
+                  />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  label="Conta"
+                  name="accountId"
+                  type="select"
+                  value={formData.accountId}
+                  onChange={(value) => handleChange('accountId', parseInt(value))}
+                  options={accounts.map(account => ({
+                    value: account.id,
+                    label: account.description
+                  }))}
+                  required
+                  labelExtra={
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const url = '/accounts?action=create';
+                        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                        if (newWindow) {
+                          newWindow.focus();
+                        } else {
+                          // Fallback se popup foi bloqueado
+                          window.location.href = url;
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors"
+                      title="Abrir página de contas em nova aba"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Adicionar
+                    </button>
+                  }
+                />
+                <FormField
+                  label="Categoria (Opcional)"
+                  name="categoryId"
+                  type="select"
+                  value={formData.categoryId || ''}
+                  onChange={(value) => handleChange('categoryId', value ? parseInt(value) : undefined)}
+                  options={[
+                    { value: '', label: 'Nenhuma categoria' },
+                    ...getFilteredCategories().map(category => ({
+                      value: category.id,
+                      label: category.category
+                    }))
+                  ]}
+                />
+              </div>
               <FormField
                 label="Descrição"
                 name="description"
@@ -486,6 +522,35 @@ export default function TransactionModal({
                 placeholder="Ex: Supermercado, Salário, etc."
                 required
               />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  label="Data do 1º Vencimento"
+                  name="dueDate"
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(value) => handleChange('dueDate', value)}
+                  required
+                />
+                <FormField
+                  label="Valor Efetivo (Opcional)"
+                  name="effectiveAmount"
+                  type="number"
+                  value={formData.effectiveAmount || ''}
+                  onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
+                  placeholder="0.00"
+                  disabled={batchMode}
+                />
+              </div>
+              <FormField
+                label="Data Efetiva (Opcional)"
+                name="effectiveDate"
+                type="date"
+                value={formData.effectiveDate || ''}
+                onChange={(value) => handleChange('effectiveDate', value || undefined)}
+                disabled={batchMode}
+              />
+
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -512,70 +577,8 @@ export default function TransactionModal({
                 />
               </div>
 
-              <FormField
-                label="Categoria (Opcional)"
-                name="categoryId"
-                type="select"
-                value={formData.categoryId || ''}
-                onChange={(value) => handleChange('categoryId', value ? parseInt(value) : undefined)}
-                options={[
-                  { value: '', label: 'Nenhuma categoria' },
-                  ...getFilteredCategories().map(category => ({
-                    value: category.id,
-                    label: category.category
-                  }))
-                ]}
-                labelExtra={
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const url = '/categories?action=create';
-                      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-                      if (newWindow) {
-                        newWindow.focus();
-                      } else {
-                        // Fallback se popup foi bloqueado
-                        window.location.href = url;
-                      }
-                    }}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition-colors"
-                    title="Abrir página de categorias em nova aba"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Adicionar
-                  </button>
-                }
-              />
 
-              <FormField
-                label="Data de Vencimento"
-                name="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(value) => handleChange('dueDate', value)}
-                required
-              />
 
-              <FormField
-                label="Data Efetiva (Opcional)"
-                name="effectiveDate"
-                type="date"
-                value={formData.effectiveDate || ''}
-                onChange={(value) => handleChange('effectiveDate', value || undefined)}
-              />
-
-              <FormField
-                label="Valor Efetivo (Opcional)"
-                name="effectiveAmount"
-                type="number"
-                value={formData.effectiveAmount || ''}
-                onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
-                placeholder="0.00"
-              />
             </div>
           );
         })()}
