@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-  
-import { Modal, FormField } from '../ui';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { FormField, Modal } from '../ui';
 // import { transactionsService } from '@/lib/services/transactionsService';
 import { loanService } from '@/lib/services/loanService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
-import { User } from '@/lib/types/user';
 import { TransactionType } from '@/lib/types/transaction';
+import { User } from '@/lib/types/user';
 
 
 interface LoanModalProps {
@@ -38,7 +38,7 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
     dueDateLoan: '',
   });
 
-  
+
   const [loading, setLoading] = useState(false);
   const [installments, setInstallments] = useState<{ dueDate: string; amount: number }[]>([]);
   const [error, setError] = useState<string>('');

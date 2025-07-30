@@ -1,15 +1,14 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Modal, FormField } from '../ui';
-import { Transaction, TransactionCreateRequest, TransactionUpdateRequest, TransactionType } from '@/lib/types/transaction';
-import { Account } from '@/lib/types/account';
-import { Category, CATEGORY_TYPE_MAP } from '@/lib/types/category';
-import { transactionsService } from '@/lib/services/transactionsService';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
+import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
+import { Account } from '@/lib/types/account';
+import { Category, CATEGORY_TYPE_MAP } from '@/lib/types/category';
+import { Transaction, TransactionCreateRequest, TransactionType, TransactionUpdateRequest } from '@/lib/types/transaction';
+import { useEffect, useState } from 'react';
+import { FormField, Modal } from '../ui';
 
 interface TransactionModalProps {
   readonly isOpen: boolean;
@@ -27,14 +26,14 @@ export default function TransactionModal({
   onSuccess
 }: TransactionModalProps) {
   const [formData, setFormData] = useState<TransactionCreateRequest>({
-    description: '',
-    amount: 0,
-    type: TransactionType.EXPENSE,
-    dueDate: new Date().toISOString().split('T')[0],
-    effectiveDate: '',
-    effectiveAmount: undefined,
     accountId: 0,
-    categoryId: undefined
+    amount: 0,
+    description: '',
+    categoryId: undefined,
+    dueDate: new Date().toISOString().split('T')[0],
+    effectiveAmount: undefined,
+    effectiveDate: '',
+    type: TransactionType.EXPENSE
   });
 
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -44,24 +43,20 @@ export default function TransactionModal({
   const [error, setError] = useState<string>('');
   const [batchMode, setBatchMode] = useState(false);
   const [batchFields, setBatchFields] = useState({
-    qtdeInstallments: null as number | null,
+    qtdeInstallments: 1,
   });
 
-  // Carregar accounts e categories quando o modal abrir
   useEffect(() => {
     if (isOpen) {
       loadAccountsAndCategories();
     }
   }, [isOpen]);
 
-  // Atualizar formulário quando transaction prop mudar
   useEffect(() => {
     if (transaction && (mode === 'edit' || mode === 'delete' || mode === 'settle')) {
-      // Converte datas do formato DD/MM/YYYY para YYYY-MM-DD se necessário
       const convertDateToInputFormat = (dateStr: string) => {
         if (!dateStr) return '';
         if (dateStr.includes('/')) {
-          // Formato DD/MM/YYYY -> YYYY-MM-DD
           const [day, month, year] = dateStr.split('/');
           return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
         }
@@ -69,14 +64,14 @@ export default function TransactionModal({
       };
 
       setFormData({
-        description: transaction.description,
+        accountId: transaction.accountId,
         amount: transaction.amount,
-        type: transaction.type,
+        categoryId: transaction.categoryId,
+        description: transaction.description,
         dueDate: convertDateToInputFormat(transaction.dueDate),
         effectiveDate: mode === 'settle' ? new Date().toISOString().split('T')[0] : convertDateToInputFormat(transaction.effectiveDate || ''),
         effectiveAmount: mode === 'settle' ? transaction.amount : transaction.effectiveAmount,
-        accountId: transaction.accountId,
-        categoryId: transaction.categoryId
+        type: transaction.type,
       });
     } else if (mode === 'create') {
       setFormData({
@@ -87,7 +82,7 @@ export default function TransactionModal({
         effectiveDate: '',
         effectiveAmount: undefined,
         accountId: accounts.length > 0 ? accounts[0].id : 0,
-        categoryId: undefined
+        categoryId: undefined,
       });
     }
     setError('');
@@ -96,18 +91,16 @@ export default function TransactionModal({
   const loadAccountsAndCategories = async () => {
     try {
       setIsLoadingData(true);
-      // Verificar se o gerenciamento familiar está ativo
       const shouldUseParentMode = typeof window !== 'undefined'
         ? localStorage.getItem('familyManagementEnabled') === 'true'
         : false;
 
-      // Buscar usuário logado
       const user = await usersService.getProfile();
       const [accountsData, categoriesData] = await Promise.all([
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode)
       ]);
-      // Filtrar apenas contas e categorias do usuário logado
+
       const myAccounts = accountsData.filter(acc => String(acc.userId) === user.id);
       const myCategories = categoriesData.filter(cat => String(cat.userId) === user.id);
       setAccounts(myAccounts);
@@ -119,10 +112,8 @@ export default function TransactionModal({
     }
   };
 
-  // Filtrar categorias baseado no tipo de transação
   const getFilteredCategories = () => {
     return categories.filter(category => {
-      // Usar o mapeamento: INCOME (0) -> IN, EXPENSE (1) -> EX
       const expectedCategoryType = CATEGORY_TYPE_MAP[formData.type as keyof typeof CATEGORY_TYPE_MAP];
       return category.type === expectedCategoryType;
     });
@@ -132,68 +123,42 @@ export default function TransactionModal({
     try {
       setError('');
       setIsLoading(true);
-
-      // Validações básicas
+  
       if (!formData.description.trim()) {
         setError('Descrição da transação é obrigatória');
         return;
       }
-
+  
       if (formData.amount <= 0) {
         setError('Valor deve ser maior que zero');
         return;
       }
-
+  
       if (formData.accountId === 0) {
         setError('Conta é obrigatória');
         return;
       }
-
+  
       if (!formData.dueDate) {
         setError('Data de vencimento é obrigatória');
         return;
       }
-
+  
       if (batchMode) {
-        if (!batchFields.qtdeInstallments || batchFields.qtdeInstallments < 2) {
-          setError('Quantidade de parcelas deve ser maior que 1');
+        if (batchFields.qtdeInstallments < 1) {
+          setError('Quantidade de parcelas deve ser maior que zero');
           return;
         }
-        if (!formData.dueDate) {
-          setError('Data do vencimento é obrigatória');
-          return;
-        }
-        // Montar payload para batch
-        // Formatar dueDate para DD/MM/YYYY
-        const formatDateToBR = (dateStr: string) => {
-          if (!dateStr) return '';
-          const [year, month, day] = dateStr.split('-');
-          return `${day}/${month}/${year}`;
+  
+        const batchRequest = {
+          transaction: formData,
+          qtdeInstallments: batchFields.qtdeInstallments
         };
-        const payload = {
-          ...formData,
-          dueDate: formatDateToBR(formData.dueDate),
-          qtdeInstallments: batchFields.qtdeInstallments,
-          effectiveAmount: formData.effectiveAmount ?? ''
-        };
-        // Pega o token JWT do localStorage (ajuste conforme seu fluxo de auth)
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-        await fetch('/api/transactions/batch', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(payload),
-        });
-        onSuccess();
-        return;
+  
+        await transactionsService.createBatch(batchRequest);
+      } else {
+        await transactionsService.create(formData);
       }
-
-      await transactionsService.create(formData);
       onSuccess();
     } catch {
       setError('Erro ao criar transação. Tente novamente.');
@@ -209,7 +174,6 @@ export default function TransactionModal({
       setError('');
       setIsLoading(true);
 
-      // Validações básicas
       if (!formData.description.trim()) {
         setError('Descrição da transação é obrigatória');
         return;
@@ -272,7 +236,6 @@ export default function TransactionModal({
       setError('');
       setIsLoading(true);
 
-      // Validações para liquidação
       if (!formData.effectiveDate) {
         setError('Data efetiva é obrigatória para liquidação');
         return;
@@ -316,7 +279,6 @@ export default function TransactionModal({
         [field]: value
       };
 
-      // Se o tipo mudou, limpar a categoria selecionada
       if (field === 'type') {
         newData.categoryId = undefined;
       }
@@ -409,25 +371,19 @@ export default function TransactionModal({
 
         {(() => {
           if (mode === 'delete') {
-            // ...existing code...
             return (
               <div className="space-y-4">
-                {/* ...existing code... */}
               </div>
             );
           }
           if (mode === 'settle') {
-            // ...existing code...
             return (
               <div className="space-y-6">
-                {/* ...existing code... */}
               </div>
             );
           }
-          // Modo create ou edit
           return (
             <div className="space-y-6">
-              {/* Ativar lançamento múltiplo */}
               <div className="flex items-center gap-2 mb-2">
                 <input
                   type="checkbox"
@@ -437,10 +393,10 @@ export default function TransactionModal({
                     const checked = e.target.checked;
                     setBatchMode(checked);
                     if (checked) {
-                  setBatchFields({ qtdeInstallments: null });
+                      setBatchFields({ qtdeInstallments: 1 });
                       setFormData(f => ({ ...f, effectiveDate: '', effectiveAmount: undefined }));
                     } else {
-                    setBatchFields({ qtdeInstallments: null });
+                      setBatchFields({ qtdeInstallments: 1 });
                     }
                   }}
                   className="form-checkbox h-4 w-4 text-blue-600"
@@ -456,7 +412,7 @@ export default function TransactionModal({
                     name="qtdeInstallments"
                     type="number"
                     value={batchFields.qtdeInstallments ?? ''}
-                    onChange={v => setBatchFields(f => ({ ...f, qtdeInstallments: v ? parseInt(v) : null }))}
+                    onChange={v => setBatchFields(f => ({ ...f, qtdeInstallments: v ? parseInt(v) : 1 }))}
                     required
                   />
                 </div>
@@ -484,7 +440,6 @@ export default function TransactionModal({
                         if (newWindow) {
                           newWindow.focus();
                         } else {
-                          // Fallback se popup foi bloqueado
                           window.location.href = url;
                         }
                       }}
@@ -522,7 +477,6 @@ export default function TransactionModal({
                 placeholder="Ex: Supermercado, Salário, etc."
                 required
               />
-
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   label="Data do 1º Vencimento"
@@ -533,27 +487,6 @@ export default function TransactionModal({
                   required
                 />
                 <FormField
-                  label="Valor Efetivo (Opcional)"
-                  name="effectiveAmount"
-                  type="number"
-                  value={formData.effectiveAmount || ''}
-                  onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
-                  placeholder="0.00"
-                  disabled={batchMode}
-                />
-              </div>
-              <FormField
-                label="Data Efetiva (Opcional)"
-                name="effectiveDate"
-                type="date"
-                value={formData.effectiveDate || ''}
-                onChange={(value) => handleChange('effectiveDate', value || undefined)}
-                disabled={batchMode}
-              />
-
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
                   label="Valor"
                   name="amount"
                   type="number"
@@ -562,7 +495,25 @@ export default function TransactionModal({
                   placeholder="0.00"
                   required
                 />
-
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  label="Valor Efetivo (Opcional)"
+                  name="effectiveAmount"
+                  type="number"
+                  value={formData.effectiveAmount || ''}
+                  onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
+                  placeholder="0.00"
+                  disabled={batchMode}
+                />
+                <FormField
+                  label="Data Efetiva (Opcional)"
+                  name="effectiveDate"
+                  type="date"
+                  value={formData.effectiveDate || ''}
+                  onChange={(value) => handleChange('effectiveDate', value || undefined)}
+                  disabled={batchMode}
+                />
                 <FormField
                   label="Tipo"
                   name="type"
@@ -576,9 +527,6 @@ export default function TransactionModal({
                   required
                 />
               </div>
-
-
-
             </div>
           );
         })()}
