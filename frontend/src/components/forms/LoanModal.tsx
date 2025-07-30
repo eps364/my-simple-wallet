@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
   
 import { Modal, FormField } from '../ui';
-import { transactionsService } from '@/lib/services/transactionsService';
+// import { transactionsService } from '@/lib/services/transactionsService';
+import { loanService } from '@/lib/services/loanService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
 import { User } from '@/lib/types/user';
@@ -19,7 +20,7 @@ interface LoanModalProps {
   currentUser: User | null;
 }
 
-export default function LoanModal({ isOpen, onClose, onSuccess, accounts, categories, currentUser }: LoanModalProps) {
+export default function LoanModal({ isOpen, onClose, onSuccess, accounts, categories }: LoanModalProps) {
   const [form, setForm] = useState({
     description: 'Emprestimo',
     amount: '',
@@ -105,8 +106,8 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
         qtdeInstallments: parseInt(form.qtdeInstallments),
         dueDateLoan: form.dueDateLoan || '',
       };
-      // Ajuste: supondo que o método correto seja transactionsService.create
-      const response = await transactionsService.create(payload);
+      // Chamada correta para o endpoint de empréstimo
+      const response: any = await loanService.createLoan(payload);
       setInstallments(response.installments || []);
       onSuccess(response);
     } catch (err) {
@@ -153,36 +154,38 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
           </div>
         )}
 
-        <FormField
-          label="Tipo"
-          name="type"
-          type="text"
-          value="Entrada"
-          disabled
-          onChange={() => {}}
-        />
-        <FormField
-          label="Conta"
-          name="accountId"
-          type="select"
-          value={form.accountId}
-          onChange={value => handleChange('accountId', value)}
-          options={
-            (accounts ?? []).map(account => ({ value: account.id.toString(), label: account.description }))
-          }
-          required
-        />
-        <FormField
-          label="Categoria"
-          name="categoryId"
-          type="select"
-          value={form.categoryId}
-          onChange={value => handleChange('categoryId', value)}
-          options={
-            (categories ?? []).map(category => ({ value: category.id.toString(), label: category.category }))
-          }
-          required
-        />
+        {/* Tipo (oculto) */}
+        <input type="hidden" name="type" value={form.type} />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <FormField
+              label="Conta"
+              name="accountId"
+              type="select"
+              value={form.accountId}
+              onChange={value => handleChange('accountId', value)}
+              options={
+                (accounts ?? []).map(account => ({ value: account.id.toString(), label: account.description }))
+              }
+              required
+            />
+          </div>
+          <div className="flex-1">
+            <FormField
+              label="Categoria"
+              name="categoryId"
+              type="select"
+              value={form.categoryId}
+              onChange={value => handleChange('categoryId', value)}
+              options={
+                (categories ?? [])
+                  .filter(category => category.type === 'IN')
+                  .map(category => ({ value: category.id.toString(), label: category.category }))
+              }
+              required
+            />
+          </div>
+        </div>
         <FormField
           label="Descrição"
           name="description"
@@ -191,54 +194,68 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
           onChange={value => handleChange('description', value)}
           required
         />
-        <div>
-          <label htmlFor="amount" className="block text-sm font-medium mb-1">
-            Valor
-          </label>
-          <input
-            id="amount"
-            name="amount"
-            type="number"
-            required
-            ref={amountRef}
-            value={form.amount}
-            onChange={e => handleChange('amount', e.target.value)}
-            className="w-full p-2 border rounded"
-          />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label htmlFor="amount" className="block text-sm font-medium mb-1">
+              Valor
+            </label>
+            <input
+              id="amount"
+              name="amount"
+              type="number"
+              required
+              ref={amountRef}
+              value={form.amount}
+              onChange={e => handleChange('amount', e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div className="flex-1">
+            <FormField
+              label="Crédito em:"
+              name="dueDate"
+              type="date"
+              value={form.dueDate}
+              onChange={value => handleChange('dueDate', value)}
+              required
+            />
+          </div>
         </div>
-        <FormField
-          label="Vencimento"
-          name="dueDate"
-          type="date"
-          value={form.dueDate}
-          onChange={value => handleChange('dueDate', value)}
-          required
-        />
-        {/* Campo oculto: effectiveDate */}
-        <input type="hidden" name="effectiveDate" value={form.effectiveDate} />
+        {/* effectiveDate oculto, igual ao Vencimento */}
+        <input type="hidden" name="effectiveDate" value={form.dueDate} />
         <hr className="my-6 border-t border-gray-300" />
-        <FormField
-          label="Conta Empréstimo"
-          name="accountIdLoan"
-          type="select"
-          value={form.accountIdLoan}
-          onChange={value => handleChange('accountIdLoan', value)}
-          options={
-            (accounts ?? []).map(account => ({ value: account.id.toString(), label: account.description }))
-          }
-          required
-        />
-        <FormField
-          label="Categoria Empréstimo"
-          name="categoryIdLoan"
-          type="select"
-          value={form.categoryIdLoan}
-          onChange={value => handleChange('categoryIdLoan', value)}
-          options={
-            (categories ?? []).map(category => ({ value: category.id.toString(), label: category.category }))
-          }
-          required
-        />
+        {/* Tipo Empréstimo (oculto) */}
+        <input type="hidden" name="typeLoan" value={form.typeLoan} />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <FormField
+              label="Conta Empréstimo"
+              name="accountIdLoan"
+              type="select"
+              value={form.accountIdLoan}
+              onChange={value => handleChange('accountIdLoan', value)}
+              options={
+                (accounts ?? []).map(account => ({ value: account.id.toString(), label: account.description }))
+              }
+              required
+            />
+          </div>
+          <div className="flex-1">
+            <FormField
+              label="Categoria Empréstimo"
+              name="categoryIdLoan"
+              type="select"
+              value={form.categoryIdLoan}
+              onChange={value => handleChange('categoryIdLoan', value)}
+              options={
+                (categories ?? [])
+                  .filter(category => category.type === 'EX')
+                  .map(category => ({ value: category.id.toString(), label: category.category }))
+              }
+              required
+            />
+          </div>
+        </div>
         <FormField
           label="Descrição do Empréstimo"
           name="descriptionLoan"
@@ -247,32 +264,30 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
           onChange={value => handleChange('descriptionLoan', value)}
           required
         />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <FormField
+              label="Valor Parcela"
+              name="amountInstallment"
+              type="number"
+              value={form.amountInstallment}
+              onChange={value => handleChange('amountInstallment', value)}
+              required
+            />
+          </div>
+          <div className="flex-1">
+            <FormField
+              label="Qtd Parcelas"
+              name="qtdeInstallments"
+              type="number"
+              value={form.qtdeInstallments}
+              onChange={value => handleChange('qtdeInstallments', value)}
+              required
+            />
+          </div>
+        </div>
         <FormField
-          label="Valor Parcela"
-          name="amountInstallment"
-          type="number"
-          value={form.amountInstallment}
-          onChange={value => handleChange('amountInstallment', value)}
-          required
-        />
-        <FormField
-          label="Qtd Parcelas"
-          name="qtdeInstallments"
-          type="number"
-          value={form.qtdeInstallments}
-          onChange={value => handleChange('qtdeInstallments', value)}
-          required
-        />
-        <FormField
-          label="Tipo Empréstimo"
-          name="typeLoan"
-          type="text"
-          value="Saída"
-          disabled
-          onChange={() => {}}
-        />
-        <FormField
-          label="Vencimento da 1ª Parcela"
+          label="Vencimento 1ª Parcela"
           name="dueDateLoan"
           type="date"
           value={form.dueDateLoan}
