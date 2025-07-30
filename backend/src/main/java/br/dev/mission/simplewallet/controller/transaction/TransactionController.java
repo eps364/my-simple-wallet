@@ -3,6 +3,7 @@ package br.dev.mission.simplewallet.controller.transaction;
 import br.dev.mission.simplewallet.dto.ApiResponse;
 import br.dev.mission.simplewallet.dto.transaction.TransactionEffectivationRequest;
 import br.dev.mission.simplewallet.dto.transaction.TransactionRequest;
+import br.dev.mission.simplewallet.dto.transaction.TransactionRequestWithInstallment;
 import br.dev.mission.simplewallet.dto.transaction.TransactionResponse;
 import br.dev.mission.simplewallet.service.transaction.TransactionService;
 import br.dev.mission.simplewallet.repository.user.UserRepository;
@@ -85,5 +86,12 @@ public class TransactionController {
         return transactionService.effective(id, request, userId)
                 .map(tx -> ResponseEntity.ok(new ApiResponse<>(200, "Transação efetivada com sucesso", tx)))
                 .orElse(ResponseEntity.ok(new ApiResponse<>(404, "Transação não encontrada", null)));
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> createBatch(@RequestBody TransactionRequestWithInstallment request) {
+        String userId = getLoggedUserId();
+        List<TransactionResponse> responses = transactionService.createBatch(request, userId);
+        return ResponseEntity.ok(new ApiResponse<>(201, "Transações criadas com sucesso", responses));
     }
 }
