@@ -6,7 +6,6 @@ import { Account } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
 import AccountModal from '@/components/forms/AccountModal';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
-import { useAuth } from '@/context/AuthContext';
 import { usersService } from '@/lib/services/usersService';
 
 

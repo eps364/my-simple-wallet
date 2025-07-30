@@ -1,11 +1,9 @@
 "use client";
 import { useEffect, useState, useCallback } from 'react';
 import { Transaction } from '@/lib/types/transaction';
-import { Account } from '@/lib/types/account';
-import { Category } from '@/lib/types/category';
+// ...existing code...
 import { transactionsService } from '@/lib/services/transactionsService';
-import { accountsService } from '@/lib/services/accountsService';
-import { categoriesService } from '@/lib/services/categoriesService';
+// ...existing code...
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { TransactionFilters, StatusFilter } from '@/components/ui';
@@ -22,9 +20,7 @@ import CategoryTrendsChart from '@/components/reports/CategoryTrendsChart';
 export default function ReportsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // ...existing code...
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState(false);
@@ -56,7 +52,7 @@ export default function ReportsPage() {
       return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
     });
 
-    setFilteredTransactions(filtered);
+    // setFilteredTransactions removido
     setTransactions(filtered);
   }, [statusFilter]);
 
@@ -75,15 +71,12 @@ export default function ReportsPage() {
   const loadTransactions = useCallback(async (isParentMode?: boolean) => {
     try {
       setLoading(true);
-      const [transactionsData, accountsData, categoriesData] = await Promise.all([
-        transactionsService.getAll(isParentMode),
-        accountsService.getAll(isParentMode),
-        categoriesService.getAll(isParentMode)
-      ]);
+         const [transactionsData] = await Promise.all([
+           transactionsService.getAll(isParentMode)
+         ]);
       
       setAllTransactions(transactionsData);
-      setAccounts(accountsData);
-      setCategories(categoriesData);
+      // setAccounts e setCategories removidos
     } catch (err) {
       setError('Erro ao carregar dados');
       console.error('Erro ao carregar dados:', err);
