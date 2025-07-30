@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Modal, FormField } from '../ui';
-import { Category, CategoryCreateRequest, CategoryUpdateRequest, CATEGORY_TYPE_REVERSE_MAP, CATEGORY_COLORS } from '@/lib/types/category';
-import { categoriesService } from '@/lib/services/categoriesService';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { categoriesService } from '@/lib/services/categoriesService';
+import { Category, CATEGORY_COLORS, CATEGORY_TYPE_REVERSE_MAP, CategoryCreateRequest, CategoryUpdateRequest } from '@/lib/types/category';
+import { useEffect, useState } from 'react';
+import { FormField, Modal } from '../ui';
 
 interface CategoryModalProps {
   readonly isOpen: boolean;
@@ -154,13 +154,6 @@ export default function CategoryModal({
     if (mode === 'edit') return 'Salvar Alterações';
     if (mode === 'delete') return 'Confirmar Exclusão';
     return 'Salvar';
-  };
-
-  const getSubmitButtonColor = () => {
-    if (mode === 'delete') {
-      return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
-    }
-    return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
   };
 
   const getModalVariant = () => {

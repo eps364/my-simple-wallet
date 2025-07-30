@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { Modal, FormField } from '../ui';
-import { Account, AccountCreateRequest, AccountUpdateRequest } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
+import { Account, AccountCreateRequest, AccountUpdateRequest } from '@/lib/types/account';
+import { useEffect, useState } from 'react';
+import { FormField, Modal } from '../ui';
 
 interface AccountFormProps {
   readonly isOpen: boolean;

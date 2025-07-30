@@ -1,33 +1,15 @@
 "use client";
 
+import { Transaction } from '@/lib/types/transaction';
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
-import { transactionsService } from '@/lib/services/transactionsService';
-import { Transaction, TransactionFilters } from '@/lib/types/transaction';
-import TransactionFiltersComponent, { StatusFilter, FilterConfig } from '@/components/ui/TransactionFilters';
 
 export default function ImportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [filter, setFilter] = useState<TransactionFilters>({});
-  const filterConfig: FilterConfig = {
-    status: {
-      enabled: true,
-      selectedStatus: statusFilter,
-      onStatusChange: setStatusFilter
-    },
-    // Adicione outros filtros conforme necessário (account, category, dateRange, etc)
-  };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [imported, setImported] = useState(false);
-
-  function getFamilyManagementEnabled(): boolean {
-    if (typeof window === 'undefined') return false;
-    const stored = localStorage.getItem('familyManagementEnabled');
-    return stored === 'true';
-  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
@@ -45,8 +27,6 @@ export default function ImportPage() {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const json: Transaction[] = XLSX.utils.sheet_to_json(worksheet);
-      // Aqui você pode enviar para o backend ou tratar os dados
-      // Exemplo: await transactionsService.import(json);
       setTransactions(json);
       setImported(true);
     } catch {

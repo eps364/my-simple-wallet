@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { Transaction, TransactionType } from '@/lib/types/transaction';
-import { Account } from '@/lib/types/account';
-import { Category } from '@/lib/types/category';
-import { User } from '@/lib/types/user';
-import { transactionsService } from '@/lib/services/transactionsService';
+import LoanModal from '@/components/forms/LoanModal';
+import TransactionModal from '@/components/forms/TransactionModal';
+import { StatusFilter, TransactionFilters } from '@/components/ui';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
+import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
-import TransactionModal from '@/components/forms/TransactionModal';
-import LoanModal from '@/components/forms/LoanModal';
-import { TransactionFilters, StatusFilter } from '@/components/ui';
-import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { Account } from '@/lib/types/account';
+import { Category } from '@/lib/types/category';
+import { Transaction, TransactionType } from '@/lib/types/transaction';
+import { User } from '@/lib/types/user';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
