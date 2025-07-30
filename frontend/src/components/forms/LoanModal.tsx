@@ -6,6 +6,7 @@ import { Modal, FormField } from '../ui';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
+import { User } from '@/lib/types/user';
 import { TransactionType } from '@/lib/types/transaction';
 
 
@@ -15,6 +16,7 @@ interface LoanModalProps {
   onSuccess: (data: unknown) => void;
   accounts: Account[];
   categories: Category[];
+  currentUser: User | null;
 }
 
 export default function LoanModal({ isOpen, onClose, onSuccess, accounts, categories, currentUser }: LoanModalProps) {
