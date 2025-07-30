@@ -13,11 +13,12 @@ type ModalMode = 'create' | 'edit' | 'delete' | null;
 function CategoriesPageContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const styles = useThemeStyles();
 
+  // Função usada
   const getFamilyManagementEnabled = (): boolean => {
     if (typeof window === 'undefined') return false;
     const stored = localStorage.getItem('familyManagementEnabled');
@@ -44,6 +45,7 @@ function CategoriesPageContent() {
     loadCategories();
   }, [loadCategories]);
 
+  // Função usada
   const getCategoryColor = (id: number): string => {
     const colors = [
       'bg-blue-100 text-blue-800 border-blue-200',
