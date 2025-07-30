@@ -9,7 +9,7 @@ import TransactionFiltersComponent, { StatusFilter, FilterConfig } from '@/compo
 export default function ExportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [filter, setFilter] = useState<TransactionFilters>({});
+     const [filter] = useState<TransactionFilters>({});
   const filterConfig: FilterConfig = {
     status: {
       enabled: true,

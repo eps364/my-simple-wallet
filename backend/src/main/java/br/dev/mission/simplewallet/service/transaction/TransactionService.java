@@ -1,5 +1,14 @@
 package br.dev.mission.simplewallet.service.transaction;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import br.dev.mission.simplewallet.dto.transaction.TransactionEffectivationRequest;
 import br.dev.mission.simplewallet.dto.transaction.TransactionRequest;
 import br.dev.mission.simplewallet.dto.transaction.TransactionResponse;
@@ -10,12 +19,6 @@ import br.dev.mission.simplewallet.repository.account.AccountRepository;
 import br.dev.mission.simplewallet.repository.category.CategoryRepository;
 import br.dev.mission.simplewallet.repository.transaction.TransactionRepository;
 import br.dev.mission.simplewallet.repository.user.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -101,5 +104,31 @@ public class TransactionService {
                     transactionRepository.delete(tx);
                     return true;
                 }).orElse(false);
+    }
+
+    public List<TransactionResponse> installments(TransactionRequest request, Integer qtdeLoan, String userId, Long creditId) {
+        List<TransactionResponse> installments = new ArrayList<>();
+        LocalDate dueDateFirstInstallment = request.dueDate();
+        
+        for (int i = 0; i < qtdeLoan; i++) {
+
+            LocalDate dueDateInstallment = dueDateFirstInstallment.plusMonths(i);
+
+        TransactionRequest installmentRequest = new TransactionRequest(
+            dueDateInstallment,
+            request.description() + " ID: " + creditId + " - " + (i + 1) + " de " + qtdeLoan,
+            request.amount(),
+            request.type(),
+            request.effectiveDate(),
+            request.effectiveAmount(),
+            request.accountId(),
+            request.categoryId()
+        );
+
+            installments.add(transactionMapper.toResponse(transactionRepository.save(transactionMapper.toEntity(installmentRequest, userId))));
+        }
+        
+        return installments;
+
     }
 }

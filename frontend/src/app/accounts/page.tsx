@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Account } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
 import AccountModal from '@/components/forms/AccountModal';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
-import { useAuth } from '@/context/AuthContext';
 import { usersService } from '@/lib/services/usersService';
 
-export default function AccountsPage() {
+
+
+function AccountsPageContent() {
   const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +58,6 @@ export default function AccountsPage() {
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('familyManagementChanged', handleStorageChange);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('familyManagementChanged', handleStorageChange);
@@ -350,5 +350,13 @@ export default function AccountsPage() {
         onSuccess={handleModalSuccess}
       />
     </div>
+  );
+}
+
+export default function AccountsPage() {
+  return (
+    <Suspense>
+      <AccountsPageContent />
+    </Suspense>
   );
 }

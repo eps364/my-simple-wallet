@@ -1,5 +1,8 @@
 package br.dev.mission.simplewallet.mapper.transaction;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import br.dev.mission.simplewallet.dto.transaction.TransactionRequest;
 import br.dev.mission.simplewallet.dto.transaction.TransactionResponse;
 import br.dev.mission.simplewallet.model.Transaction;
@@ -7,8 +10,6 @@ import br.dev.mission.simplewallet.model.TransactionType;
 import br.dev.mission.simplewallet.repository.account.AccountRepository;
 import br.dev.mission.simplewallet.repository.category.CategoryRepository;
 import br.dev.mission.simplewallet.repository.user.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Component
 public class TransactionMapper {

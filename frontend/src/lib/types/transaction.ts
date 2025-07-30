@@ -1,6 +1,7 @@
 // Tipos relacionados às transações
 
 export interface Transaction {
+  installments: never[];
   id: number;
   description: string;
   amount: number;
