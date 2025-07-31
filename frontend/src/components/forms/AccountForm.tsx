@@ -12,12 +12,12 @@ interface AccountFormProps {
   readonly isLoading?: boolean;
 }
 
-export default function AccountForm({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  account, 
-  isLoading = false 
+export default function AccountForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  account,
+  isLoading = false
 }: AccountFormProps) {
   const [formData, setFormData] = useState<AccountCreateRequest>({
     description: account?.description || '',
@@ -30,7 +30,7 @@ export default function AccountForm({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
-  const [actionLoading, setActionLoading] = useState<{[key: number]: 'edit' | 'delete'}>({});
+  const [actionLoading, setActionLoading] = useState<{ [key: number]: 'edit' | 'delete' }>({});
 
   // Carregar contas quando o modal abrir
   useEffect(() => {
@@ -63,14 +63,15 @@ export default function AccountForm({
   const loadAccounts = async () => {
     try {
       setIsLoadingAccounts(true);
-      // Verificar se o gerenciamento familiar está ativo
-      const shouldUseParentMode = typeof window !== 'undefined' 
+      const shouldUseParentMode = typeof window !== 'undefined'
         ? localStorage.getItem('familyManagementEnabled') === 'true'
         : false;
-      
+
       const accountsData = await accountsService.getAll(shouldUseParentMode);
       setAccounts(accountsData);
-    } catch (error) {
+
+    } catch {
+      setErrors('Erro ao carregar contas. Tente novamente.');
     } finally {
       setIsLoadingAccounts(false);
     }
@@ -95,7 +96,7 @@ export default function AccountForm({
       setActionLoading(prev => ({ ...prev, [accountId]: 'delete' }));
       await accountsService.delete(accountId);
       await loadAccounts(); // Recarregar lista
-    } catch (error) {
+    } catch {
       setErrors('Erro ao excluir conta. Tente novamente.');
     } finally {
       setActionLoading(prev => {
@@ -111,7 +112,7 @@ export default function AccountForm({
 
     try {
       setErrors('');
-      
+
       // Validações básicas
       if (!formData.description.trim()) {
         setErrors('Descrição da conta é obrigatória');
@@ -128,7 +129,7 @@ export default function AccountForm({
       await accountsService.update(editingAccount.id, updateData);
       await loadAccounts(); // Recarregar lista
       handleClearForm();
-    } catch (error) {
+    } catch {
       setErrors('Erro ao atualizar conta. Tente novamente.');
     }
   };
@@ -147,7 +148,7 @@ export default function AccountForm({
   const handleSubmit = async () => {
     try {
       setErrors('');
-      
+
       // Validações básicas
       if (!formData.description.trim()) {
         setErrors('Descrição da conta é obrigatória');
@@ -162,9 +163,9 @@ export default function AccountForm({
         await onSubmit(formData);
         await loadAccounts(); // Recarregar lista após criar
       }
-      
+
       handleClearForm();
-    } catch (error) {
+    } catch {
       setErrors('Erro ao salvar conta. Tente novamente.');
     }
   };
@@ -178,7 +179,7 @@ export default function AccountForm({
   const getAccountColor = (id: number): string => {
     const colors = [
       'bg-blue-100 text-blue-800',
-      'bg-green-100 text-green-800', 
+      'bg-green-100 text-green-800',
       'bg-purple-100 text-purple-800',
       'bg-yellow-100 text-yellow-800',
       'bg-red-100 text-red-800',
@@ -190,11 +191,11 @@ export default function AccountForm({
   const updateFormData = (field: keyof AccountCreateRequest) => (value: string) => {
     setFormData(prev => {
       let newValue: string | number | undefined = value;
-      
+
       if (field === 'balance' || field === 'credit' || field === 'dueDate') {
         newValue = value ? parseFloat(value) : undefined;
       }
-      
+
       return {
         ...prev,
         [field]: newValue
@@ -215,7 +216,7 @@ export default function AccountForm({
           <h4 className="text-xl font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-3">
             {editingAccount ? 'Editar Conta' : 'Criar Nova Conta'}
           </h4>
-          
+
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
             {errors && (
               <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
@@ -317,7 +318,7 @@ export default function AccountForm({
               </span>
             )}
           </h4>
-          
+
           <div className="max-h-96 overflow-y-auto">
             {isLoadingAccounts ? (
               <div className="flex justify-center items-center py-8">
@@ -337,11 +338,10 @@ export default function AccountForm({
                     {accounts.map((acc) => (
                       <div
                         key={acc.id}
-                        className={`p-4 border rounded-lg ${
-                          editingAccount?.id === acc.id 
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                        className={`p-4 border rounded-lg ${editingAccount?.id === acc.id
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                             : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
@@ -359,7 +359,7 @@ export default function AccountForm({
                               {acc.dueDate && <p>Vencimento: Dia {acc.dueDate}</p>}
                             </div>
                           </div>
-                          
+
                           <div className="flex flex-col gap-2 ml-4">
                             <button
                               onClick={() => handleEdit(acc)}
@@ -396,7 +396,7 @@ export default function AccountForm({
           </div>
         </div>
       </div>
-      
+
       {/* Botão de fechar no rodapé */}
       <div className="flex justify-end pt-8 mt-8 border-t border-gray-200 dark:border-gray-600">
         <button

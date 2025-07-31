@@ -25,7 +25,7 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
       })
       .then(() => {
       })
-      .catch((error: unknown) => {
+      .catch(() => {
       });
     }
   }, [value, size]);
@@ -35,7 +35,7 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch  {
       const textArea = document.createElement('textarea');
       textArea.value = value;
       textArea.style.position = 'fixed';
@@ -46,7 +46,8 @@ export default function QRCodeGenerator({ value, size = 150, className = '' }: Q
         document.execCommand('copy');
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-      } catch (fallbackError) {
+      } catch {
+        setCopied(false);
       }
       document.body.removeChild(textArea);
     }

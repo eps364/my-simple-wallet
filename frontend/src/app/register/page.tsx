@@ -74,8 +74,8 @@ export default function RegisterPage() {
         }, 2000);
       }
       
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
       setError(errorMessage);
     } finally {
       setLoading(false);
