@@ -5,6 +5,8 @@ import { categoriesService } from '@/lib/services/categoriesService';
 import { Category, CATEGORY_COLORS, CATEGORY_TYPE_REVERSE_MAP, CategoryCreateRequest, CategoryUpdateRequest } from '@/lib/types/category';
 import { useEffect, useState } from 'react';
 import { FormField, Modal } from '../ui';
+import { FormFeedback } from '../ui/FormFeedback';
+import { SubmitButton } from '../ui/SubmitButton';
 
 interface CategoryModalProps {
   readonly isOpen: boolean;
@@ -229,16 +231,8 @@ export default function CategoryModal({
       footer={renderFooter()}
     >
       {error && (
-        <div
-          style={{
-            backgroundColor: 'var(--color-error)',
-            borderColor: 'var(--color-error)',
-            color: 'white',
-            opacity: 0.9
-          }}
-          className="mb-6 p-4 border rounded-lg"
-        >
-          {error}
+        <div className="mb-6">
+          <FormFeedback message={error} type="error" />
         </div>
       )}
 
@@ -335,40 +329,18 @@ export default function CategoryModal({
             disabled={isLoading}
           />
 
-          <div className="space-y-2">
-            <label
-              htmlFor="category-type"
-              style={{ color: styles.text.color }}
-              className="block text-sm font-medium"
-            >
-              Tipo da Categoria
-            </label>
-            <select
-              id="category-type"
-              value={formData.type}
-              onChange={(e) => updateFormData('type')(e.target.value)}
-              disabled={isLoading}
-              style={{
-                backgroundColor: 'var(--color-surface)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-                borderWidth: '1px',
-                borderStyle: 'solid'
-              }}
-              className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm"
-              onFocus={(e) => {
-                e.target.style.borderColor = 'var(--color-primary)';
-                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'var(--color-border)';
-                e.target.style.boxShadow = 'none';
-              }}
-            >
-              <option value={0}>Entrada</option>
-              <option value={1}>Saída</option>
-            </select>
-          </div>
+          <FormField
+            label="Tipo da Categoria"
+            name="type"
+            type="select"
+            value={formData.type}
+            onChange={updateFormData('type')}
+            options={[
+              { value: 0, label: 'Entrada' },
+              { value: 1, label: 'Saída' }
+            ]}
+            disabled={isLoading}
+          />
 
           <div className="space-y-2">
             <label
@@ -414,6 +386,8 @@ export default function CategoryModal({
               Cor selecionada: <span className="font-medium">{formData.color}</span>
             </p>
           </div>
+
+          <SubmitButton label={getSubmitButtonText()} loading={isLoading} />
         </form>
       )}
     </Modal>
