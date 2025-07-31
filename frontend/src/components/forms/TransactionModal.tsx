@@ -373,12 +373,34 @@ export default function TransactionModal({
           if (mode === 'delete') {
             return (
               <div className="space-y-4">
+                <p className="text-sm text-gray-700 dark:text-gray-300">Tem certeza que deseja excluir esta transação?</p>
+                <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <strong>{transaction?.description}</strong><br />
+                  Valor: R$ {transaction?.amount.toFixed(2)}<br />
+                  Vencimento: {transaction?.dueDate}
+                </div>
               </div>
             );
           }
           if (mode === 'settle') {
             return (
               <div className="space-y-6">
+                <FormField
+                  label="Data Efetiva"
+                  name="effectiveDate"
+                  type="date"
+                  value={formData.effectiveDate || ''}
+                  onChange={(value) => handleChange('effectiveDate', value || undefined)}
+                  required
+                />
+                <FormField
+                  label="Valor Efetivo"
+                  name="effectiveAmount"
+                  type="number"
+                  value={formData.effectiveAmount || ''}
+                  onChange={(value) => handleChange('effectiveAmount', parseFloat(value) || undefined)}
+                  required
+                />
               </div>
             );
           }
