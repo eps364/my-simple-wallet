@@ -3,6 +3,8 @@
 import { Transaction } from '@/lib/types/transaction';
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
+import { FormFeedback } from '@/components/ui/FormFeedback';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 
 export default function ImportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -46,20 +48,15 @@ export default function ImportPage() {
           onChange={handleFileChange}
           className="border px-2 py-1 rounded"
         />
-        <button
-          type="button"
-          onClick={handleImport}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded mt-4"
-          disabled={loading || !file}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0-8l-4 4m4-4l4 4M4 4h16" />
-          </svg>
-          Importar XLSX
-        </button>
+        <SubmitButton
+          label="Importar XLSX"
+          loading={loading}
+          disabled={!file}
+          className="flex items-center gap-2 px-4 py-2 mt-4"
+        />
       </div>
-      {imported && <div className="text-green-600 mb-2">Arquivo importado com sucesso!</div>}
-      {error && <div className="text-red-600 mb-2">{error}</div>}
+      {imported && <FormFeedback message="Arquivo importado com sucesso!" type="success" />}
+      {error && <FormFeedback message={error} type="error" />}
       {/* Preview dos dados importados */}
       <div className="overflow-x-auto">
         <table className="min-w-full border">
