@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, FormField } from '../ui';
+import { FormFeedback } from '../ui/FormFeedback';
 import { Account, AccountCreateRequest, AccountUpdateRequest } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
@@ -197,32 +198,53 @@ export default function AccountModal({
       >
         Cancelar
       </button>
-      <button
-        type="submit"
-        form="account-form"
-        disabled={isLoading}
-        style={{
-          backgroundColor: mode === 'delete' ? 'var(--color-error)' : 'var(--color-primary)',
-          color: 'white'
-        }}
-        className="px-4 py-2 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50"
-        onMouseEnter={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.backgroundColor = mode === 'delete'
-              ? 'var(--color-error)'
-              : 'var(--color-primary-hover)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.backgroundColor = mode === 'delete'
-              ? 'var(--color-error)'
-              : 'var(--color-primary)';
-          }
-        }}
-      >
-        {getSubmitButtonText()}
-      </button>
+      {mode === 'delete' ? (
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={handleSubmit}
+          style={{
+            backgroundColor: 'var(--color-error)',
+            color: 'white'
+          }}
+          className="px-4 py-2 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50"
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = 'var(--color-error)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = 'var(--color-error)';
+            }
+          }}
+        >
+          {getSubmitButtonText()}
+        </button>
+      ) : (
+        <button
+          type="submit"
+          form="account-form"
+          disabled={isLoading}
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: 'white'
+          }}
+          className="px-4 py-2 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50"
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+            }
+          }}
+        >
+          {getSubmitButtonText()}
+        </button>
+      )}
     </div>
   );
 
@@ -236,16 +258,8 @@ export default function AccountModal({
       footer={renderFooter()}
     >
       {error && (
-        <div
-          style={{
-            backgroundColor: 'var(--color-error)',
-            borderColor: 'var(--color-error)',
-            color: 'white',
-            opacity: 0.9
-          }}
-          className="mb-6 p-4 border rounded-lg"
-        >
-          {error}
+        <div className="mb-6">
+          <FormFeedback message={error} type="error" />
         </div>
       )}
 

@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/lib/services/authService';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { FormField } from '@/components/ui/FormComponents';
+import { FormFeedback } from '@/components/ui/FormFeedback';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -87,82 +90,29 @@ export default function LoginPage() {
           }}
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div 
-                className="border px-4 py-3 rounded"
-                style={{
-                  backgroundColor: '#fef2f2',
-                  borderColor: '#fca5a5',
-                  color: '#dc2626'
-                }}
-              >
-                {error}
-              </div>
-            )}
+            {error && <FormFeedback message={error} type="error" />}
 
-            <div>
-              <label 
-                htmlFor="username" 
-                className="block text-sm font-medium mb-2"
-                style={styles.text}
-              >
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition-colors"
-                style={{
-                  ...styles.surface,
-                  ...styles.border,
-                  color: styles.text.color
-                }}
-                placeholder="Seu username"
-              />
-            </div>
+            <FormField
+              label="Username"
+              name="username"
+              type="text"
+              value={username}
+              onChange={setUsername}
+              required
+              placeholder="Seu username"
+            />
 
-            <div>
-              <label 
-                htmlFor="password" 
-                className="block text-sm font-medium mb-2"
-                style={styles.text}
-              >
-                Senha
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition-colors"
-                style={{
-                  ...styles.surface,
-                  ...styles.border,
-                  color: styles.text.color
-                }}
-                placeholder="Sua senha"
-              />
-            </div>
+            <FormField
+              label="Senha"
+              name="password"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              required
+              placeholder="Sua senha"
+            />
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  ...styles.button,
-                  color: 'white'
-                }}
-              >
-                {loading ? 'Entrando...' : 'Entrar'}
-              </button>
-            </div>
+            <SubmitButton label="Entrar" loading={loading} />
           </form>
 
           <div className="mt-6 text-center">

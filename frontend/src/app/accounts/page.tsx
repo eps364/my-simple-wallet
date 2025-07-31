@@ -6,6 +6,7 @@ import { Account } from '@/lib/types/account';
 import { accountsService } from '@/lib/services/accountsService';
 import AccountModal from '@/components/forms/AccountModal';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { FormFeedback } from '@/components/ui/FormFeedback';
 import { usersService } from '@/lib/services/usersService';
 
 
@@ -168,8 +169,8 @@ function AccountsPageContent() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-          {error}
+        <div className="mb-6">
+          <FormFeedback message={error} type="error" />
           <button
             onClick={loadAccounts}
             className="ml-4 text-red-800 underline hover:no-underline"

@@ -6,7 +6,12 @@ import { transactionsService } from '@/lib/services/transactionsService';
 // ...existing code...
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { TransactionFilters, StatusFilter } from '@/components/ui';
+import { StatusFilter, SortOrder } from '@/components/ui';
+import AdvancedTransactionFilters from '@/components/ui/AdvancedTransactionFilters';
+import { accountsService } from '@/lib/services/accountsService';
+import { categoriesService } from '@/lib/services/categoriesService';
+import { Account } from '@/lib/types/account';
+import { Category } from '@/lib/types/category';
 import IncomeChart from '@/components/reports/IncomeChart';
 import ExpenseChart from '@/components/reports/ExpenseChart';
 import PayableChart from '@/components/reports/PayableChart';
@@ -25,8 +30,17 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState(false);
   
-  // Estado do filtro - apenas status
+  // Estados dos filtros
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [accountFilter, setAccountFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>({ startDate: '', endDate: '' });
+  const [descriptionFilter, setDescriptionFilter] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('dueDate');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // Função para verificar se o gerenciamento familiar está ativo
   const getFamilyManagementEnabled = (): boolean => {
@@ -34,7 +48,7 @@ export default function ReportsPage() {
     return localStorage.getItem('familyManagementEnabled') === 'true';
   };
 
-  // Função para aplicar filtro de status apenas
+  // Função para aplicar todos os filtros e ordenação
   const applyFilters = useCallback((data: Transaction[]) => {
     let filtered = [...data];
 
@@ -47,19 +61,63 @@ export default function ReportsPage() {
       }
     }
 
-    // Ordenação padrão por data de vencimento (mais recente primeiro)
+    // Filtro por conta
+    if (accountFilter !== 'all') {
+      filtered = filtered.filter(t => t.accountId === Number(accountFilter));
+    }
+
+    // Filtro por categoria
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(t => t.categoryId === Number(categoryFilter));
+    }
+
+    // Filtro por tipo
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(t => String(t.type) === typeFilter);
+    }
+
+    // Filtro por período
+    if (dateRange.startDate) {
+      filtered = filtered.filter(t => t.dueDate >= dateRange.startDate);
+    }
+    if (dateRange.endDate) {
+      filtered = filtered.filter(t => t.dueDate <= dateRange.endDate);
+    }
+
+    // Filtro por descrição
+    if (descriptionFilter.trim() !== '') {
+      filtered = filtered.filter(t => t.description.toLowerCase().includes(descriptionFilter.trim().toLowerCase()));
+    }
+
+    // Ordenação
     filtered.sort((a, b) => {
-      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+      let aValue: unknown = a[sortBy as keyof Transaction];
+      let bValue: unknown = b[sortBy as keyof Transaction];
+      // Se for data, converter para Date
+      if (sortBy === 'dueDate' || sortBy === 'effectiveDate' || sortBy === 'createdAt') {
+        aValue = aValue ? new Date(aValue as string).getTime() : 0;
+        bValue = bValue ? new Date(bValue as string).getTime() : 0;
+      }
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      return 0;
     });
 
-    // setFilteredTransactions removido
     setTransactions(filtered);
-  }, [statusFilter]);
+  }, [statusFilter, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, sortBy, sortOrder]);
 
-  // Função para lidar com mudança no filtro de status
-  const handleStatusFilterChange = (status: StatusFilter) => {
-    setStatusFilter(status);
-  };
+  // Handlers dos filtros
+  const handleStatusFilterChange = (status: StatusFilter) => setStatusFilter(status);
+  const handleAccountChange = (accountId: string) => setAccountFilter(accountId);
+  const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
+  const handleTypeChange = (type: string) => setTypeFilter(type);
+  const handleDateRangeChange = (start: string, end: string) => setDateRange({ startDate: start, endDate: end });
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
+  const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
 
   // Aplicar filtros sempre que algum filtro mudar
   useEffect(() => {
@@ -71,12 +129,14 @@ export default function ReportsPage() {
   const loadTransactions = useCallback(async (isParentMode?: boolean) => {
     try {
       setLoading(true);
-         const [transactionsData] = await Promise.all([
-           transactionsService.getAll(isParentMode)
-         ]);
-      
+      const [transactionsData, accountsData, categoriesData] = await Promise.all([
+        transactionsService.getAll(isParentMode),
+        accountsService.getAll(isParentMode),
+        categoriesService.getAll(isParentMode)
+      ]);
       setAllTransactions(transactionsData);
-      // setAccounts e setCategories removidos
+      setAccounts(accountsData);
+      setCategories(categoriesData);
     } catch (err) {
       setError('Erro ao carregar dados');
       console.error('Erro ao carregar dados:', err);
@@ -189,17 +249,36 @@ export default function ReportsPage() {
 
           {/* Filtros */}
           <div className="mb-6">
-            <TransactionFilters
-              config={{
-                status: {
-                  enabled: true,
-                  selectedStatus: statusFilter,
-                  onStatusChange: handleStatusFilterChange
-                }
+            <AdvancedTransactionFilters
+              statusFilter={statusFilter}
+              onStatusChange={handleStatusFilterChange}
+              accountFilter={accountFilter}
+              onAccountChange={handleAccountChange}
+              accounts={accounts}
+              categoryFilter={categoryFilter}
+              onCategoryChange={handleCategoryChange}
+              categories={categories}
+              typeFilter={typeFilter}
+              onTypeChange={handleTypeChange}
+              dateRange={dateRange}
+              onDateRangeChange={handleDateRangeChange}
+              descriptionFilter={descriptionFilter}
+              onDescriptionChange={handleDescriptionChange}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
+              className="mb-2"
+              onClearFilters={() => {
+                setStatusFilter('all');
+                setAccountFilter('all');
+                setCategoryFilter('all');
+                setTypeFilter('all');
+                setDateRange({ startDate: '', endDate: '' });
+                setDescriptionFilter('');
+                setSortBy('dueDate');
+                setSortOrder('desc');
               }}
-              familyManagementEnabled={familyManagementEnabled}
             />
-            
             {/* Contador de transações */}
             <div className="mt-4 flex justify-end">
               <div 
