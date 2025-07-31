@@ -14,17 +14,17 @@ interface CategoryModalProps {
   readonly onSuccess: () => void;
 }
 
-export default function CategoryModal({ 
-  isOpen, 
-  mode, 
-  category, 
-  onClose, 
-  onSuccess 
+export default function CategoryModal({
+  isOpen,
+  mode,
+  category,
+  onClose,
+  onSuccess
 }: CategoryModalProps) {
   const [formData, setFormData] = useState<CategoryCreateRequest>({
     category: '',
     type: 0,
-    color: CATEGORY_COLORS[0] 
+    color: CATEGORY_COLORS[0]
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function CategoryModal({
 
       await categoriesService.create(formData);
       onSuccess();
-    } catch (error) {
+    } catch {
       setError('Erro ao criar categoria. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -87,7 +87,7 @@ export default function CategoryModal({
 
       await categoriesService.update(category.id, updateData);
       onSuccess();
-    } catch (error) {
+    } catch {
       setError('Erro ao atualizar categoria. Tente novamente.');
     } finally {
       setIsLoading(false);
@@ -103,8 +103,8 @@ export default function CategoryModal({
 
       await categoriesService.delete(category.id);
       onSuccess();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir categoria. Tente novamente.';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao excluir categoria. Tente novamente.';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -124,11 +124,11 @@ export default function CategoryModal({
   const updateFormData = (field: keyof CategoryCreateRequest) => (value: string) => {
     setFormData(prev => {
       let newValue: string | number = value;
-      
+
       if (field === 'type') {
         newValue = parseInt(value);
       }
-      
+
       return {
         ...prev,
         [field]: newValue
@@ -229,7 +229,7 @@ export default function CategoryModal({
       footer={renderFooter()}
     >
       {error && (
-        <div 
+        <div
           style={{
             backgroundColor: 'var(--color-error)',
             borderColor: 'var(--color-error)',
@@ -244,7 +244,7 @@ export default function CategoryModal({
 
       {mode === 'delete' ? (
         <div className="space-y-6">
-          <div 
+          <div
             style={{
               backgroundColor: 'var(--color-warning)',
               borderColor: 'var(--color-warning)',
@@ -253,23 +253,23 @@ export default function CategoryModal({
             className="p-4 border rounded-lg"
           >
             <div className="flex items-start space-x-3">
-              <svg 
+              <svg
                 style={{ color: 'var(--color-warning)' }}
-                className="w-6 h-6 mt-0.5 flex-shrink-0" 
-                fill="none" 
-                stroke="currentColor" 
+                className="w-6 h-6 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div>
-                <h4 
+                <h4
                   style={{ color: 'var(--color-warning)' }}
                   className="text-lg font-medium"
                 >
                   Confirmar Exclusão
                 </h4>
-                <p 
+                <p
                   style={{ color: styles.text.color }}
                   className="mt-1"
                 >
@@ -280,20 +280,20 @@ export default function CategoryModal({
           </div>
 
           {category && (
-            <div 
+            <div
               style={{
                 ...styles.background,
                 borderColor: styles.border.borderColor
               }}
               className="rounded-lg p-4 border"
             >
-              <h5 
+              <h5
                 style={{ color: styles.text.color }}
                 className="font-medium mb-3"
               >
                 Categoria a ser excluída:
               </h5>
-              <div 
+              <div
                 style={{ color: styles.textSecondary.color }}
                 className="space-y-2 text-sm"
               >
@@ -303,14 +303,14 @@ export default function CategoryModal({
                 {category.color && (
                   <p className="flex items-center gap-2">
                     <span className="font-medium">Cor:</span>
-                    <div 
-                      style={{ 
+                    <div
+                      style={{
                         backgroundColor: category.color,
                         borderColor: styles.border.borderColor
                       }}
                       className="w-4 h-4 rounded-full border"
                     />
-                    <span 
+                    <span
                       style={{ color: styles.textMuted.color }}
                       className="font-mono"
                     >
@@ -336,8 +336,8 @@ export default function CategoryModal({
           />
 
           <div className="space-y-2">
-            <label 
-              htmlFor="category-type" 
+            <label
+              htmlFor="category-type"
               style={{ color: styles.text.color }}
               className="block text-sm font-medium"
             >
@@ -371,8 +371,8 @@ export default function CategoryModal({
           </div>
 
           <div className="space-y-2">
-            <label 
-              htmlFor="category-color" 
+            <label
+              htmlFor="category-color"
               style={{ color: styles.text.color }}
               className="block text-sm font-medium"
             >
@@ -387,17 +387,16 @@ export default function CategoryModal({
                   disabled={isLoading}
                   style={{
                     backgroundColor: color,
-                    borderColor: formData.color === color 
-                      ? styles.text.color 
+                    borderColor: formData.color === color
+                      ? styles.text.color
                       : styles.border.borderColor,
                     borderWidth: '2px',
                     borderStyle: 'solid'
                   }}
-                  className={`w-8 h-8 rounded-full focus:outline-none transition-transform disabled:cursor-not-allowed ${
-                    formData.color === color 
-                      ? 'scale-110' 
+                  className={`w-8 h-8 rounded-full focus:outline-none transition-transform disabled:cursor-not-allowed ${formData.color === color
+                      ? 'scale-110'
                       : 'hover:scale-105'
-                  }`}
+                    }`}
                   onFocus={(e) => {
                     e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
                   }}
@@ -408,7 +407,7 @@ export default function CategoryModal({
                 />
               ))}
             </div>
-            <p 
+            <p
               style={{ color: styles.textMuted.color }}
               className="text-xs"
             >

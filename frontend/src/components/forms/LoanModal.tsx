@@ -2,13 +2,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { FormField, Modal } from '../ui';
-// import { transactionsService } from '@/lib/services/transactionsService';
 import { loanService } from '@/lib/services/loanService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
 import { TransactionType } from '@/lib/types/transaction';
-import { User } from '@/lib/types/user';
+import { FormField, Modal } from '../ui';
 
 
 interface LoanModalProps {
@@ -17,14 +15,13 @@ interface LoanModalProps {
   onSuccess: (data: unknown) => void;
   accounts: Account[];
   categories: Category[];
-  currentUser: User | null;
 }
 
 export default function LoanModal({ isOpen, onClose, onSuccess, accounts, categories }: LoanModalProps) {
   const [form, setForm] = useState({
     description: 'Emprestimo',
     amount: '',
-    type: TransactionType.INCOME, // Não editável
+    type: TransactionType.INCOME,
     dueDate: '',
     effectiveDate: '',
     accountId: '',
@@ -32,7 +29,7 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
     descriptionLoan: 'Emprestimo',
     qtdeInstallments: '1',
     amountInstallment: '',
-    typeLoan: TransactionType.EXPENSE, // Não editável
+    typeLoan: TransactionType.EXPENSE,
     accountIdLoan: '',
     categoryIdLoan: '',
     dueDateLoan: '',
@@ -91,24 +88,25 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
     setError('');
     try {
       const payload = {
-        type: 0,
-        accountId: parseInt(form.accountId),
-        categoryId: parseInt(form.categoryId),
+        type: form.type.toString(),
+        accountId: form.accountId,
+        categoryId: form.categoryId,
         description: form.description,
-        amount: parseFloat(form.amount),
+        amount: form.amount,
         dueDate: form.dueDate,
         effectiveDate: form.effectiveDate,
-        typeLoan: 1,
-        accountIdLoan: parseInt(form.accountIdLoan),
-        categoryIdLoan: parseInt(form.categoryIdLoan),
+        typeLoan: form.typeLoan.toString(),
+        accountIdLoan: form.accountIdLoan,
+        categoryIdLoan: form.categoryIdLoan,
         descriptionLoan: form.descriptionLoan,
-        amountInstallment: parseFloat(form.amountInstallment),
-        qtdeInstallments: parseInt(form.qtdeInstallments),
+        amountInstallment: form.amountInstallment,
+        qtdeInstallments: form.qtdeInstallments,
         dueDateLoan: form.dueDateLoan || '',
       };
-      // Chamada correta para o endpoint de empréstimo
-      const response: any = await loanService.createLoan(payload);
-      setInstallments(response.installments || []);
+
+      const response = await loanService.createLoan(payload);
+      const typedResponse = response as { installments?: { dueDate: string; amount: number }[] };
+      setInstallments(typedResponse.installments || []);
       onSuccess(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar empréstimo');

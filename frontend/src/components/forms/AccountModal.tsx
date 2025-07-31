@@ -14,12 +14,12 @@ interface AccountModalProps {
   readonly onSuccess: () => void;
 }
 
-export default function AccountModal({ 
-  isOpen, 
-  mode, 
-  account, 
-  onClose, 
-  onSuccess 
+export default function AccountModal({
+  isOpen,
+  mode,
+  account,
+  onClose,
+  onSuccess
 }: AccountModalProps) {
   const [formData, setFormData] = useState<AccountCreateRequest>({
     description: '',
@@ -134,11 +134,11 @@ export default function AccountModal({
   const updateFormData = (field: keyof AccountCreateRequest) => (value: string) => {
     setFormData(prev => {
       let newValue: string | number | undefined = value;
-      
+
       if (field === 'balance' || field === 'credit' || field === 'dueDate') {
         newValue = value ? parseFloat(value) : undefined;
       }
-      
+
       return {
         ...prev,
         [field]: newValue
@@ -164,13 +164,6 @@ export default function AccountModal({
     if (mode === 'edit') return 'Salvar Alterações';
     if (mode === 'delete') return 'Confirmar Exclusão';
     return 'Salvar';
-  };
-
-  const getSubmitButtonColor = () => {
-    if (mode === 'delete') {
-      return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
-    }
-    return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
   };
 
   const getModalVariant = () => {
@@ -215,15 +208,15 @@ export default function AccountModal({
         className="px-4 py-2 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-50"
         onMouseEnter={(e) => {
           if (!isLoading) {
-            e.currentTarget.style.backgroundColor = mode === 'delete' 
-              ? 'var(--color-error)' 
+            e.currentTarget.style.backgroundColor = mode === 'delete'
+              ? 'var(--color-error)'
               : 'var(--color-primary-hover)';
           }
         }}
         onMouseLeave={(e) => {
           if (!isLoading) {
-            e.currentTarget.style.backgroundColor = mode === 'delete' 
-              ? 'var(--color-error)' 
+            e.currentTarget.style.backgroundColor = mode === 'delete'
+              ? 'var(--color-error)'
               : 'var(--color-primary)';
           }
         }}
@@ -243,7 +236,7 @@ export default function AccountModal({
       footer={renderFooter()}
     >
       {error && (
-        <div 
+        <div
           style={{
             backgroundColor: 'var(--color-error)',
             borderColor: 'var(--color-error)',
@@ -256,121 +249,121 @@ export default function AccountModal({
         </div>
       )}
 
-        {mode === 'delete' ? (
-          <div className="space-y-4">
-            <div 
-              style={{
-                backgroundColor: 'var(--color-warning)',
-                borderColor: 'var(--color-warning)',
-                color: 'white',
-                opacity: 0.1
-              }}
-              className="p-4 border rounded-lg"
-            >
-              <div className="flex items-start space-x-3">
-                <svg 
-                  style={{ color: 'var(--color-warning)' }}
-                  className="w-6 h-6 mt-0.5" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <div>
-                  <h4 
-                    style={{ color: 'var(--color-warning)' }}
-                    className="text-lg font-medium"
-                  >
-                    Confirmar Exclusão
-                  </h4>
-                  <p 
-                    style={{ color: styles.text.color }}
-                    className="mt-1"
-                  >
-                    Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {account && (
-              <div 
-                style={{
-                  ...styles.background,
-                  borderColor: styles.border.borderColor
-                }}
-                className="rounded-lg p-4 border"
+      {mode === 'delete' ? (
+        <div className="space-y-4">
+          <div
+            style={{
+              backgroundColor: 'var(--color-warning)',
+              borderColor: 'var(--color-warning)',
+              color: 'white',
+              opacity: 0.1
+            }}
+            className="p-4 border rounded-lg"
+          >
+            <div className="flex items-start space-x-3">
+              <svg
+                style={{ color: 'var(--color-warning)' }}
+                className="w-6 h-6 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <h5 
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h4
+                  style={{ color: 'var(--color-warning)' }}
+                  className="text-lg font-medium"
+                >
+                  Confirmar Exclusão
+                </h4>
+                <p
                   style={{ color: styles.text.color }}
-                  className="font-medium mb-2"
+                  className="mt-1"
                 >
-                  Conta a ser excluída:
-                </h5>
-                <div 
-                  style={{ color: styles.textSecondary.color }}
-                  className="space-y-1 text-sm"
-                >
-                  <p><span className="font-medium">ID:</span> #{account.id}</p>
-                  <p><span className="font-medium">Descrição:</span> {account.description}</p>
-                  <p><span className="font-medium">Saldo:</span> R$ {account.balance?.toFixed(2) || '0.00'}</p>
-                  {account.credit !== undefined && account.credit !== null && (
-                    <p><span className="font-medium">Limite:</span> R$ {account.credit.toFixed(2)}</p>
-                  )}
-                  {account.dueDate && (
-                    <p><span className="font-medium">Vencimento:</span> Dia {account.dueDate}</p>
-                  )}
-                </div>
+                  Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.
+                </p>
               </div>
-            )}
-          </div>
-        ) : (
-          <form id="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
-            <FormField
-              label="Descrição da Conta"
-              name="description"
-              type="text"
-              value={formData.description}
-              onChange={updateFormData('description')}
-              required
-              placeholder="Ex: Conta Corrente Banco XYZ, Cartão Nu"
-              disabled={isLoading}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                label="Saldo Inicial"
-                name="balance"
-                type="number"
-                value={formData.balance || 0}
-                onChange={updateFormData('balance')}
-                placeholder="0.00 (padrão)"
-                disabled={isLoading}
-              />
-
-              <FormField
-                label="Limite de Crédito (opcional)"
-                name="credit"
-                type="number"
-                value={formData.credit || ''}
-                onChange={updateFormData('credit')}
-                placeholder="0.00 (padrão)"
-                disabled={isLoading}
-              />
             </div>
+          </div>
 
+          {account && (
+            <div
+              style={{
+                ...styles.background,
+                borderColor: styles.border.borderColor
+              }}
+              className="rounded-lg p-4 border"
+            >
+              <h5
+                style={{ color: styles.text.color }}
+                className="font-medium mb-2"
+              >
+                Conta a ser excluída:
+              </h5>
+              <div
+                style={{ color: styles.textSecondary.color }}
+                className="space-y-1 text-sm"
+              >
+                <p><span className="font-medium">ID:</span> #{account.id}</p>
+                <p><span className="font-medium">Descrição:</span> {account.description}</p>
+                <p><span className="font-medium">Saldo:</span> R$ {account.balance?.toFixed(2) || '0.00'}</p>
+                {account.credit !== undefined && account.credit !== null && (
+                  <p><span className="font-medium">Limite:</span> R$ {account.credit.toFixed(2)}</p>
+                )}
+                {account.dueDate && (
+                  <p><span className="font-medium">Vencimento:</span> Dia {account.dueDate}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <form id="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
+          <FormField
+            label="Descrição da Conta"
+            name="description"
+            type="text"
+            value={formData.description}
+            onChange={updateFormData('description')}
+            required
+            placeholder="Ex: Conta Corrente Banco XYZ, Cartão Nu"
+            disabled={isLoading}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
-              label="Dia do Vencimento (opcional)"
-              name="dueDate"
+              label="Saldo Inicial"
+              name="balance"
               type="number"
-              value={formData.dueDate || ''}
-              onChange={updateFormData('dueDate')}
-              placeholder="1 (padrão - dia do mês para vencimento)"
+              value={formData.balance || 0}
+              onChange={updateFormData('balance')}
+              placeholder="0.00 (padrão)"
               disabled={isLoading}
             />
-          </form>
-        )}
+
+            <FormField
+              label="Limite de Crédito (opcional)"
+              name="credit"
+              type="number"
+              value={formData.credit || ''}
+              onChange={updateFormData('credit')}
+              placeholder="0.00 (padrão)"
+              disabled={isLoading}
+            />
+          </div>
+
+          <FormField
+            label="Dia do Vencimento (opcional)"
+            name="dueDate"
+            type="number"
+            value={formData.dueDate || ''}
+            onChange={updateFormData('dueDate')}
+            placeholder="1 (padrão - dia do mês para vencimento)"
+            disabled={isLoading}
+          />
+        </form>
+      )}
     </Modal>
   );
 }

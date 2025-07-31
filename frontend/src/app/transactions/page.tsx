@@ -23,10 +23,10 @@ export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
-  
+
   // Estado do filtro - apenas status
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  
+
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -89,17 +89,17 @@ export default function TransactionsPage() {
     try {
       setIsLoading(true);
       setError('');
-      
+
       // Enviar isParent=true quando o gerenciamento familiar estiver ativo
       const shouldUseParentMode = getFamilyManagementEnabled();
-      
+
       const [transactionsData, accountsData, categoriesData, userData] = await Promise.all([
         transactionsService.getAll(shouldUseParentMode),
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode),
         usersService.getProfile()
       ]);
-      
+
       setAllTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);
@@ -114,7 +114,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
     setFamilyManagementEnabled(getFamilyManagementEnabled());
-    
+
     // Listener para mudanças no localStorage
     const handleStorageChange = () => {
       const newValue = getFamilyManagementEnabled();
@@ -126,10 +126,10 @@ export default function TransactionsPage() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Listener customizado para mudanças feitas na mesma aba
     window.addEventListener('familyManagementChanged', handleStorageChange);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('familyManagementChanged', handleStorageChange);
@@ -175,12 +175,12 @@ export default function TransactionsPage() {
   // Função para formatar data
   const formatDate = (dateString: string): string => {
     if (!dateString) return '-';
-    
+
     // Se a data já está no formato DD/MM/YYYY (do backend), apenas retorna
     if (dateString.includes('/')) {
       return dateString;
     }
-    
+
     // Se está no formato ISO (YYYY-MM-DD), converte para DD/MM/YYYY
     try {
       return new Date(dateString).toLocaleDateString('pt-BR');
@@ -205,32 +205,25 @@ export default function TransactionsPage() {
     };
   };
 
-  // Adicione os IDs de conta e categoria que serão usados para o empréstimo
-  // Aqui, exemplo usando o primeiro account e category disponíveis
-  const accountId = accounts.length > 0 ? accounts[0].id : 0;
-  const categoryId = categories.length > 0 ? categories[0].id : 0;
-  const accountIdLoan = accounts.length > 1 ? accounts[1].id : accountId;
-  const categoryIdLoan = categories.length > 1 ? categories[1].id : categoryId;
-
   if (isLoading) {
     return (
-      <div 
+      <div
         style={{ backgroundColor: styles.background.backgroundColor }}
         className="container mx-auto px-4 py-8"
       >
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="flex flex-col items-center space-y-4">
-            <svg 
+            <svg
               style={{ color: 'var(--color-primary)' }}
-              className="animate-spin h-12 w-12" 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
+              className="animate-spin h-12 w-12"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
               viewBox="0 0 24 24"
             >
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p 
+            <p
               style={{ color: styles.textSecondary.color }}
             >
               Carregando transações...
@@ -242,20 +235,20 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div 
+    <div
       style={{ backgroundColor: styles.background.backgroundColor }}
       className="container mx-auto px-4 py-8"
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 
+          <h1
             style={{ color: styles.text.color }}
             className="text-3xl font-bold"
           >
             Gerenciar Transações
           </h1>
-          <p 
+          <p
             style={{ color: styles.textSecondary.color }}
             className="mt-2"
           >
@@ -310,10 +303,10 @@ export default function TransactionsPage() {
           }}
           familyManagementEnabled={familyManagementEnabled}
         />
-        
+
         {/* Results Counter */}
         <div className="mt-4 flex justify-end">
-          <div 
+          <div
             style={{ color: styles.textMuted.color }}
             className="text-sm"
           >
@@ -326,7 +319,7 @@ export default function TransactionsPage() {
 
       {/* Error Message */}
       {error && (
-        <div 
+        <div
           style={{
             backgroundColor: 'var(--color-error)',
             borderColor: 'var(--color-error)',
@@ -356,22 +349,22 @@ export default function TransactionsPage() {
       {transactions.length === 0 ? (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto">
-            <svg 
+            <svg
               style={{ color: styles.textMuted.color }}
-              className="mx-auto h-24 w-24" 
-              fill="none" 
-              viewBox="0 0 24 24" 
+              className="mx-auto h-24 w-24"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            <h3 
+            <h3
               style={{ color: styles.text.color }}
               className="mt-4 text-lg font-medium"
             >
               {getEmptyStateTexts().title}
             </h3>
-            <p 
+            <p
               style={{ color: styles.textSecondary.color }}
               className="mt-2"
             >
@@ -426,13 +419,13 @@ export default function TransactionsPage() {
               {/* Card Header */}
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <h3 
+                  <h3
                     style={{ color: styles.text.color }}
                     className="text-lg font-semibold truncate"
                   >
                     {transaction.description}
                   </h3>
-                  <p 
+                  <p
                     style={{ color: styles.textSecondary.color }}
                     className="text-sm mt-1"
                   >
@@ -449,17 +442,16 @@ export default function TransactionsPage() {
                 {/* Main Amount */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between">
-                    <span 
+                    <span
                       style={{ color: styles.textSecondary.color }}
                       className="text-sm"
                     >
                       Valor
                     </span>
-                    <span className={`text-2xl font-bold ${
-                      transaction.type === TransactionType.INCOME 
-                        ? 'text-green-600 dark:text-green-400' 
+                    <span className={`text-2xl font-bold ${transaction.type === TransactionType.INCOME
+                        ? 'text-green-600 dark:text-green-400'
                         : 'text-red-600 dark:text-red-400'
-                    }`}>
+                      }`}>
                       {transaction.type === TransactionType.INCOME ? '+' : '-'} R$ {transaction.amount.toFixed(2)}
                     </span>
                   </div>
@@ -468,13 +460,13 @@ export default function TransactionsPage() {
                 {/* Category */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between">
-                    <span 
+                    <span
                       style={{ color: styles.textSecondary.color }}
                       className="text-sm"
                     >
                       Categoria
                     </span>
-                    <span 
+                    <span
                       style={{
                         backgroundColor: 'var(--color-primary)',
                         color: 'white'
@@ -489,13 +481,13 @@ export default function TransactionsPage() {
                 {/* Dates */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
-                    <span 
+                    <span
                       style={{ color: styles.textSecondary.color }}
                       className="text-sm"
                     >
                       Vencimento
                     </span>
-                    <span 
+                    <span
                       style={{ color: styles.text.color }}
                       className="text-sm font-medium"
                     >
@@ -504,13 +496,13 @@ export default function TransactionsPage() {
                   </div>
                   {transaction.effectiveDate && (
                     <div className="flex items-center justify-between">
-                      <span 
+                      <span
                         style={{ color: styles.textSecondary.color }}
                         className="text-sm"
                       >
                         Data Efetiva
                       </span>
-                      <span 
+                      <span
                         style={{ color: styles.textMuted.color }}
                         className="text-sm"
                       >
@@ -522,25 +514,24 @@ export default function TransactionsPage() {
 
                 {/* Effective Amount (if different) */}
                 {transaction.effectiveAmount && transaction.effectiveAmount !== transaction.amount && (
-                  <div 
-                    style={{ 
+                  <div
+                    style={{
                       backgroundColor: styles.background.backgroundColor,
                       borderColor: styles.border.borderColor
                     }}
                     className="mb-4 p-3 rounded-lg border"
                   >
                     <div className="flex items-center justify-between">
-                      <span 
+                      <span
                         style={{ color: styles.textSecondary.color }}
                         className="text-sm"
                       >
                         Valor Efetivo
                       </span>
-                      <span className={`text-sm font-medium ${
-                        transaction.type === TransactionType.INCOME 
-                          ? 'text-green-600 dark:text-green-400' 
+                      <span className={`text-sm font-medium ${transaction.type === TransactionType.INCOME
+                          ? 'text-green-600 dark:text-green-400'
                           : 'text-red-600 dark:text-red-400'
-                      }`}>
+                        }`}>
                         R$ {transaction.effectiveAmount.toFixed(2)}
                       </span>
                     </div>
@@ -568,14 +559,14 @@ export default function TransactionsPage() {
               </div>
 
               {/* Footer - Fixed at Bottom */}
-              <div 
+              <div
                 style={{ borderColor: styles.border.borderColor }}
                 className="flex justify-between items-center pt-4 border-t gap-3 mt-auto"
               >
                 {/* Username (lado esquerdo) */}
                 <div className="flex items-center min-w-0 flex-1">
                   {familyManagementEnabled && currentUser?.isParent && transaction.username && (
-                    <span 
+                    <span
                       style={{
                         backgroundColor: 'var(--color-surface)',
                         borderColor: 'var(--color-border)',
@@ -682,7 +673,7 @@ export default function TransactionsPage() {
                       </button>
                     </>
                   ) : (
-                    <div 
+                    <div
                       style={{
                         ...styles.background,
                         borderColor: styles.border.borderColor,
@@ -720,7 +711,6 @@ export default function TransactionsPage() {
         onSuccess={handleModalSuccess}
         accounts={accounts.filter(acc => acc.userId === currentUser?.id)}
         categories={categories.filter(cat => cat.userId === currentUser?.id)}
-        currentUser={currentUser}
       />
     </div>
   );

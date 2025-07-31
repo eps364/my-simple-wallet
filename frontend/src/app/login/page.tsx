@@ -31,7 +31,7 @@ export default function LoginPage() {
         const errorMsg = 'Token não recebido da API';
         setError(errorMsg);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
       setError(errorMessage);
     } finally {
