@@ -2,7 +2,8 @@
 
 import LoanModal from '@/components/forms/LoanModal';
 import TransactionModal from '@/components/forms/TransactionModal';
-import { StatusFilter, TransactionFilters } from '@/components/ui';
+import { StatusFilter, SortOrder } from '@/components/ui';
+import AdvancedTransactionFilters from '@/components/ui/AdvancedTransactionFilters';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
@@ -20,12 +21,22 @@ export default function TransactionsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
 
-  // Estado do filtro - apenas status
+  // Estados dos filtros
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [accountFilter, setAccountFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>({ startDate: '', endDate: '' });
+  const [dateField, setDateField] = useState<string>('dueDate');
+  const [descriptionFilter, setDescriptionFilter] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('dueDate');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
@@ -52,7 +63,8 @@ export default function TransactionsPage() {
     return category?.category || 'Categoria não encontrada';
   }, [categories]);
 
-  // Função para aplicar filtro de status apenas
+  // Função para aplicar todos os filtros e ordenação
+
   const applyFilters = useCallback((data: Transaction[]) => {
     let filtered = [...data];
 
@@ -65,18 +77,104 @@ export default function TransactionsPage() {
       }
     }
 
-    // Ordenação padrão por data de vencimento (mais recente primeiro)
+    // Filtro por conta
+    if (accountFilter !== 'all') {
+      filtered = filtered.filter(t => t.accountId === Number(accountFilter));
+    }
+
+    // Filtro por categoria
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(t => t.categoryId === Number(categoryFilter));
+    }
+
+    // Filtro por tipo
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(t => String(t.type) === typeFilter);
+    }
+
+    // Filtro por usuário (apenas se familyManagementEnabled)
+    if (familyManagementEnabled && userFilter !== 'all') {
+      filtered = filtered.filter(t => t.username === userFilter);
+    }
+
+    // Filtro por período
+    // Helper para normalizar datas para YYYYMMDD
+    const normalizeDate = (d: string) => {
+      if (!d) return '';
+      // Se já está no formato YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.replace(/-/g, '').substring(0, 8);
+      // Se está no formato DD/MM/YYYY
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) {
+        const [day, month, year] = d.split('/');
+        return `${year}${month}${day}`;
+      }
+      // Tenta converter para Date
+      try {
+        const dateObj = new Date(d);
+        if (!isNaN(dateObj.getTime())) {
+          const y = dateObj.getFullYear();
+          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          return `${y}${m}${day}`;
+        }
+      } catch (e) {}
+      return '';
+    };
+
+    if (dateRange.startDate) {
+      const startNorm = normalizeDate(dateRange.startDate);
+      filtered = filtered.filter(t => {
+        const value = t[dateField as keyof Transaction];
+        if (!value) return false;
+        const dateNorm = normalizeDate(typeof value === 'string' ? value.substring(0, 10) : '');
+        return dateNorm >= startNorm;
+      });
+    }
+    if (dateRange.endDate) {
+      const endNorm = normalizeDate(dateRange.endDate);
+      filtered = filtered.filter(t => {
+        const value = t[dateField as keyof Transaction];
+        if (!value) return false;
+        const dateNorm = normalizeDate(typeof value === 'string' ? value.substring(0, 10) : '');
+        return dateNorm <= endNorm;
+      });
+    }
+
+    // Filtro por descrição
+    if (descriptionFilter.trim() !== '') {
+      filtered = filtered.filter(t => t.description.toLowerCase().includes(descriptionFilter.trim().toLowerCase()));
+    }
+
+    // Ordenação
     filtered.sort((a, b) => {
-      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+      let aValue: unknown = a[sortBy as keyof Transaction];
+      let bValue: unknown = b[sortBy as keyof Transaction];
+      // Se for data, converter para Date
+      if (sortBy === 'dueDate' || sortBy === 'effectiveDate') {
+        aValue = aValue ? new Date(aValue as string).getTime() : 0;
+        bValue = bValue ? new Date(bValue as string).getTime() : 0;
+      }
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      return 0;
     });
 
     setTransactions(filtered);
-  }, [statusFilter]);
+  }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
 
-  // Função para lidar com mudança no filtro de status
-  const handleStatusFilterChange = (status: StatusFilter) => {
-    setStatusFilter(status);
-  };
+  // Handlers dos filtros
+  const handleStatusFilterChange = (status: StatusFilter) => setStatusFilter(status);
+  const handleAccountChange = (accountId: string) => setAccountFilter(accountId);
+  const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
+  const handleTypeChange = (type: string) => setTypeFilter(type);
+  const handleUserChange = (username: string) => setUserFilter(username);
+  const handleDateRangeChange = (start: string, end: string) => setDateRange({ startDate: start, endDate: end });
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
+  const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
 
   // Aplicar filtros sempre que algum filtro mudar
   useEffect(() => {
@@ -93,17 +191,20 @@ export default function TransactionsPage() {
       // Enviar isParent=true quando o gerenciamento familiar estiver ativo
       const shouldUseParentMode = getFamilyManagementEnabled();
 
-      const [transactionsData, accountsData, categoriesData, userData] = await Promise.all([
+      const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
         transactionsService.getAll(shouldUseParentMode),
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode),
-        usersService.getProfile()
+        usersService.getProfile(), // usuário logado
+        shouldUseParentMode ? usersService.getChildren() : Promise.resolve([]) // filhos
       ]);
 
       setAllTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
+      if (shouldUseParentMode) setUsers(usersData);
+      else setUsers([]);
     } catch {
       setError('Erro ao carregar dados. Tente novamente.');
     } finally {
@@ -205,6 +306,9 @@ export default function TransactionsPage() {
     };
   };
 
+  // Helper: check if any transaction has the selected date field
+  const anyHasDateField = allTransactions.some(t => !!t[dateField as keyof Transaction]);
+
   if (isLoading) {
     return (
       <div
@@ -293,17 +397,46 @@ export default function TransactionsPage() {
 
       {/* Filter Section */}
       <div className="mb-6">
-        <TransactionFilters
-          config={{
-            status: {
-              enabled: true,
-              selectedStatus: statusFilter,
-              onStatusChange: handleStatusFilterChange
-            }
+        <AdvancedTransactionFilters
+          statusFilter={statusFilter}
+          onStatusChange={handleStatusFilterChange}
+          accountFilter={accountFilter}
+          onAccountChange={handleAccountChange}
+          accounts={accounts}
+          categoryFilter={categoryFilter}
+          onCategoryChange={handleCategoryChange}
+          categories={categories}
+          typeFilter={typeFilter}
+          onTypeChange={handleTypeChange}
+          dateRange={dateRange}
+          onDateRangeChange={handleDateRangeChange}
+          dateField={dateField}
+          onDateFieldChange={setDateField}
+          descriptionFilter={descriptionFilter}
+          onDescriptionChange={handleDescriptionChange}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+          className="mb-2"
+          onClearFilters={() => {
+            setStatusFilter('all');
+            setAccountFilter('all');
+            setCategoryFilter('all');
+            setTypeFilter('all');
+            setUserFilter('all');
+            setDateRange({ startDate: '', endDate: '' });
+            setDateField('dueDate');
+            setDescriptionFilter('');
+            setSortBy('dueDate');
+            setSortOrder('desc');
           }}
-          familyManagementEnabled={familyManagementEnabled}
+          users={familyManagementEnabled && currentUser ? [
+            currentUser,
+            ...Array.isArray(users) ? users : []
+          ] : []}
+          userFilter={userFilter}
+          onUserChange={handleUserChange}
         />
-
         {/* Results Counter */}
         <div className="mt-4 flex justify-end">
           <div
@@ -370,6 +503,13 @@ export default function TransactionsPage() {
             >
               {getEmptyStateTexts().description}
             </p>
+            {/* Helper: if filtering by a date field that is missing in all transactions, show a tip */}
+            {dateRange.startDate && !anyHasDateField && (
+              <div className="mt-4 text-sm text-yellow-700 bg-yellow-100 rounded p-3 border border-yellow-300">
+                Nenhuma transação possui o campo de data selecionado (<b>{dateField}</b>).<br />
+                Tente escolher outro campo de data ou limpe o filtro de período.
+              </div>
+            )}
             {getEmptyStateTexts().showButton && (
               <button
                 onClick={() => openModal('create')}
@@ -439,22 +579,56 @@ export default function TransactionsPage() {
 
               {/* Card Content - Flex Grow */}
               <div className="flex-grow">
-                {/* Main Amount */}
+                {/* Main Amount (always show both, Valor then Valor Efetivo if exists) */}
                 <div className="mb-4">
-                  <div className="flex items-center justify-between">
-                    <span
-                      style={{ color: styles.textSecondary.color }}
-                      className="text-sm"
-                    >
-                      Valor
-                    </span>
-                    <span className={`text-2xl font-bold ${transaction.type === TransactionType.INCOME
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                      }`}>
-                      {transaction.type === TransactionType.INCOME ? '+' : '-'} R$ {transaction.amount.toFixed(2)}
-                    </span>
-                  </div>
+                  {/* Valor Efetivo em destaque, se existir */}
+                  {transaction.effectiveAmount !== undefined && transaction.effectiveAmount !== null ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span
+                          style={{ color: styles.textSecondary.color }}
+                          className="text-sm"
+                        >
+                          Valor Efetivo
+                        </span>
+                        <span className={`text-2xl font-extrabold ${transaction.type === TransactionType.INCOME
+                            ? 'text-green-700 dark:text-green-300'
+                            : 'text-red-700 dark:text-red-300'
+                          }`}>
+                          {transaction.type === TransactionType.INCOME ? '+' : '-'} R$ {transaction.effectiveAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2 opacity-60">
+                        <span
+                          style={{ color: styles.textSecondary.color }}
+                          className="text-xs"
+                        >
+                          Valor original
+                        </span>
+                        <span className={`text-base font-medium ${transaction.type === TransactionType.INCOME
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
+                          }`}>
+                          {transaction.type === TransactionType.INCOME ? '+' : '-'} R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span
+                        style={{ color: styles.textSecondary.color }}
+                        className="text-sm"
+                      >
+                        Valor
+                      </span>
+                      <span className={`text-2xl font-bold ${transaction.type === TransactionType.INCOME
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-red-600 dark:text-red-400'
+                        }`}>
+                        {transaction.type === TransactionType.INCOME ? '+' : '-'} R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Category */}
@@ -512,31 +686,7 @@ export default function TransactionsPage() {
                   )}
                 </div>
 
-                {/* Effective Amount (if different) */}
-                {transaction.effectiveAmount && transaction.effectiveAmount !== transaction.amount && (
-                  <div
-                    style={{
-                      backgroundColor: styles.background.backgroundColor,
-                      borderColor: styles.border.borderColor
-                    }}
-                    className="mb-4 p-3 rounded-lg border"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span
-                        style={{ color: styles.textSecondary.color }}
-                        className="text-sm"
-                      >
-                        Valor Efetivo
-                      </span>
-                      <span className={`text-sm font-medium ${transaction.type === TransactionType.INCOME
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-600 dark:text-red-400'
-                        }`}>
-                        R$ {transaction.effectiveAmount.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                {/* Valor Efetivo removido do card separado, agora sempre aparece abaixo de Valor se existir */}
 
                 {/* Status Badge */}
                 <div className="mb-4">

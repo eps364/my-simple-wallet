@@ -41,7 +41,13 @@ export default function ImportPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Importar Transações</h1>
-      <div className="mb-4 flex items-center gap-4">
+      <form
+        className="mb-4 flex items-center gap-4"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await handleImport();
+        }}
+      >
         <input
           type="file"
           accept=".xlsx,.xls"
@@ -54,7 +60,7 @@ export default function ImportPage() {
           disabled={!file}
           className="flex items-center gap-2 px-4 py-2 mt-4"
         />
-      </div>
+      </form>
       {imported && <FormFeedback message="Arquivo importado com sucesso!" type="success" />}
       {error && <FormFeedback message={error} type="error" />}
       {/* Preview dos dados importados */}
