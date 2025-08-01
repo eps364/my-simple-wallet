@@ -12,6 +12,7 @@ import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
+import { User } from '@/lib/types/user';
 import IncomeChart from '@/components/reports/IncomeChart';
 import ExpenseChart from '@/components/reports/ExpenseChart';
 import PayableChart from '@/components/reports/PayableChart';
@@ -43,7 +44,7 @@ export default function ReportsPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [users, setUsers] = useState<any[]>([]); // Ajuste se necessário para o tipo correto
+  const [users] = useState<User[]>([]);
 
   // Função para verificar se o gerenciamento familiar está ativo
   const getFamilyManagementEnabled = (): boolean => {
@@ -187,7 +188,6 @@ export default function ReportsPage() {
   const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
   const handleTypeChange = (type: string) => setTypeFilter(type);
   const handleUserChange = (username: string) => setUserFilter(username);
-  const handleDateRangeChange = (start: string, end: string) => setDateRange({ startDate: start, endDate: end });
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
   const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
 
@@ -332,10 +332,6 @@ export default function ReportsPage() {
               categories={categories}
               typeFilter={typeFilter}
               onTypeChange={handleTypeChange}
-              dateRange={dateRange}
-              onDateRangeChange={handleDateRangeChange}
-              dateField={dateField}
-              onDateFieldChange={setDateField}
               descriptionFilter={descriptionFilter}
               onDescriptionChange={handleDescriptionChange}
               sortBy={sortBy}

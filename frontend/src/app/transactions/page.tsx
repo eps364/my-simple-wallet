@@ -175,7 +175,6 @@ export default function TransactionsPage() {
   const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
   const handleTypeChange = (type: string) => setTypeFilter(type);
   const handleUserChange = (username: string) => setUserFilter(username);
-  const handleDateRangeChange = (start: string, end: string) => setDateRange({ startDate: start, endDate: end });
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
   const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
 
@@ -411,10 +410,6 @@ export default function TransactionsPage() {
           categories={categories}
           typeFilter={typeFilter}
           onTypeChange={handleTypeChange}
-          dateRange={dateRange}
-          onDateRangeChange={handleDateRangeChange}
-          dateField={dateField}
-          onDateFieldChange={setDateField}
           descriptionFilter={descriptionFilter}
           onDescriptionChange={handleDescriptionChange}
           sortBy={sortBy}
