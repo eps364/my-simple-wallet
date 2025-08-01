@@ -89,6 +89,7 @@ const AdvancedTransactionFilters: React.FC<AdvancedTransactionFiltersProps> = ({
                     <option value="all">Todas</option>
                     <option value="liquidated">Liquidadas</option>
                     <option value="pending">Pendentes</option>
+                    <option value="overdue">Atrasadas</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-1 min-w-32">

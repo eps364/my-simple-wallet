@@ -2,7 +2,7 @@
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
 
-export type StatusFilter = 'all' | 'liquidated' | 'pending';
+export type StatusFilter = 'all' | 'liquidated' | 'pending' | 'overdue';
 export type SortOrder = 'asc' | 'desc';
 
 export interface FilterConfig {

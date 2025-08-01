@@ -15,7 +15,7 @@ interface TransactionCardProps {
   onEdit: (transaction: Transaction) => void;
   onSettle: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
-  styles?: any;
+  styles?: React.CSSProperties | { [key: string]: React.CSSProperties };
 }
 
 const TransactionCard: React.FC<TransactionCardProps> = ({
