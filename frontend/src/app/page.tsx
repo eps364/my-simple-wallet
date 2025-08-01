@@ -7,7 +7,7 @@ export default function Home() {
   
   return (
     <div
-      className="container mx-auto px-4 py-8 min-h-screen max-w-5xl"
+      className="responsive-container mx-auto py-8 min-h-screen max-w-5xl"
       style={{
         background: `linear-gradient(135deg, 
           ${styles.surface.backgroundColor}CC 0%, 
@@ -34,7 +34,7 @@ export default function Home() {
           </div>
 
           {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 gap-8 mb-12 md:grid-cols-3">
             <div 
               className="p-6 rounded-lg shadow-lg border"
               style={{

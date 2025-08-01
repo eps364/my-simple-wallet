@@ -110,7 +110,7 @@ function AccountsPageContent() {
   if (isLoading) {
     return (
       <div 
-        className="container mx-auto px-4 py-8"
+        className="responsive-container mx-auto py-8"
         style={{ backgroundColor: 'var(--color-background)' }}
       >
         <div className="flex justify-center items-center min-h-[400px]">
@@ -136,7 +136,7 @@ function AccountsPageContent() {
 
   return (
     <div
-      className="container mx-auto px-4 py-8 min-h-screen max-w-5xl"
+      className="responsive-container mx-auto py-8 min-h-screen max-w-5xl"
       style={{ backgroundColor: 'var(--color-background)' }}
     >
       {/* Header */}
@@ -218,7 +218,7 @@ function AccountsPageContent() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {accounts.map((account) => (
             <div
               key={account.id}

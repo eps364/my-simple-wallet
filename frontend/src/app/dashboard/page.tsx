@@ -14,8 +14,8 @@ export default function DashboardPage() {
           ${styles.primary.backgroundColor}22 100%)`
       }}
     >
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
+      <main className="responsive-container mx-auto py-8">
+        <div className="max-w-6xl mx-auto w-full">
           <h1 
             className="text-3xl font-bold mb-8"
             style={styles.text}
@@ -34,7 +34,7 @@ export default function DashboardPage() {
             <QuickActions />
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Card de Saldo Total */}
             <div 
               className="p-6 rounded-lg shadow-lg border"
