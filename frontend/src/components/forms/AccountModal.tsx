@@ -115,8 +115,13 @@ export default function AccountModal({
 
       await accountsService.delete(account.id);
       onSuccess();
-    } catch {
-      setError('Erro ao excluir conta. Tente novamente.');
+    } catch (err: unknown) {
+      // Tenta extrair mensagem da API
+      let errorMsg = 'Erro ao excluir conta. Tente novamente.';
+      if (err instanceof Error && err.message) {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

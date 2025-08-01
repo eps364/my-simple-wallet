@@ -2,7 +2,7 @@
 
 import LoanModal from '@/components/forms/LoanModal';
 import TransactionModal from '@/components/forms/TransactionModal';
-import { StatusFilter, SortOrder } from '@/components/ui';
+import { SortOrder, StatusFilter } from '@/components/ui';
 import AdvancedTransactionFilters from '@/components/ui/AdvancedTransactionFilters';
 import TransactionCard from '@/components/ui/TransactionCard';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
@@ -12,7 +12,7 @@ import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
-import { Transaction, TransactionType } from '@/lib/types/transaction';
+import { Transaction } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -118,7 +118,9 @@ export default function TransactionsPage() {
           const day = String(dateObj.getDate()).padStart(2, '0');
           return `${y}${m}${day}`;
         }
-      } catch (e) {}
+      } catch {
+        setError('Formato de data inválido');
+      }
       return '';
     };
 
@@ -173,7 +175,6 @@ export default function TransactionsPage() {
   const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
   const handleTypeChange = (type: string) => setTypeFilter(type);
   const handleUserChange = (username: string) => setUserFilter(username);
-  const handleDateRangeChange = (start: string, end: string) => setDateRange({ startDate: start, endDate: end });
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
   const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
 
@@ -409,10 +410,6 @@ export default function TransactionsPage() {
           categories={categories}
           typeFilter={typeFilter}
           onTypeChange={handleTypeChange}
-          dateRange={dateRange}
-          onDateRangeChange={handleDateRangeChange}
-          dateField={dateField}
-          onDateFieldChange={setDateField}
           descriptionFilter={descriptionFilter}
           onDescriptionChange={handleDescriptionChange}
           sortBy={sortBy}

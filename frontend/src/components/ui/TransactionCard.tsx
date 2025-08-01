@@ -15,8 +15,17 @@ interface TransactionCardProps {
   onEdit: (transaction: Transaction) => void;
   onSettle: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
-  styles?: any;
+  styles?: React.CSSProperties | { [key: string]: React.CSSProperties };
 }
+
+type ThemeStyles = {
+  surface?: React.CSSProperties;
+  border: { borderColor: string };
+  text: { color: string };
+  textSecondary: { color: string };
+  textMuted: { color: string };
+  background?: React.CSSProperties;
+};
 
 const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction,
@@ -33,16 +42,25 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
 }) => {
   const themeStyles = useThemeStyles();
   const styles = propStyles || themeStyles;
+
+  // Type guards para acessar propriedades de tema
+  const getStyleProp = <T,>(key: keyof ThemeStyles, fallback?: T): T | undefined => {
+    if (styles && typeof styles === 'object' && key in styles) {
+      return (styles as ThemeStyles)[key] as T;
+    }
+    return fallback;
+  };
   // Helper para atrasada
   const isOverdue = !transaction.effectiveDate && transaction.dueDate && new Date(transaction.dueDate) < new Date();
 
   return (
     <div
-      role="group"
       tabIndex={0}
       style={{
-        ...styles.surface,
-        borderColor: styles.border.borderColor,
+        ...(typeof (styles as ThemeStyles).surface === 'object'
+          ? (styles as ThemeStyles).surface!
+          : {}),
+        borderColor: (styles as ThemeStyles).border?.borderColor || undefined,
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         display: 'flex',
         flexDirection: 'column',
@@ -57,29 +75,23 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
       }}
     >
       {/* Descrição */}
-      <div className="mb-2">
-        <div style={{ position: 'relative', width: '100%' }}>
-          <h3
-            style={{
-              color: styles.text.color,
-              width: '100%',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'normal',
-            }}
-            className="text-lg font-semibold cursor-pointer"
-            title={transaction.description}
-          >
-            {transaction.description}
-          </h3>
-        </div>
-      </div>
+      <h3
+        style={{
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'normal',
+        }}
+        className="text-lg font-semibold cursor-pointer"
+        title={transaction.description}
+      >
+        {transaction.description}
+      </h3>
+
       {/* Conta | Categoria */}
       <div className="flex items-center justify-between mb-2">
-        <span style={{ color: styles.textSecondary.color }} className="text-sm">
+        <span style={{ color: getStyleProp<{ color: string }>('textSecondary')?.color }} className="text-sm">
           {getAccountName(transaction.accountId)}
         </span>
         <span
@@ -89,11 +101,12 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           {getCategoryName(transaction.categoryId)}
         </span>
       </div>
+
       {/* Valor */}
       {!(transaction.effectiveDate && transaction.effectiveAmount !== undefined && transaction.amount === transaction.effectiveAmount) && (
         <div className="mb-1">
           <div className="flex items-center justify-between">
-            <span style={{ color: styles.textSecondary.color }} className="text-sm">
+            <span style={{ color: getStyleProp<{ color: string }>('textSecondary')?.color }} className="text-sm">
               Valor
             </span>
             <span
@@ -109,11 +122,12 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           </div>
         </div>
       )}
+
       {/* Valor Efetivo (destaque) */}
       {transaction.effectiveAmount !== undefined && transaction.effectiveAmount !== null && (
         <div className="mb-1">
           <div className="flex items-center justify-between">
-            <span style={{ color: styles.textSecondary.color }} className="text-sm">
+            <span style={{ color: getStyleProp<{ color: string }>('textSecondary')?.color }} className="text-sm">
               Valor Efetivo
             </span>
             <span
@@ -129,26 +143,27 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           </div>
         </div>
       )}
+
       {/* Vencimento | Data Efetiva */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex flex-col">
-          <span style={{ color: styles.textSecondary.color }} className="text-xs">
+          <span style={{ color: getStyleProp<{ color: string }>('textSecondary')?.color }} className="text-xs">
             Vencimento
           </span>
-          <span style={{ color: styles.text.color }} className="text-sm font-medium">
+          <span style={{ color: getStyleProp<{ color: string }>('text')?.color }} className="text-sm font-medium">
             {formatDate(transaction.dueDate)}
           </span>
         </div>
         <div className="flex flex-col items-end">
-          <span style={{ color: styles.textSecondary.color }} className="text-xs">
+          <span style={{ color: getStyleProp<{ color: string }>('textSecondary')?.color }} className="text-xs">
             Data Efetiva
           </span>
-          <span style={{ color: styles.textMuted.color }} className="text-sm">
+          <span style={{ color: getStyleProp<{ color: string }>('textMuted')?.color }} className="text-sm">
             {transaction.effectiveDate ? formatDate(transaction.effectiveDate) : '-'}
           </span>
         </div>
       </div>
-      
+
       {/* Tags: Liquidada | Atrasada */}
       <div className="mb-2 flex gap-2">
         {transaction.effectiveDate ? (
@@ -185,10 +200,10 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           </>
         )}
       </div>
-      
+
       {/* Footer - User à esquerda, botões à direita */}
       <div
-        style={{ borderColor: styles.border.borderColor }}
+        style={{ borderColor: getStyleProp<{ borderColor: string }>('border')?.borderColor }}
         className="flex justify-between items-center pt-4 border-t gap-3 mt-auto"
       >
         {/* Username (lado esquerdo) */}
@@ -312,7 +327,11 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
             </>
           ) : (
             <div
-              style={{ ...styles.background, borderColor: styles.border.borderColor, color: styles.textMuted.color }}
+              style={{
+                ...(getStyleProp<React.CSSProperties>('background') || {}),
+                borderColor: getStyleProp<{ borderColor: string }>('border')?.borderColor,
+                color: getStyleProp<{ color: string }>('textMuted')?.color,
+              }}
               className="px-3 py-2 text-xs text-center rounded-lg border flex items-center justify-center"
             >
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,7 +345,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  d="M0 0h24v24H0z"
                 />
               </svg>
               <span className="whitespace-nowrap">Apenas Visualização</span>
@@ -336,6 +355,5 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
       </div>
     </div>
   );
-};
-
+}
 export default TransactionCard;

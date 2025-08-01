@@ -12,6 +12,7 @@ import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
+import { User } from '@/lib/types/user';
 import IncomeChart from '@/components/reports/IncomeChart';
 import ExpenseChart from '@/components/reports/ExpenseChart';
 import PayableChart from '@/components/reports/PayableChart';
@@ -35,12 +36,15 @@ export default function ReportsPage() {
   const [accountFilter, setAccountFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>({ startDate: '', endDate: '' });
+  const [dateField, setDateField] = useState<string>('dueDate');
   const [descriptionFilter, setDescriptionFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('dueDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [users] = useState<User[]>([]);
 
   // Função para verificar se o gerenciamento familiar está ativo
   const getFamilyManagementEnabled = (): boolean => {
@@ -58,6 +62,36 @@ export default function ReportsPage() {
         filtered = filtered.filter(t => t.effectiveDate);
       } else if (statusFilter === 'pending') {
         filtered = filtered.filter(t => !t.effectiveDate);
+      } else if (statusFilter === 'overdue') {
+        
+        const today = new Date();
+        const normalizeDate = (d: string) => {
+          if (!d) return '';
+          if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.replace(/-/g, '').substring(0, 8);
+          if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) {
+            const [day, month, year] = d.split('/');
+            return `${year}${month}${day}`;
+          }
+          try {
+            const dateObj = new Date(d);
+            if (!isNaN(dateObj.getTime())) {
+              const y = dateObj.getFullYear();
+              const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const day = String(dateObj.getDate()).padStart(2, '0');
+              return `${y}${m}${day}`;
+            }
+          } catch {
+            setError('Formato de data inválido');
+          }
+          return '';
+        };
+        const todayNorm = normalizeDate(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
+        filtered = filtered.filter(t => {
+          if (t.effectiveDate) return false;
+          const due = t.dueDate || '';
+          const dueNorm = normalizeDate(typeof due === 'string' ? due.substring(0, 10) : '');
+          return dueNorm !== '' && dueNorm < todayNorm;
+        });
       }
     }
 
@@ -76,12 +110,50 @@ export default function ReportsPage() {
       filtered = filtered.filter(t => String(t.type) === typeFilter);
     }
 
-    // Filtro por período
+    // Filtro por usuário (apenas se familyManagementEnabled)
+    if (familyManagementEnabled && userFilter !== 'all') {
+      filtered = filtered.filter(t => t.username === userFilter);
+    }
+
+    // Helper para normalizar datas para YYYYMMDD
+    const normalizeDate = (d: string) => {
+      if (!d) return '';
+      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.replace(/-/g, '').substring(0, 8);
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) {
+        const [day, month, year] = d.split('/');
+        return `${year}${month}${day}`;
+      }
+      try {
+        const dateObj = new Date(d);
+        if (!isNaN(dateObj.getTime())) {
+          const y = dateObj.getFullYear();
+          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          return `${y}${m}${day}`;
+        }
+      } catch {
+        setError('Formato de data inválido');
+      }
+      return '';
+    };
+
     if (dateRange.startDate) {
-      filtered = filtered.filter(t => t.dueDate >= dateRange.startDate);
+      const startNorm = normalizeDate(dateRange.startDate);
+      filtered = filtered.filter(t => {
+        const value = t[dateField as keyof Transaction];
+        if (!value) return false;
+        const dateNorm = normalizeDate(typeof value === 'string' ? value.substring(0, 10) : '');
+        return dateNorm >= startNorm;
+      });
     }
     if (dateRange.endDate) {
-      filtered = filtered.filter(t => t.dueDate <= dateRange.endDate);
+      const endNorm = normalizeDate(dateRange.endDate);
+      filtered = filtered.filter(t => {
+        const value = t[dateField as keyof Transaction];
+        if (!value) return false;
+        const dateNorm = normalizeDate(typeof value === 'string' ? value.substring(0, 10) : '');
+        return dateNorm <= endNorm;
+      });
     }
 
     // Filtro por descrição
@@ -108,14 +180,14 @@ export default function ReportsPage() {
     });
 
     setTransactions(filtered);
-  }, [statusFilter, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, sortBy, sortOrder]);
+  }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
 
   // Handlers dos filtros
   const handleStatusFilterChange = (status: StatusFilter) => setStatusFilter(status);
   const handleAccountChange = (accountId: string) => setAccountFilter(accountId);
   const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
   const handleTypeChange = (type: string) => setTypeFilter(type);
-  const handleDateRangeChange = (start: string, end: string) => setDateRange({ startDate: start, endDate: end });
+  const handleUserChange = (username: string) => setUserFilter(username);
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
   const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
 
@@ -260,8 +332,6 @@ export default function ReportsPage() {
               categories={categories}
               typeFilter={typeFilter}
               onTypeChange={handleTypeChange}
-              dateRange={dateRange}
-              onDateRangeChange={handleDateRangeChange}
               descriptionFilter={descriptionFilter}
               onDescriptionChange={handleDescriptionChange}
               sortBy={sortBy}
@@ -273,11 +343,16 @@ export default function ReportsPage() {
                 setAccountFilter('all');
                 setCategoryFilter('all');
                 setTypeFilter('all');
+                setUserFilter('all');
                 setDateRange({ startDate: '', endDate: '' });
+                setDateField('dueDate');
                 setDescriptionFilter('');
                 setSortBy('dueDate');
                 setSortOrder('desc');
               }}
+              users={familyManagementEnabled ? users : []}
+              userFilter={userFilter}
+              onUserChange={handleUserChange}
             />
             {/* Contador de transações */}
             <div className="mt-4 flex justify-end">
