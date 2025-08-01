@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import br.dev.mission.simplewallet.dto.account.AccountRequest;
@@ -66,11 +67,11 @@ public class AccountService {
     }
 
     public boolean delete(Long id, String userId) {
-        if (transactionRepository.existsById(id)) {
-            return false;
-        }
-
         return accountRepository.findById(id).filter(acc -> acc.getUserId().equals(userId)).map(acc -> {
+            if (transactionRepository.existsByAccountId(acc.getId())) {
+                throw new DataIntegrityViolationException(
+                        "Não é possível remover a conta pois existem transações vinculadas.");
+            }
             accountRepository.delete(acc);
             return true;
         }).orElse(false);
