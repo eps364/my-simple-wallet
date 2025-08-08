@@ -1,3 +1,4 @@
+// ...existing code...
 "use client";
 
 import LoanModal from '@/components/forms/LoanModal';
@@ -208,6 +209,8 @@ export default function TransactionsPage() {
       if (familyManagementEnabled && userFilter !== 'all') filters.username = userFilter;
       if (sortBy) filters.sort = sortBy;
       if (sortOrder) filters.order = sortOrder;
+      // Adiciona filtro de status para o backend
+      if (statusFilter !== 'all') filters.status = statusFilter;
 
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
         transactionsService.getFiltered(filters, page, pageSize, shouldUseParentMode),
@@ -230,7 +233,7 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, familyManagementEnabled, sortBy, sortOrder, userFilter]);
+  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, familyManagementEnabled, sortBy, sortOrder, userFilter, statusFilter]);
 
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
@@ -601,6 +604,7 @@ export default function TransactionsPage() {
             <TransactionCard
               key={transaction.id}
               transaction={transaction}
+              status={transaction.status}
               currentUser={currentUser}
               familyManagementEnabled={familyManagementEnabled}
               getAccountName={getAccountName}
