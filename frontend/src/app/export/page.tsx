@@ -32,9 +32,9 @@ export default function ExportPage() {
     setError('');
     try {
       const isParent = getFamilyManagementEnabled();
-      let data = await transactionsService.getAll(isParent);
-      // Filtros compartilhados
-      data = data.filter((tx: Transaction) => {
+      const response = await transactionsService.getAll(isParent);
+
+      const filtered = response.content.filter((tx: Transaction) => {
         let match = true;
         if (filter.dateFrom) {
           match = match && new Date(tx.dueDate) >= new Date(filter.dateFrom);
@@ -56,7 +56,7 @@ export default function ExportPage() {
         }
         return match;
       });
-      setTransactions(data);
+      setTransactions(filtered);
     } catch {
       setError('Erro ao carregar transações');
     } finally {

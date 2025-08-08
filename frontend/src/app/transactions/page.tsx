@@ -604,7 +604,6 @@ export default function TransactionsPage() {
             <TransactionCard
               key={transaction.id}
               transaction={transaction}
-              status={transaction.status}
               currentUser={currentUser}
               familyManagementEnabled={familyManagementEnabled}
               getAccountName={getAccountName}

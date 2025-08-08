@@ -16,6 +16,7 @@ export interface Transaction {
   username?: string;
   createdAt?: string;
   updatedAt?: string;
+  status?: string;
 }
 
 export interface TransactionCreateRequest {

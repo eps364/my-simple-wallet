@@ -69,7 +69,7 @@ const AdvancedTransactionFilters: React.FC<AdvancedTransactionFiltersProps> = ({
       setDescLoading(false);
     }, 500);
     return () => clearTimeout(handler);
-  }, [descInput]);
+  }, [descInput, descriptionFilter, onDescriptionChange]);
 
   return (
     <div className={className}>
