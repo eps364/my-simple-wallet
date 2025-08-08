@@ -1,15 +1,12 @@
-package br.dev.mission.simplewallet.controller;
+package br.dev.mission.simplewallet.controller.health;
+
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
-/**
- * Controller de saúde da aplicação para validar se está funcionando
- */
 @RestController
 @RequestMapping("/api/health")
 public class HealthController {
@@ -18,7 +15,7 @@ public class HealthController {
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of(
             "status", "UP",
-            "application", "My Simple Wallet"
+            "application", "Simple Wallet API is running"
         ));
     }
 }
