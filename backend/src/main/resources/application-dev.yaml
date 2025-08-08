@@ -3,6 +3,8 @@ server:
   port: ${PORT:8080}
 
 spring:
+  jackson:
+    time-zone: America/Sao_Paulo
   # Docker Compose Support para facilitar desenvolvimento
   docker:
     compose:
