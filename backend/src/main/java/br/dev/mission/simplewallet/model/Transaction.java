@@ -58,6 +58,16 @@ public class Transaction {
     @Column(name = "account_id", nullable = false)
     private Long accountId;
 
+    public String getStatus() {
+        if (this.effectiveDate != null) {
+            return "liquidated";
+        }
+        if (this.dueDate != null && this.dueDate.isBefore(java.time.LocalDate.now())) {
+            return "overdue";
+        }
+        return "pending";
+    }
+
     @Column(name = "user_id", nullable = false)
     private String userId;
 
