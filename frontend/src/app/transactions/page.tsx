@@ -150,7 +150,7 @@ export default function TransactionsPage() {
   }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
 
   // Handlers dos filtros
-  const handleStatusFilterChange = useCallback((status: StatusFilter) => setStatusFilter(status), []);
+  const handleStatusFilterChange = useCallback((status: MultiStatusFilter) => setStatusFilter(status), []);
   const handleAccountChange = useCallback((accountId: string) => setAccountFilter(accountId), []);
   const handleCategoryChange = useCallback((categoryId: string) => setCategoryFilter(categoryId), []);
   const handleTypeChange = useCallback((type: string) => setTypeFilter(type), []);

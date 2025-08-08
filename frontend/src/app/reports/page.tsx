@@ -1,27 +1,26 @@
 "use client";
-import { useEffect, useState, useCallback } from 'react';
 import { Transaction } from '@/lib/types/transaction';
-// ...existing code...
+import { useCallback, useEffect, useState } from 'react';
 import { transactionsService } from '@/lib/services/transactionsService';
-// ...existing code...
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { StatusFilter, SortOrder } from '@/components/ui';
+import CategoryDistributionChart from '@/components/reports/CategoryDistributionChart';
+import CategoryTrendsChart from '@/components/reports/CategoryTrendsChart';
+import ExpenseChart from '@/components/reports/ExpenseChart';
+import IncomeChart from '@/components/reports/IncomeChart';
+import MonthlyBalanceChart from '@/components/reports/MonthlyBalanceChart';
+import PaidChart from '@/components/reports/PaidChart';
+import PayableChart from '@/components/reports/PayableChart';
+import UserComparisonChart from '@/components/reports/UserComparisonChart';
+import UserExpenseDistributionChart from '@/components/reports/UserExpenseDistributionChart';
+import { SortOrder } from '@/components/ui';
+import type { MultiStatusFilter } from '@/components/ui/AdvancedTransactionFilters';
 import AdvancedTransactionFilters from '@/components/ui/AdvancedTransactionFilters';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
 import { User } from '@/lib/types/user';
-import IncomeChart from '@/components/reports/IncomeChart';
-import ExpenseChart from '@/components/reports/ExpenseChart';
-import PayableChart from '@/components/reports/PayableChart';
-import PaidChart from '@/components/reports/PaidChart';
-import MonthlyBalanceChart from '@/components/reports/MonthlyBalanceChart';
-import CategoryDistributionChart from '@/components/reports/CategoryDistributionChart';
-import UserComparisonChart from '@/components/reports/UserComparisonChart';
-import UserExpenseDistributionChart from '@/components/reports/UserExpenseDistributionChart';
-import CategoryTrendsChart from '@/components/reports/CategoryTrendsChart';
 
 export default function ReportsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -32,7 +31,7 @@ export default function ReportsPage() {
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState(false);
   
   // Estados dos filtros
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<MultiStatusFilter>('all');
   const [accountFilter, setAccountFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -183,7 +182,7 @@ export default function ReportsPage() {
   }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
 
   // Handlers dos filtros
-  const handleStatusFilterChange = (status: StatusFilter) => setStatusFilter(status);
+  const handleStatusFilterChange = (status: MultiStatusFilter) => setStatusFilter(status);
   const handleAccountChange = (accountId: string) => setAccountFilter(accountId);
   const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
   const handleTypeChange = (type: string) => setTypeFilter(type);
