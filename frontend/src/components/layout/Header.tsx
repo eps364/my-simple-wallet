@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import ContainerHeader from './ContainerHeader';
 import UserMenu from './UserMenu';
 
 function isAuthenticated() {
@@ -33,9 +34,8 @@ export default function Header() {
         borderColor: 'var(--color-border)'
       }}
     >
-      <div className="container mx-auto px-4 max-w-5xl">
+      <ContainerHeader>
         <div className="flex items-center justify-between h-16">
-          
           <Link 
             href={logged ? "/dashboard" : "/"} 
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -54,10 +54,7 @@ export default function Header() {
               Simple Wallet
             </span>
           </Link>
-
-          
           <div className="flex items-center gap-3">
-            
             <div className="flex items-center gap-3">
               {logged ? (                 
                   <UserMenu onLogout={handleLogout} />
@@ -109,7 +106,7 @@ export default function Header() {
             </div>
           </div>
         </div>
-      </div>
+      </ContainerHeader>
     </header>
   );
 }

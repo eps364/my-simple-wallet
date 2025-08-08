@@ -1,19 +1,13 @@
 "use client";
-import Link from 'next/link';
+import Container from '@/components/layout/Container';
+import Footer from '@/components/layout/Footer';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
 export default function Home() {
   const styles = useThemeStyles();
   
   return (
-    <div
-      className="responsive-container mx-auto py-8 min-h-screen max-w-5xl"
-      style={{
-        background: `linear-gradient(135deg, 
-          ${styles.surface.backgroundColor}CC 0%, 
-          ${styles.primary.backgroundColor}22 100%)`
-      }}
-    >
+    <Container>
       <main>
         <div className="text-center max-w-4xl mx-auto">
           {/* Header */}
@@ -115,40 +109,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex gap-4 justify-center flex-col sm:flex-row">
-            <Link 
-              href="/register" 
-              className="font-semibold py-3 px-8 rounded-lg transition-colors text-center"
-              style={{
-                ...styles.button,
-                display: 'inline-block'
-              }}
-            >
-              Criar Conta Grátis
-            </Link>
-            <Link 
-              href="/login" 
-              className="font-semibold py-3 px-8 rounded-lg border transition-colors text-center"
-              style={{
-                ...styles.surface,
-                ...styles.border,
-                color: styles.text.color,
-                display: 'inline-block'
-              }}
-            >
-              Fazer Login
-            </Link>
-          </div>
+          
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="text-center py-8">
-        <p style={styles.textMuted}>
-          &copy; 2025 Simple Wallet. Desenvolvido com Next.js e TypeScript.
-        </p>
-      </footer>
-    </div>
+      <Footer />
+    </Container>
   );
 }
