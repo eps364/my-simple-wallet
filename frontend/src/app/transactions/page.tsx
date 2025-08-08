@@ -15,8 +15,8 @@ import { PaginatedResponse } from '@/lib/types/api';
 import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
-import { useCallback, useEffect, useState } from 'react';
 import { normalizeDate } from '@/lib/utils/dateUtils';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
