@@ -1,5 +1,5 @@
-// ...existing code...
 "use client";
+
 import LoanModal from '@/components/forms/LoanModal';
 import TransactionModal from '@/components/forms/TransactionModal';
 import { SortOrder, StatusFilter } from '@/components/ui';
@@ -16,6 +16,7 @@ import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
+import { normalizeDate } from '@/lib/utils/dateUtils';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -31,8 +32,9 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string>('');
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
 
-  // Estados dos filtros
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  type MultiStatusFilter = StatusFilter | StatusFilter[];
+  
+  const [statusFilter, setStatusFilter] = useState<MultiStatusFilter>(['pending', 'overdue']);
   const [accountFilter, setAccountFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -41,7 +43,7 @@ export default function TransactionsPage() {
   const [dateField, setDateField] = useState<string>('dueDate');
   const [descriptionFilter, setDescriptionFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('dueDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
@@ -69,7 +71,6 @@ export default function TransactionsPage() {
   }, [categories]);
 
   // Função para aplicar todos os filtros e ordenação
-
   const applyFilters = useCallback((data: Transaction[]) => {
     let filtered = [...data];
 
@@ -103,13 +104,6 @@ export default function TransactionsPage() {
     }
 
     // Filtro por período
-    // Helper para normalizar datas para YYYYMMDD
-    const normalizeDate = (d: string) => {
-      if (!d) return '';
-      // Usar utilitário centralizado
-      return normalizeDate(d);
-    };
-
     if (dateRange.startDate) {
       const startNorm = normalizeDate(dateRange.startDate);
       filtered = filtered.filter(t => {
