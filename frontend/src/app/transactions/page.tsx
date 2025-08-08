@@ -11,14 +11,19 @@ import { categoriesService } from '@/lib/services/categoriesService';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
+import { PaginatedResponse } from '@/lib/types/api';
 import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
+import { normalizeDate } from '@/lib/utils/dateUtils';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [pagination, setPagination] = useState<PaginatedResponse<Transaction> | null>(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -27,8 +32,9 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string>('');
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
 
-  // Estados dos filtros
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  type MultiStatusFilter = StatusFilter | StatusFilter[];
+  
+  const [statusFilter, setStatusFilter] = useState<MultiStatusFilter>(['pending', 'overdue']);
   const [accountFilter, setAccountFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -37,7 +43,7 @@ export default function TransactionsPage() {
   const [dateField, setDateField] = useState<string>('dueDate');
   const [descriptionFilter, setDescriptionFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('dueDate');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
@@ -65,7 +71,6 @@ export default function TransactionsPage() {
   }, [categories]);
 
   // Função para aplicar todos os filtros e ordenação
-
   const applyFilters = useCallback((data: Transaction[]) => {
     let filtered = [...data];
 
@@ -99,31 +104,6 @@ export default function TransactionsPage() {
     }
 
     // Filtro por período
-    // Helper para normalizar datas para YYYYMMDD
-    const normalizeDate = (d: string) => {
-      if (!d) return '';
-      // Se já está no formato YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.replace(/-/g, '').substring(0, 8);
-      // Se está no formato DD/MM/YYYY
-      if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) {
-        const [day, month, year] = d.split('/');
-        return `${year}${month}${day}`;
-      }
-      // Tenta converter para Date
-      try {
-        const dateObj = new Date(d);
-        if (!isNaN(dateObj.getTime())) {
-          const y = dateObj.getFullYear();
-          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          return `${y}${m}${day}`;
-        }
-      } catch {
-        setError('Formato de data inválido');
-      }
-      return '';
-    };
-
     if (dateRange.startDate) {
       const startNorm = normalizeDate(dateRange.startDate);
       filtered = filtered.filter(t => {
@@ -170,13 +150,13 @@ export default function TransactionsPage() {
   }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
 
   // Handlers dos filtros
-  const handleStatusFilterChange = (status: StatusFilter) => setStatusFilter(status);
-  const handleAccountChange = (accountId: string) => setAccountFilter(accountId);
-  const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
-  const handleTypeChange = (type: string) => setTypeFilter(type);
-  const handleUserChange = (username: string) => setUserFilter(username);
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
-  const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
+  const handleStatusFilterChange = useCallback((status: MultiStatusFilter) => setStatusFilter(status), []);
+  const handleAccountChange = useCallback((accountId: string) => setAccountFilter(accountId), []);
+  const handleCategoryChange = useCallback((categoryId: string) => setCategoryFilter(categoryId), []);
+  const handleTypeChange = useCallback((type: string) => setTypeFilter(type), []);
+  const handleUserChange = useCallback((username: string) => setUserFilter(username), []);
+  const handleDescriptionChange = useCallback((value: string) => setDescriptionFilter(value), []);
+  const handleSortChange = useCallback((field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); }, []);
 
   // Aplicar filtros sempre que algum filtro mudar
   useEffect(() => {
@@ -193,15 +173,31 @@ export default function TransactionsPage() {
       // Enviar isParent=true quando o gerenciamento familiar estiver ativo
       const shouldUseParentMode = getFamilyManagementEnabled();
 
+      // Montar filtros para backend
+      const filters: Record<string, unknown> = {};
+      if (accountFilter !== 'all') filters.accountId = Number(accountFilter);
+      if (categoryFilter !== 'all') filters.categoryId = Number(categoryFilter);
+      if (typeFilter !== 'all') filters.type = Number(typeFilter);
+      if (dateRange.startDate) filters.dateFrom = dateRange.startDate;
+      if (dateRange.endDate) filters.dateTo = dateRange.endDate;
+      if (descriptionFilter.trim() !== '') filters.description = descriptionFilter.trim();
+      if (familyManagementEnabled && userFilter !== 'all') filters.username = userFilter;
+      if (sortBy) filters.sort = sortBy;
+      if (sortOrder) filters.order = sortOrder;
+      // Adiciona filtro de status para o backend
+      if (statusFilter !== 'all') filters.status = statusFilter;
+
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
-        transactionsService.getAll(shouldUseParentMode),
+        transactionsService.getFiltered(filters, page, pageSize, shouldUseParentMode),
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode),
         usersService.getProfile(), // usuário logado
         shouldUseParentMode ? usersService.getChildren() : Promise.resolve([]) // filhos
       ]);
 
-      setAllTransactions(transactionsData);
+      setPagination(transactionsData);
+      setAllTransactions(transactionsData.content);
+      setTransactions(transactionsData.content);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
@@ -212,7 +208,7 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, familyManagementEnabled, sortBy, sortOrder, userFilter, statusFilter]);
 
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
@@ -239,10 +235,10 @@ export default function TransactionsPage() {
     };
   }, [currentUser, loadData]);
 
-  // Carregar dados inicialmente
+  // Carregar dados inicialmente e ao mudar página
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, page, pageSize]);
 
   const openModal = (mode: 'create' | 'edit' | 'delete' | 'settle', transaction?: Transaction) => {
     setModalState({
@@ -275,22 +271,8 @@ export default function TransactionsPage() {
     return currentUser ? transaction.username === currentUser.username : false;
   };
 
-  // Função para formatar data
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return '-';
-
-    // Se a data já está no formato DD/MM/YYYY (do backend), apenas retorna
-    if (dateString.includes('/')) {
-      return dateString;
-    }
-
-    // Se está no formato ISO (YYYY-MM-DD), converte para DD/MM/YYYY
-    try {
-      return new Date(dateString).toLocaleDateString('pt-BR');
-    } catch {
-      return dateString;
-    }
-  };
+  // Usar utilitário centralizado para datas
+  
 
   const getEmptyStateTexts = () => {
     if (allTransactions.length === 0) {
@@ -436,15 +418,58 @@ export default function TransactionsPage() {
           onUserChange={handleUserChange}
         />
         {/* Results Counter */}
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
           <div
             style={{ color: styles.textMuted.color }}
             className="text-sm"
           >
             <span>
-              Mostrando {transactions.length} de {allTransactions.length} transações
+              Mostrando {transactions.length} de {pagination?.totalElements ?? allTransactions.length} transações
             </span>
           </div>
+          {/* Paginação avançada */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex gap-2 items-center">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(0)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                « Primeira
+              </button>
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                ‹ Anterior
+              </button>
+              <span>Página {page + 1} de {pagination.totalPages}</span>
+              <button
+                disabled={page === pagination.totalPages - 1}
+                onClick={() => setPage(page + 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                Próxima ›
+              </button>
+              <button
+                disabled={page === pagination.totalPages - 1}
+                onClick={() => setPage(pagination.totalPages - 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                Última »
+              </button>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }}
+                className="ml-2 px-2 py-1 border rounded"
+              >
+                {[10, 20, 50, 100].map(size => (
+                  <option key={size} value={size}>{size} por página</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
@@ -545,7 +570,6 @@ export default function TransactionsPage() {
               getAccountName={getAccountName}
               getCategoryName={getCategoryName}
               canEditTransaction={canEditTransaction}
-              formatDate={formatDate}
               onEdit={() => openModal('edit', transaction)}
               onDelete={() => openModal('delete', transaction)}
               onSettle={() => openModal('settle', transaction)}

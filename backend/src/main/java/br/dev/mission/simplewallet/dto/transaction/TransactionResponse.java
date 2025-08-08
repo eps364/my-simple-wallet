@@ -19,5 +19,6 @@ public record TransactionResponse(
     Long categoryId,
     String category,
     String userId,
-    String username
+    String username,
+    String status
 ) {}

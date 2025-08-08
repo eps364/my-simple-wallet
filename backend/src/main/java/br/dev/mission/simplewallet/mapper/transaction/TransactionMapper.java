@@ -68,7 +68,8 @@ public class TransactionMapper {
             transaction.getCategory(),
             category,
             transaction.getUserId(),
-            username
+            username,
+            transaction.getStatus()
         );
     }
 

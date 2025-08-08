@@ -5,6 +5,7 @@ import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { FormFeedback } from '@/components/ui/FormFeedback';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import Container from '@/components/layout/Container';
 
 export default function ImportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -39,7 +40,7 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Container>
       <h1 className="text-2xl font-bold mb-4">Importar Transações</h1>
       <form
         className="mb-4 flex items-center gap-4"
@@ -84,6 +85,6 @@ export default function ImportPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </Container>
   );
 }

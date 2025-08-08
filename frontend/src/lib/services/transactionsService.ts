@@ -9,6 +9,8 @@ import {
   TransactionUpdateRequest,
 } from "@/lib/types/transaction";
 import { apiRequest, fetchConfig } from "./baseService";
+import { PaginatedResponse } from "@/lib/types/api";
+import { TransactionFilters } from "@/lib/types/transaction";
 
 interface BatchTransactionRequest {
   transaction: TransactionCreateRequest;
@@ -44,10 +46,31 @@ export class TransactionsService {
   }
 
   // Listar todas as transações
-  async getAll(isParent?: boolean): Promise<Transaction[]> {
+  async getAll(isParent?: boolean): Promise<PaginatedResponse<Transaction>> {
     const params = isParent ? "?isParent=true" : "";
-    return apiRequest<Transaction[]>(
+    return apiRequest<PaginatedResponse<Transaction>>(
       `${this.endpoint}${params}`,
+      fetchConfig()
+    );
+  }
+
+  // Consultar transações com filtros e paginação
+  async getFiltered(filters: TransactionFilters, page: number = 0, size: number = 20, isParent?: boolean): Promise<PaginatedResponse<Transaction>> {
+    const params = new URLSearchParams();
+    if (filters.accountId) params.append('accountId', String(filters.accountId));
+    if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
+    if (filters.type !== undefined) params.append('type', String(filters.type));
+    if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+    if (filters.dateTo) params.append('dateTo', filters.dateTo);
+    if (filters.description) params.append('description', filters.description);
+    if (filters.username) params.append('username', filters.username);
+    if (filters.sort) params.append('sort', filters.sort);
+    if (filters.order) params.append('order', filters.order);
+    params.append('page', String(page));
+    params.append('size', String(size));
+    if (isParent) params.append('isParent', 'true');
+    return apiRequest<PaginatedResponse<Transaction>>(
+      `${this.endpoint}?${params.toString()}`,
       fetchConfig()
     );
   }

@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.dev.mission.simplewallet.dto.transaction.TransactionEffectivationRequest;
@@ -48,11 +50,11 @@ public class TransactionService {
         return transactionMapper.toResponse(transactionRepository.save(transaction));
     }
 
-    public List<TransactionResponse> findByUserId(String userId) {
-        return transactionRepository.findByUserId(userId).stream().map(transactionMapper::toResponse).toList();
+    public Page<TransactionResponse> findByUserId(String userId, Pageable pageable) {
+        return transactionRepository.findByUserId(userId, pageable).map(transactionMapper::toResponse);
     }
 
-    public List<TransactionResponse> findByUserIdWithChildren(String userId) {
+    public Page<TransactionResponse> findByUserIdWithChildren(String userId, Pageable pageable) {
         // Criar lista com o userId atual
         List<String> userIds = new java.util.ArrayList<>();
         userIds.add(userId);
@@ -63,10 +65,8 @@ public class TransactionService {
                 .map(user -> user.getId().toString()).toList();
         userIds.addAll(childrenIds);
 
-        // Buscar todas as transações em uma única consulta
-        List<Transaction> transactions = transactionRepository.findByUserIdIn(userIds);
-
-        return transactions.stream().map(transactionMapper::toResponse).toList();
+        // Buscar todas as transações paginadas
+        return transactionRepository.findByUserIdIn(userIds, pageable).map(transactionMapper::toResponse);
     }
 
     public Optional<TransactionResponse> findById(Long id, String userId) {
@@ -138,7 +138,7 @@ public class TransactionService {
         List<TransactionResponse> installments = new ArrayList<>();
         LocalDate dueDateFirstInstallment = request.dueDate();
 
-         for (int i = 0; i < request.qtdeInstallments(); i++) {
+        for (int i = 0; i < request.qtdeInstallments(); i++) {
 
             LocalDate dueDateInstallment = dueDateFirstInstallment.plusMonths(i);
 
@@ -152,6 +152,6 @@ public class TransactionService {
         }
 
         return installments;
-        
+
     }
 }

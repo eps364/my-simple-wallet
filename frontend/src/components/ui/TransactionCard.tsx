@@ -1,5 +1,7 @@
 
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { toDisplayDate } from '@/lib/utils/dateUtils';
+import TagsStatus from './TagsStatus';
 import { Transaction, TransactionType } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
 import React from 'react';
@@ -10,7 +12,6 @@ interface TransactionCardProps {
   familyManagementEnabled: boolean;
   getAccountName: (accountId: number) => string;
   getCategoryName: (categoryId?: number) => string;
-  formatDate: (dateString: string) => string;
   canEditTransaction: (transaction: Transaction) => boolean;
   onEdit: (transaction: Transaction) => void;
   onSettle: (transaction: Transaction) => void;
@@ -33,7 +34,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
   familyManagementEnabled,
   getAccountName,
   getCategoryName,
-  formatDate,
+  // formatDate removido
   canEditTransaction,
   onEdit,
   onSettle,
@@ -50,8 +51,6 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
     }
     return fallback;
   };
-  // Helper para atrasada
-  const isOverdue = !transaction.effectiveDate && transaction.dueDate && new Date(transaction.dueDate) < new Date();
 
   return (
     <div
@@ -151,7 +150,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
             Vencimento
           </span>
           <span style={{ color: getStyleProp<{ color: string }>('text')?.color }} className="text-sm font-medium">
-            {formatDate(transaction.dueDate)}
+            {toDisplayDate(transaction.dueDate)}
           </span>
         </div>
         <div className="flex flex-col items-end">
@@ -159,46 +158,16 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
             Data Efetiva
           </span>
           <span style={{ color: getStyleProp<{ color: string }>('textMuted')?.color }} className="text-sm">
-            {transaction.effectiveDate ? formatDate(transaction.effectiveDate) : '-'}
+            {transaction.effectiveDate ? toDisplayDate(transaction.effectiveDate) : '-'}
           </span>
         </div>
       </div>
 
-      {/* Tags: Liquidada | Atrasada */}
       <div className="mb-2 flex gap-2">
-        {transaction.effectiveDate ? (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Liquidada
-          </span>
-        ) : (
-          <>
-            {isOverdue && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <circle cx="10" cy="10" r="5" />
-                </svg>
-                Atrasada
-              </span>
-            )}
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Pendente
-            </span>
-          </>
-        )}
+        {/* Garante que o status seja válido para TagsStatus */}
+        {['liquidated', 'overdue', 'pending'].includes(transaction.status as string) ? (
+          <TagsStatus status={transaction.status as 'liquidated' | 'overdue' | 'pending'} />
+        ) : null}
       </div>
 
       {/* Footer - User à esquerda, botões à direita */}
