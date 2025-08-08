@@ -27,7 +27,7 @@ export interface TransactionCreateRequest {
   effectiveAmount?: number;
   accountId: number;
   categoryId?: number;
-  qtdeInstallments?: number; 
+  qtdeInstallments?: number;
 }
 
 export interface TransactionUpdateRequest {
@@ -44,7 +44,7 @@ export interface TransactionUpdateRequest {
 // Enum para tipos de transação
 export enum TransactionType {
   INCOME = 0,
-  EXPENSE = 1
+  EXPENSE = 1,
 }
 
 // Interface para filtros de transação
@@ -55,4 +55,7 @@ export interface TransactionFilters {
   dateFrom?: string;
   dateTo?: string;
   description?: string;
+  username?: string;
+  sort?: string;
+  order?: "asc" | "desc";
 }

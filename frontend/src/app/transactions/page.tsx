@@ -12,13 +12,17 @@ import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
-import { Transaction } from '@/lib/types/transaction';
+import { Transaction, TransactionType } from '@/lib/types/transaction';
+import { PaginatedResponse } from '@/lib/types/api';
 import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [pagination, setPagination] = useState<PaginatedResponse<Transaction> | null>(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -193,15 +197,26 @@ export default function TransactionsPage() {
       // Enviar isParent=true quando o gerenciamento familiar estiver ativo
       const shouldUseParentMode = getFamilyManagementEnabled();
 
+      // Montar filtros para backend
+      const filters: any = {};
+      if (accountFilter !== 'all') filters.accountId = Number(accountFilter);
+      if (categoryFilter !== 'all') filters.categoryId = Number(categoryFilter);
+      if (typeFilter !== 'all') filters.type = Number(typeFilter);
+      if (dateRange.startDate) filters.dateFrom = dateRange.startDate;
+      if (dateRange.endDate) filters.dateTo = dateRange.endDate;
+      if (descriptionFilter.trim() !== '') filters.description = descriptionFilter.trim();
+
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
-        transactionsService.getAll(shouldUseParentMode),
+        transactionsService.getFiltered(filters, page, pageSize, shouldUseParentMode),
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode),
         usersService.getProfile(), // usuário logado
         shouldUseParentMode ? usersService.getChildren() : Promise.resolve([]) // filhos
       ]);
 
-      setAllTransactions(transactionsData);
+      setPagination(transactionsData);
+      setAllTransactions(transactionsData.content);
+      setTransactions(transactionsData.content);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
@@ -212,7 +227,7 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter]);
 
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
@@ -239,10 +254,10 @@ export default function TransactionsPage() {
     };
   }, [currentUser, loadData]);
 
-  // Carregar dados inicialmente
+  // Carregar dados inicialmente e ao mudar página
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, page, pageSize]);
 
   const openModal = (mode: 'create' | 'edit' | 'delete' | 'settle', transaction?: Transaction) => {
     setModalState({
@@ -436,15 +451,35 @@ export default function TransactionsPage() {
           onUserChange={handleUserChange}
         />
         {/* Results Counter */}
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end items-center gap-4">
           <div
             style={{ color: styles.textMuted.color }}
             className="text-sm"
           >
             <span>
-              Mostrando {transactions.length} de {allTransactions.length} transações
+              Mostrando {transactions.length} de {pagination?.totalElements ?? allTransactions.length} transações
             </span>
           </div>
+          {/* Paginação simples */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex gap-2 items-center">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <span>Página {page + 1} de {pagination.totalPages}</span>
+              <button
+                disabled={page === pagination.totalPages - 1}
+                onClick={() => setPage(page + 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                Próxima
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
