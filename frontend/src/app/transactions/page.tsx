@@ -1,6 +1,5 @@
 // ...existing code...
 "use client";
-
 import LoanModal from '@/components/forms/LoanModal';
 import TransactionModal from '@/components/forms/TransactionModal';
 import { SortOrder, StatusFilter } from '@/components/ui';
@@ -12,9 +11,9 @@ import { categoriesService } from '@/lib/services/categoriesService';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
+import { PaginatedResponse } from '@/lib/types/api';
 import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
-import { PaginatedResponse } from '@/lib/types/api';
 import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -107,26 +106,8 @@ export default function TransactionsPage() {
     // Helper para normalizar datas para YYYYMMDD
     const normalizeDate = (d: string) => {
       if (!d) return '';
-      // Se já está no formato YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.replace(/-/g, '').substring(0, 8);
-      // Se está no formato DD/MM/YYYY
-      if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) {
-        const [day, month, year] = d.split('/');
-        return `${year}${month}${day}`;
-      }
-      // Tenta converter para Date
-      try {
-        const dateObj = new Date(d);
-        if (!isNaN(dateObj.getTime())) {
-          const y = dateObj.getFullYear();
-          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          return `${y}${m}${day}`;
-        }
-      } catch {
-        setError('Formato de data inválido');
-      }
-      return '';
+      // Usar utilitário centralizado
+      return normalizeDate(d);
     };
 
     if (dateRange.startDate) {
@@ -296,22 +277,8 @@ export default function TransactionsPage() {
     return currentUser ? transaction.username === currentUser.username : false;
   };
 
-  // Função para formatar data
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return '-';
-
-    // Se a data já está no formato DD/MM/YYYY (do backend), apenas retorna
-    if (dateString.includes('/')) {
-      return dateString;
-    }
-
-    // Se está no formato ISO (YYYY-MM-DD), converte para DD/MM/YYYY
-    try {
-      return new Date(dateString).toLocaleDateString('pt-BR');
-    } catch {
-      return dateString;
-    }
-  };
+  // Usar utilitário centralizado para datas
+  
 
   const getEmptyStateTexts = () => {
     if (allTransactions.length === 0) {
@@ -609,7 +576,6 @@ export default function TransactionsPage() {
               getAccountName={getAccountName}
               getCategoryName={getCategoryName}
               canEditTransaction={canEditTransaction}
-              formatDate={formatDate}
               onEdit={() => openModal('edit', transaction)}
               onDelete={() => openModal('delete', transaction)}
               onSettle={() => openModal('settle', transaction)}

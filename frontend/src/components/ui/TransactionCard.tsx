@@ -1,5 +1,6 @@
 
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { toDisplayDate } from '@/lib/utils/dateUtils';
 import TagsStatus from './TagsStatus';
 import { Transaction, TransactionType } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
@@ -11,7 +12,6 @@ interface TransactionCardProps {
   familyManagementEnabled: boolean;
   getAccountName: (accountId: number) => string;
   getCategoryName: (categoryId?: number) => string;
-  formatDate: (dateString: string) => string;
   canEditTransaction: (transaction: Transaction) => boolean;
   onEdit: (transaction: Transaction) => void;
   onSettle: (transaction: Transaction) => void;
@@ -34,7 +34,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
   familyManagementEnabled,
   getAccountName,
   getCategoryName,
-  formatDate,
+  // formatDate removido
   canEditTransaction,
   onEdit,
   onSettle,
@@ -150,7 +150,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
             Vencimento
           </span>
           <span style={{ color: getStyleProp<{ color: string }>('text')?.color }} className="text-sm font-medium">
-            {formatDate(transaction.dueDate)}
+            {toDisplayDate(transaction.dueDate)}
           </span>
         </div>
         <div className="flex flex-col items-end">
@@ -158,13 +158,16 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
             Data Efetiva
           </span>
           <span style={{ color: getStyleProp<{ color: string }>('textMuted')?.color }} className="text-sm">
-            {transaction.effectiveDate ? formatDate(transaction.effectiveDate) : '-'}
+            {transaction.effectiveDate ? toDisplayDate(transaction.effectiveDate) : '-'}
           </span>
         </div>
       </div>
 
       <div className="mb-2 flex gap-2">
-        <TagsStatus status={transaction.status} />
+        {/* Garante que o status seja válido para TagsStatus */}
+        {['liquidated', 'overdue', 'pending'].includes(transaction.status as string) ? (
+          <TagsStatus status={transaction.status as 'liquidated' | 'overdue' | 'pending'} />
+        ) : null}
       </div>
 
       {/* Footer - User à esquerda, botões à direita */}
