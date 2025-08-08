@@ -3,7 +3,7 @@ import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
 import { StatusFilter, SortOrder } from '@/components/ui/TransactionFilters';
 import { TransactionType } from '@/lib/types/transaction';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { User } from '@/lib/types/user';
 
@@ -19,7 +19,7 @@ export interface AdvancedTransactionFiltersProps {
   typeFilter: string;
   onTypeChange: (type: string) => void;
   descriptionFilter: string;
-  onDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDescriptionChange: (value: string) => void;
   sortBy: string;
   sortOrder: SortOrder;
   onSortChange: (field: string, order: SortOrder) => void;
@@ -52,7 +52,24 @@ const AdvancedTransactionFilters: React.FC<AdvancedTransactionFiltersProps> = ({
   userFilter,
   onUserChange
 }) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [descInput, setDescInput] = useState(descriptionFilter);
+  const [descLoading, setDescLoading] = useState(false);
+
+  // Debounce para busca por descrição
+  useEffect(() => {
+    setDescInput(descriptionFilter);
+  }, [descriptionFilter]);
+
+  useEffect(() => {
+    if (descInput === descriptionFilter) return;
+    setDescLoading(true);
+    const handler = setTimeout(() => {
+      onDescriptionChange(descInput);
+      setDescLoading(false);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [descInput]);
 
   return (
     <div className={className}>
@@ -123,7 +140,14 @@ const AdvancedTransactionFilters: React.FC<AdvancedTransactionFiltersProps> = ({
                 </div>
                 <div className="flex flex-col gap-1 min-w-40">
                   <label htmlFor="description-filter" className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Descrição:</label>
-                  <input id="description-filter" type="text" value={descriptionFilter} onChange={onDescriptionChange} placeholder="Buscar..." className="px-3 py-2 rounded-lg border text-sm" />
+                  <div className="relative">
+                    <input id="description-filter" type="text" value={descInput} onChange={e => setDescInput(e.target.value)} placeholder="Buscar..." className="px-3 py-2 rounded-lg border text-sm pr-8" />
+                    {descLoading && (
+                      <span className="absolute right-2 top-2 animate-spin text-gray-400">
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1 min-w-32">
                   <label htmlFor="sort-by" className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Ordenar por:</label>

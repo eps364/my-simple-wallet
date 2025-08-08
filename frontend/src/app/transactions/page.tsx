@@ -12,7 +12,7 @@ import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
-import { Transaction, TransactionType } from '@/lib/types/transaction';
+import { Transaction } from '@/lib/types/transaction';
 import { PaginatedResponse } from '@/lib/types/api';
 import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
@@ -41,7 +41,7 @@ export default function TransactionsPage() {
   const [dateField, setDateField] = useState<string>('dueDate');
   const [descriptionFilter, setDescriptionFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('dueDate');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
@@ -174,13 +174,13 @@ export default function TransactionsPage() {
   }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
 
   // Handlers dos filtros
-  const handleStatusFilterChange = (status: StatusFilter) => setStatusFilter(status);
-  const handleAccountChange = (accountId: string) => setAccountFilter(accountId);
-  const handleCategoryChange = (categoryId: string) => setCategoryFilter(categoryId);
-  const handleTypeChange = (type: string) => setTypeFilter(type);
-  const handleUserChange = (username: string) => setUserFilter(username);
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => setDescriptionFilter(e.target.value);
-  const handleSortChange = (field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); };
+  const handleStatusFilterChange = useCallback((status: StatusFilter) => setStatusFilter(status), []);
+  const handleAccountChange = useCallback((accountId: string) => setAccountFilter(accountId), []);
+  const handleCategoryChange = useCallback((categoryId: string) => setCategoryFilter(categoryId), []);
+  const handleTypeChange = useCallback((type: string) => setTypeFilter(type), []);
+  const handleUserChange = useCallback((username: string) => setUserFilter(username), []);
+  const handleDescriptionChange = useCallback((value: string) => setDescriptionFilter(value), []);
+  const handleSortChange = useCallback((field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); }, []);
 
   // Aplicar filtros sempre que algum filtro mudar
   useEffect(() => {
@@ -198,13 +198,16 @@ export default function TransactionsPage() {
       const shouldUseParentMode = getFamilyManagementEnabled();
 
       // Montar filtros para backend
-      const filters: any = {};
+      const filters: Record<string, unknown> = {};
       if (accountFilter !== 'all') filters.accountId = Number(accountFilter);
       if (categoryFilter !== 'all') filters.categoryId = Number(categoryFilter);
       if (typeFilter !== 'all') filters.type = Number(typeFilter);
       if (dateRange.startDate) filters.dateFrom = dateRange.startDate;
       if (dateRange.endDate) filters.dateTo = dateRange.endDate;
       if (descriptionFilter.trim() !== '') filters.description = descriptionFilter.trim();
+      if (familyManagementEnabled && userFilter !== 'all') filters.username = userFilter;
+      if (sortBy) filters.sort = sortBy;
+      if (sortOrder) filters.order = sortOrder;
 
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
         transactionsService.getFiltered(filters, page, pageSize, shouldUseParentMode),
@@ -227,7 +230,7 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter]);
+  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, familyManagementEnabled, sortBy, sortOrder, userFilter]);
 
   useEffect(() => {
     // Sincronizar com localStorage na inicialização
@@ -451,7 +454,7 @@ export default function TransactionsPage() {
           onUserChange={handleUserChange}
         />
         {/* Results Counter */}
-        <div className="mt-4 flex justify-end items-center gap-4">
+        <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
           <div
             style={{ color: styles.textMuted.color }}
             className="text-sm"
@@ -460,15 +463,22 @@ export default function TransactionsPage() {
               Mostrando {transactions.length} de {pagination?.totalElements ?? allTransactions.length} transações
             </span>
           </div>
-          {/* Paginação simples */}
+          {/* Paginação avançada */}
           {pagination && pagination.totalPages > 1 && (
             <div className="flex gap-2 items-center">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(0)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                « Primeira
+              </button>
               <button
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
                 className="px-2 py-1 border rounded disabled:opacity-50"
               >
-                Anterior
+                ‹ Anterior
               </button>
               <span>Página {page + 1} de {pagination.totalPages}</span>
               <button
@@ -476,8 +486,24 @@ export default function TransactionsPage() {
                 onClick={() => setPage(page + 1)}
                 className="px-2 py-1 border rounded disabled:opacity-50"
               >
-                Próxima
+                Próxima ›
               </button>
+              <button
+                disabled={page === pagination.totalPages - 1}
+                onClick={() => setPage(pagination.totalPages - 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                Última »
+              </button>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }}
+                className="ml-2 px-2 py-1 border rounded"
+              >
+                {[10, 20, 50, 100].map(size => (
+                  <option key={size} value={size}>{size} por página</option>
+                ))}
+              </select>
             </div>
           )}
         </div>

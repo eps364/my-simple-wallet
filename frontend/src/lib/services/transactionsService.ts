@@ -63,6 +63,9 @@ export class TransactionsService {
     if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) params.append('dateTo', filters.dateTo);
     if (filters.description) params.append('description', filters.description);
+    if (filters.username) params.append('username', filters.username);
+    if (filters.sort) params.append('sort', filters.sort);
+    if (filters.order) params.append('order', filters.order);
     params.append('page', String(page));
     params.append('size', String(size));
     if (isParent) params.append('isParent', 'true');
