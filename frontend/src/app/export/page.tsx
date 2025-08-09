@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { Transaction, TransactionFilters } from '@/lib/types/transaction';
 import TransactionFiltersComponent, { StatusFilter, FilterConfig } from '@/components/ui/TransactionFilters';
@@ -16,7 +15,6 @@ export default function ExportPage() {
       selectedStatus: statusFilter,
       onStatusChange: setStatusFilter
     },
-    // Adicione outros filtros conforme necessário (account, category, dateRange, etc)
   };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,14 +62,9 @@ export default function ExportPage() {
     }
   };
 
-  // Exportar para XLSX
   const handleExport = () => {
     if (!transactions.length) return;
-    // Exporta apenas os dados filtrados
-    const worksheet = XLSX.utils.json_to_sheet(transactions);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transacoes');
-    XLSX.writeFile(workbook, 'transacoes-filtradas.xlsx');
+
   };
 
   return (
@@ -97,7 +90,6 @@ export default function ExportPage() {
           className="bg-green-600 text-white px-4 py-2 rounded"
           disabled={!transactions.length}
         >
-          Exportar XLSX
         </button>
       </div>
       {/* Preview dos dados */}

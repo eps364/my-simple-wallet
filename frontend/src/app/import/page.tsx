@@ -2,7 +2,7 @@
 
 import { Transaction } from '@/lib/types/transaction';
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
+// ...import XLSX removido...
 import { FormFeedback } from '@/components/ui/FormFeedback';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import Container from '@/components/layout/Container';
@@ -25,13 +25,8 @@ export default function ImportPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json: Transaction[] = XLSX.utils.sheet_to_json(worksheet);
-      setTransactions(json);
-      setImported(true);
+  // ...lógica de importação XLSX removida...
+  setError('Importação XLSX removida do sistema');
     } catch {
       setError('Erro ao importar arquivo');
     } finally {
@@ -49,42 +44,9 @@ export default function ImportPage() {
           await handleImport();
         }}
       >
-        <input
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={handleFileChange}
-          className="border px-2 py-1 rounded"
-        />
-        <SubmitButton
-          label="Importar XLSX"
-          loading={loading}
-          disabled={!file}
-          className="flex items-center gap-2 px-4 py-2 mt-4"
-        />
+  {/* Importação XLSX removida */}
       </form>
-      {imported && <FormFeedback message="Arquivo importado com sucesso!" type="success" />}
-      {error && <FormFeedback message={error} type="error" />}
-      {/* Preview dos dados importados */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border">
-          <thead>
-            <tr>
-              {transactions[0] && Object.keys(transactions[0]).map(key => (
-                <th key={key} className="border px-2 py-1">{key}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((tx, idx) => (
-              <tr key={tx.id || idx}>
-                {Object.entries(tx).map(([key, val]) => (
-                  <td key={key} className="border px-2 py-1">{val === null || val === undefined ? "" : (typeof val === 'string' || typeof val === 'number' ? val : JSON.stringify(val))}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+  {/* Importação e preview XLSX removidos */}
     </Container>
   );
 }

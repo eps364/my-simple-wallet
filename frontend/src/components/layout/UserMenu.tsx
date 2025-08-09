@@ -402,7 +402,6 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0-8l-4 4m4-4l4 4M4 4h16" />
               </svg>
-              Importar XLSX
             </button>
           </div>
 
