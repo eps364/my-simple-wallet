@@ -1,10 +1,12 @@
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeStore } from '@/lib/stores/themeStore';
+import { themes } from '@/lib/types/theme';
 
 /**
  * Hook que retorna estilos inline para usar com as cores do tema atual
  */
 export function useThemeStyles() {
-  const { colors } = useTheme();
+  const theme = useThemeStore((state) => state.theme);
+  const colors = themes[theme];
 
   return {
     // Backgrounds

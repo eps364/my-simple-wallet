@@ -1,5 +1,5 @@
 "use client";
-import { useTheme } from "@/context/ThemeContext";
+import { useThemeStore } from "@/lib/stores/themeStore";
 import { Theme, themeLabels } from "@/lib/types/theme";
 
 interface ThemeButtonProps {
@@ -81,7 +81,7 @@ function ThemeButton({ themeKey, isSelected, onClick, featured = false }: ThemeB
 }
 
 export function ThemeSelector() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useThemeStore();
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);

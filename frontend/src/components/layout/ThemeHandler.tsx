@@ -1,39 +1,27 @@
-"use client";
-import { createContext, useContext, useEffect, useState, useMemo } from "react";
-import { Theme, themes } from "@/lib/types/theme";
+'use client';
 
-interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  colors: typeof themes[Theme];
-}
+import { useEffect } from 'react';
+import { useThemeStore } from '@/lib/stores/themeStore';
+import { themes } from '@/lib/types/theme';
 
-const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dracula-dark',
-  setTheme: () => {},
-  colors: themes['dracula-dark'],
-});
+export function ThemeHandler() {
+  const theme = useThemeStore((state) => state.theme);
+  const setTheme = useThemeStore((state) => state.setTheme);
 
-interface ThemeProviderProps {
-  readonly children: React.ReactNode;
-}
-
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>('dracula-dark');
-
+  // Efeito para carregar o tema do localStorage na inicialização (apenas no cliente)
   useEffect(() => {
-    // Carrega o tema do localStorage
-    const savedTheme = localStorage.getItem('theme') as Theme;
+    const savedTheme = localStorage.getItem('theme') as keyof typeof themes;
     if (savedTheme && themes[savedTheme]) {
       setTheme(savedTheme);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Executa apenas uma vez
 
+  // Efeito para aplicar o tema no DOM e salvar no localStorage quando ele mudar
   useEffect(() => {
-    // Aplica as variáveis CSS customizadas
     const root = document.documentElement;
     const themeColors = themes[theme];
-    
+
     // Define as variáveis CSS customizadas
     root.style.setProperty('--color-primary', themeColors.primary);
     root.style.setProperty('--color-primary-hover', themeColors.primaryHover);
@@ -57,27 +45,5 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const handleSetTheme = (newTheme: Theme) => {
-    setTheme(newTheme);
-  };
-
-  const contextValue = useMemo(() => ({
-    theme,
-    setTheme: handleSetTheme,
-    colors: themes[theme]
-  }), [theme]);
-
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme deve ser usado dentro de um ThemeProvider');
-  }
-  return context;
+  return null; // Este componente não renderiza nada
 }
