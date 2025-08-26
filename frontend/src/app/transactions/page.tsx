@@ -2,9 +2,10 @@
 
 import LoanModal from '@/components/forms/LoanModal';
 import TransactionModal from '@/components/forms/TransactionModal';
-import { SortOrder, StatusFilter } from '@/components/ui';
+import { SortOrder, StatusFilter } from '@/components/ui'; // Assuming StatusFilter is defined here
 import AdvancedTransactionFilters from '@/components/ui/AdvancedTransactionFilters';
-import TransactionCard from '@/components/ui/TransactionCard';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import TransactionCard from '@/components/ui/TransactionCard'; // Assuming this component exists
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
@@ -14,13 +15,10 @@ import { Account } from '@/lib/types/account';
 import { PaginatedResponse } from '@/lib/types/api';
 import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
-import { User } from '@/lib/types/user';
-import { normalizeDate } from '@/lib/utils/dateUtils';
+import { User } from '@/lib/types/user'; // Assuming this type exists
 import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [pagination, setPagination] = useState<PaginatedResponse<Transaction> | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
@@ -33,7 +31,7 @@ export default function TransactionsPage() {
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
 
   type MultiStatusFilter = StatusFilter | StatusFilter[];
-  
+
   const [statusFilter, setStatusFilter] = useState<MultiStatusFilter>(['pending', 'overdue']);
   const [accountFilter, setAccountFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -70,85 +68,6 @@ export default function TransactionsPage() {
     return category?.category || 'Categoria não encontrada';
   }, [categories]);
 
-  // Função para aplicar todos os filtros e ordenação
-  const applyFilters = useCallback((data: Transaction[]) => {
-    let filtered = [...data];
-
-    // Filtro por status
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'liquidated') {
-        filtered = filtered.filter(t => t.effectiveDate);
-      } else if (statusFilter === 'pending') {
-        filtered = filtered.filter(t => !t.effectiveDate);
-      }
-    }
-
-    // Filtro por conta
-    if (accountFilter !== 'all') {
-      filtered = filtered.filter(t => t.accountId === Number(accountFilter));
-    }
-
-    // Filtro por categoria
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(t => t.categoryId === Number(categoryFilter));
-    }
-
-    // Filtro por tipo
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(t => String(t.type) === typeFilter);
-    }
-
-    // Filtro por usuário (apenas se familyManagementEnabled)
-    if (familyManagementEnabled && userFilter !== 'all') {
-      filtered = filtered.filter(t => t.username === userFilter);
-    }
-
-    // Filtro por período
-    if (dateRange.startDate) {
-      const startNorm = normalizeDate(dateRange.startDate);
-      filtered = filtered.filter(t => {
-        const value = t[dateField as keyof Transaction];
-        if (!value) return false;
-        const dateNorm = normalizeDate(typeof value === 'string' ? value.substring(0, 10) : '');
-        return dateNorm >= startNorm;
-      });
-    }
-    if (dateRange.endDate) {
-      const endNorm = normalizeDate(dateRange.endDate);
-      filtered = filtered.filter(t => {
-        const value = t[dateField as keyof Transaction];
-        if (!value) return false;
-        const dateNorm = normalizeDate(typeof value === 'string' ? value.substring(0, 10) : '');
-        return dateNorm <= endNorm;
-      });
-    }
-
-    // Filtro por descrição
-    if (descriptionFilter.trim() !== '') {
-      filtered = filtered.filter(t => t.description.toLowerCase().includes(descriptionFilter.trim().toLowerCase()));
-    }
-
-    // Ordenação
-    filtered.sort((a, b) => {
-      let aValue: unknown = a[sortBy as keyof Transaction];
-      let bValue: unknown = b[sortBy as keyof Transaction];
-      // Se for data, converter para Date
-      if (sortBy === 'dueDate' || sortBy === 'effectiveDate') {
-        aValue = aValue ? new Date(aValue as string).getTime() : 0;
-        bValue = bValue ? new Date(bValue as string).getTime() : 0;
-      }
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-      }
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-      }
-      return 0;
-    });
-
-    setTransactions(filtered);
-  }, [statusFilter, accountFilter, categoryFilter, typeFilter, userFilter, familyManagementEnabled, dateRange, descriptionFilter, sortBy, sortOrder, dateField]);
-
   // Handlers dos filtros
   const handleStatusFilterChange = useCallback((status: MultiStatusFilter) => setStatusFilter(status), []);
   const handleAccountChange = useCallback((accountId: string) => setAccountFilter(accountId), []);
@@ -158,22 +77,11 @@ export default function TransactionsPage() {
   const handleDescriptionChange = useCallback((value: string) => setDescriptionFilter(value), []);
   const handleSortChange = useCallback((field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); }, []);
 
-  // Aplicar filtros sempre que algum filtro mudar
-  useEffect(() => {
-    if (allTransactions.length > 0) {
-      applyFilters(allTransactions);
-    }
-  }, [allTransactions, applyFilters]);
-
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
-
-      // Enviar isParent=true quando o gerenciamento familiar estiver ativo
       const shouldUseParentMode = getFamilyManagementEnabled();
-
-      // Montar filtros para backend
       const filters: Record<string, unknown> = {};
       if (accountFilter !== 'all') filters.accountId = Number(accountFilter);
       if (categoryFilter !== 'all') filters.categoryId = Number(categoryFilter);
@@ -184,7 +92,6 @@ export default function TransactionsPage() {
       if (familyManagementEnabled && userFilter !== 'all') filters.username = userFilter;
       if (sortBy) filters.sort = sortBy;
       if (sortOrder) filters.order = sortOrder;
-      // Adiciona filtro de status para o backend
       if (statusFilter !== 'all') filters.status = statusFilter;
 
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
@@ -196,8 +103,6 @@ export default function TransactionsPage() {
       ]);
 
       setPagination(transactionsData);
-      setAllTransactions(transactionsData.content);
-      setTransactions(transactionsData.content);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
@@ -226,7 +131,6 @@ export default function TransactionsPage() {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Listener customizado para mudanças feitas na mesma aba
     window.addEventListener('familyManagementChanged', handleStorageChange);
 
     return () => {
@@ -235,7 +139,6 @@ export default function TransactionsPage() {
     };
   }, [currentUser, loadData]);
 
-  // Carregar dados inicialmente e ao mudar página
   useEffect(() => {
     loadData();
   }, [loadData, page, pageSize]);
@@ -271,11 +174,9 @@ export default function TransactionsPage() {
     return currentUser ? transaction.username === currentUser.username : false;
   };
 
-  // Usar utilitário centralizado para datas
-  
-
   const getEmptyStateTexts = () => {
-    if (allTransactions.length === 0) {
+    // Check based on pagination total elements
+    if (pagination?.totalElements === 0) {
       return {
         title: 'Nenhuma transação encontrada',
         description: 'Comece adicionando sua primeira receita ou despesa.',
@@ -291,35 +192,11 @@ export default function TransactionsPage() {
   };
 
   // Helper: check if any transaction has the selected date field
-  const anyHasDateField = allTransactions.some(t => !!t[dateField as keyof Transaction]);
+  const transactions = pagination?.content ?? [];
+  const anyHasDateField = transactions.some(t => !!t[dateField as keyof Transaction]);
 
   if (isLoading) {
-    return (
-      <div
-        style={{ backgroundColor: styles.background.backgroundColor }}
-        className="container mx-auto px-4 py-8"
-      >
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="flex flex-col items-center space-y-4">
-            <svg
-              style={{ color: 'var(--color-primary)' }}
-              className="animate-spin h-12 w-12"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p
-              style={{ color: styles.textSecondary.color }}
-            >
-              Carregando transações...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner label="Carregando transações..." />;
   }
 
   return (
@@ -424,7 +301,7 @@ export default function TransactionsPage() {
             className="text-sm"
           >
             <span>
-              Mostrando {transactions.length} de {pagination?.totalElements ?? allTransactions.length} transações
+              Mostrando {transactions.length} de {pagination?.totalElements ?? 0} transações
             </span>
           </div>
           {/* Paginação avançada */}
@@ -502,7 +379,7 @@ export default function TransactionsPage() {
       )}
 
       {/* Transactions List */}
-      {transactions.length === 0 ? (
+      {transactions.length === 0 && !isLoading ? (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto">
             <svg
