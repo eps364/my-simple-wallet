@@ -1,4 +1,4 @@
-// Tipos relacionados às transações
+import { DateFilterType } from '../hooks/useDateFilter';
 
 export interface Transaction {
   installments: never[];
@@ -59,4 +59,5 @@ export interface TransactionFilters {
   username?: string;
   sort?: string;
   order?: "asc" | "desc";
+  dateType?: DateFilterType;
 }

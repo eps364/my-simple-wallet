@@ -11,16 +11,14 @@ import { categoriesService } from '@/lib/services/categoriesService';
 import { transactionsService } from '@/lib/services/transactionsService';
 import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
-import { PaginatedResponse } from '@/lib/types/api';
 import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
 import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
-  const [pagination, setPagination] = useState<PaginatedResponse<Transaction> | null>(null);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -59,31 +57,20 @@ export default function TransactionsPage() {
       setError('');
       const shouldUseParentMode = getFamilyManagementEnabled();
 
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
-
       const filters: Record<string, unknown> = {
-        dateFrom: startDate,
-        dateTo: endDate,
-        // TODO: The user wants to filter by settlement date, pre-dated date, and overdue date.
-        // This is not directly supported by the backend.
-        // For now, we are filtering by a date range on the default date field.
-        // This might need to be adjusted depending on the backend implementation.
         sort: 'dueDate',
         order: 'asc'
       };
 
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
-        transactionsService.getFiltered(filters, page, pageSize, shouldUseParentMode),
+        transactionsService.getFiltered(filters, 0, 1000, shouldUseParentMode), // Fetch up to 1000 transactions
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode),
         usersService.getProfile(),
         shouldUseParentMode ? usersService.getChildren() : Promise.resolve([])
       ]);
 
-      setPagination(transactionsData);
+      setTransactions(transactionsData.content);
       setAccounts(accountsData);
       setCategories(categoriesData);
       setCurrentUser(userData);
@@ -94,7 +81,7 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, currentDate, familyManagementEnabled]);
+  }, [familyManagementEnabled]);
 
   useEffect(() => {
     setFamilyManagementEnabled(getFamilyManagementEnabled());
@@ -118,7 +105,24 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     loadData();
-  }, [loadData, page, pageSize, currentDate]);
+  }, [loadData]);
+
+  useEffect(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    const filtered = transactions.filter(t => {
+      if (t.effectiveDate) {
+        const effectiveDate = new Date(t.effectiveDate);
+        return effectiveDate.getFullYear() === year && effectiveDate.getMonth() === month;
+      }
+      const dueDate = new Date(t.dueDate);
+      return dueDate <= lastDayOfMonth && !t.effectiveDate;
+    });
+
+    setFilteredTransactions(filtered);
+  }, [transactions, currentDate]);
 
   const openModal = (mode: 'create' | 'edit' | 'delete' | 'settle', transaction?: Transaction) => {
     setModalState({
@@ -150,22 +154,26 @@ export default function TransactionsPage() {
   };
 
   const getEmptyStateTexts = () => {
-    if (pagination?.totalElements === 0) {
+    if (transactions.length > 0 && filteredTransactions.length === 0) {
+      return {
+        title: 'Nenhuma transação encontrada para este mês',
+        description: 'Tente navegar para um mês diferente ou adicione uma nova transação.',
+        showButton: false
+      };
+    }
+    if (transactions.length === 0) {
       return {
         title: 'Nenhuma transação encontrada',
         description: 'Comece adicionando sua primeira receita ou despesa.',
         showButton: true
       };
     }
-
     return {
       title: 'Nenhuma transação encontrada para este mês',
       description: 'Tente navegar para um mês diferente ou adicione uma nova transação.',
       showButton: false
     };
   };
-
-  const transactions = pagination?.content ?? [];
 
   if (isLoading) {
     return <LoadingSpinner label="Carregando transações..." />;
@@ -242,52 +250,9 @@ export default function TransactionsPage() {
             className="text-sm"
           >
             <span>
-              Mostrando {transactions.length} de {pagination?.totalElements ?? 0} transações
+              Mostrando {filteredTransactions.length} transações
             </span>
           </div>
-          {/* Paginação avançada */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex gap-2 items-center">
-              <button
-                disabled={page === 0}
-                onClick={() => setPage(0)}
-                className="px-2 py-1 border rounded disabled:opacity-50"
-              >
-                « Primeira
-              </button>
-              <button
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-                className="px-2 py-1 border rounded disabled:opacity-50"
-              >
-                ‹ Anterior
-              </button>
-              <span>Página {page + 1} de {pagination.totalPages}</span>
-              <button
-                disabled={page === pagination.totalPages - 1}
-                onClick={() => setPage(page + 1)}
-                className="px-2 py-1 border rounded disabled:opacity-50"
-              >
-                Próxima ›
-              </button>
-              <button
-                disabled={page === pagination.totalPages - 1}
-                onClick={() => setPage(pagination.totalPages - 1)}
-                className="px-2 py-1 border rounded disabled:opacity-50"
-              >
-                Última »
-              </button>
-              <select
-                value={pageSize}
-                onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }}
-                className="ml-2 px-2 py-1 border rounded"
-              >
-                {[10, 20, 50, 100].map(size => (
-                  <option key={size} value={size}>{size} por página</option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
       </div>
 
@@ -320,7 +285,7 @@ export default function TransactionsPage() {
       )}
 
       {/* Transactions List */}
-      {transactions.length === 0 && !isLoading ? (
+      {filteredTransactions.length === 0 && !isLoading ? (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto">
             <svg
@@ -372,7 +337,7 @@ export default function TransactionsPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {transactions.map((transaction: Transaction) => (
+          {filteredTransactions.map((transaction: Transaction) => (
             <TransactionCard
               key={transaction.id}
               transaction={transaction}
