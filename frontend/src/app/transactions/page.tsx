@@ -2,10 +2,9 @@
 
 import LoanModal from '@/components/forms/LoanModal';
 import TransactionModal from '@/components/forms/TransactionModal';
-import { SortOrder, StatusFilter } from '@/components/ui'; // Assuming StatusFilter is defined here
-import AdvancedTransactionFilters from '@/components/ui/AdvancedTransactionFilters';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import TransactionCard from '@/components/ui/TransactionCard'; // Assuming this component exists
+import MonthNavigator from '@/components/ui/MonthNavigator';
+import TransactionCard from '@/components/ui/TransactionCard';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 import { accountsService } from '@/lib/services/accountsService';
 import { categoriesService } from '@/lib/services/categoriesService';
@@ -15,7 +14,7 @@ import { Account } from '@/lib/types/account';
 import { PaginatedResponse } from '@/lib/types/api';
 import { Category } from '@/lib/types/category';
 import { Transaction } from '@/lib/types/transaction';
-import { User } from '@/lib/types/user'; // Assuming this type exists
+import { User } from '@/lib/types/user';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function TransactionsPage() {
@@ -29,19 +28,7 @@ export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [familyManagementEnabled, setFamilyManagementEnabled] = useState<boolean>(false);
-
-  type MultiStatusFilter = StatusFilter | StatusFilter[];
-
-  const [statusFilter, setStatusFilter] = useState<MultiStatusFilter>(['pending', 'overdue']);
-  const [accountFilter, setAccountFilter] = useState<string>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [userFilter, setUserFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>({ startDate: '', endDate: '' });
-  const [dateField, setDateField] = useState<string>('dueDate');
-  const [descriptionFilter, setDescriptionFilter] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('dueDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const styles = useThemeStyles();
   const [modalState, setModalState] = useState<{
@@ -54,52 +41,46 @@ export default function TransactionsPage() {
   });
   const [loanModalOpen, setLoanModalOpen] = useState(false);
 
-  // Função para buscar estado do gerenciamento familiar do localStorage
   const getFamilyManagementEnabled = (): boolean => {
     if (typeof window === 'undefined') return false;
     const stored = localStorage.getItem('familyManagementEnabled');
     return stored === 'true';
   };
 
-  // Função para obter o nome da categoria
   const getCategoryName = useCallback((categoryId?: number): string => {
     if (!categoryId) return 'Sem categoria';
     const category = categories.find(cat => cat.id === categoryId);
     return category?.category || 'Categoria não encontrada';
   }, [categories]);
 
-  // Handlers dos filtros
-  const handleStatusFilterChange = useCallback((status: MultiStatusFilter) => setStatusFilter(status), []);
-  const handleAccountChange = useCallback((accountId: string) => setAccountFilter(accountId), []);
-  const handleCategoryChange = useCallback((categoryId: string) => setCategoryFilter(categoryId), []);
-  const handleTypeChange = useCallback((type: string) => setTypeFilter(type), []);
-  const handleUserChange = useCallback((username: string) => setUserFilter(username), []);
-  const handleDescriptionChange = useCallback((value: string) => setDescriptionFilter(value), []);
-  const handleSortChange = useCallback((field: string, order: SortOrder) => { setSortBy(field); setSortOrder(order); }, []);
-
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
       const shouldUseParentMode = getFamilyManagementEnabled();
-      const filters: Record<string, unknown> = {};
-      if (accountFilter !== 'all') filters.accountId = Number(accountFilter);
-      if (categoryFilter !== 'all') filters.categoryId = Number(categoryFilter);
-      if (typeFilter !== 'all') filters.type = Number(typeFilter);
-      if (dateRange.startDate) filters.dateFrom = dateRange.startDate;
-      if (dateRange.endDate) filters.dateTo = dateRange.endDate;
-      if (descriptionFilter.trim() !== '') filters.description = descriptionFilter.trim();
-      if (familyManagementEnabled && userFilter !== 'all') filters.username = userFilter;
-      if (sortBy) filters.sort = sortBy;
-      if (sortOrder) filters.order = sortOrder;
-      if (statusFilter !== 'all') filters.status = statusFilter;
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+      const filters: Record<string, unknown> = {
+        dateFrom: startDate,
+        dateTo: endDate,
+        // TODO: The user wants to filter by settlement date, pre-dated date, and overdue date.
+        // This is not directly supported by the backend.
+        // For now, we are filtering by a date range on the default date field.
+        // This might need to be adjusted depending on the backend implementation.
+        sort: 'dueDate',
+        order: 'asc'
+      };
 
       const [transactionsData, accountsData, categoriesData, userData, usersData] = await Promise.all([
         transactionsService.getFiltered(filters, page, pageSize, shouldUseParentMode),
         accountsService.getAll(shouldUseParentMode),
         categoriesService.getAll(shouldUseParentMode),
-        usersService.getProfile(), // usuário logado
-        shouldUseParentMode ? usersService.getChildren() : Promise.resolve([]) // filhos
+        usersService.getProfile(),
+        shouldUseParentMode ? usersService.getChildren() : Promise.resolve([])
       ]);
 
       setPagination(transactionsData);
@@ -113,24 +94,20 @@ export default function TransactionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, accountFilter, categoryFilter, typeFilter, dateRange, descriptionFilter, familyManagementEnabled, sortBy, sortOrder, userFilter, statusFilter]);
+  }, [page, pageSize, currentDate, familyManagementEnabled]);
 
   useEffect(() => {
-    // Sincronizar com localStorage na inicialização
     setFamilyManagementEnabled(getFamilyManagementEnabled());
 
-    // Listener para mudanças no localStorage
     const handleStorageChange = () => {
       const newValue = getFamilyManagementEnabled();
       setFamilyManagementEnabled(newValue);
-      // Recarregar dados quando o estado mudar
       if (currentUser) {
         loadData();
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-
     window.addEventListener('familyManagementChanged', handleStorageChange);
 
     return () => {
@@ -141,7 +118,7 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     loadData();
-  }, [loadData, page, pageSize]);
+  }, [loadData, page, pageSize, currentDate]);
 
   const openModal = (mode: 'create' | 'edit' | 'delete' | 'settle', transaction?: Transaction) => {
     setModalState({
@@ -160,22 +137,19 @@ export default function TransactionsPage() {
 
   const handleModalSuccess = () => {
     closeModal();
-    loadData(); // Recarregar a lista após operação bem-sucedida
+    loadData();
   };
 
-  // Função para obter nome da conta
   const getAccountName = (accountId: number): string => {
     const account = accounts.find(acc => acc.id === accountId);
     return account?.description || 'Conta não encontrada';
   };
 
-  // Verificar se uma transação pode ser editada/deletada (apenas transações do usuário logado)
   const canEditTransaction = (transaction: Transaction): boolean => {
     return currentUser ? transaction.username === currentUser.username : false;
   };
 
   const getEmptyStateTexts = () => {
-    // Check based on pagination total elements
     if (pagination?.totalElements === 0) {
       return {
         title: 'Nenhuma transação encontrada',
@@ -185,15 +159,13 @@ export default function TransactionsPage() {
     }
 
     return {
-      title: 'Nenhuma transação encontrada com os filtros aplicados',
-      description: 'Tente ajustar os filtros para ver mais transações.',
+      title: 'Nenhuma transação encontrada para este mês',
+      description: 'Tente navegar para um mês diferente ou adicione uma nova transação.',
       showButton: false
     };
   };
 
-  // Helper: check if any transaction has the selected date field
   const transactions = pagination?.content ?? [];
-  const anyHasDateField = transactions.some(t => !!t[dateField as keyof Transaction]);
 
   if (isLoading) {
     return <LoadingSpinner label="Carregando transações..." />;
@@ -258,41 +230,10 @@ export default function TransactionsPage() {
 
       {/* Filter Section */}
       <div className="mb-6">
-        <AdvancedTransactionFilters
-          statusFilter={statusFilter}
-          onStatusChange={handleStatusFilterChange}
-          accountFilter={accountFilter}
-          onAccountChange={handleAccountChange}
-          accounts={accounts}
-          categoryFilter={categoryFilter}
-          onCategoryChange={handleCategoryChange}
-          categories={categories}
-          typeFilter={typeFilter}
-          onTypeChange={handleTypeChange}
-          descriptionFilter={descriptionFilter}
-          onDescriptionChange={handleDescriptionChange}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={handleSortChange}
+        <MonthNavigator
+          currentDate={currentDate}
+          onDateChange={setCurrentDate}
           className="mb-2"
-          onClearFilters={() => {
-            setStatusFilter('all');
-            setAccountFilter('all');
-            setCategoryFilter('all');
-            setTypeFilter('all');
-            setUserFilter('all');
-            setDateRange({ startDate: '', endDate: '' });
-            setDateField('dueDate');
-            setDescriptionFilter('');
-            setSortBy('dueDate');
-            setSortOrder('desc');
-          }}
-          users={familyManagementEnabled && currentUser ? [
-            currentUser,
-            ...Array.isArray(users) ? users : []
-          ] : []}
-          userFilter={userFilter}
-          onUserChange={handleUserChange}
         />
         {/* Results Counter */}
         <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
@@ -403,13 +344,6 @@ export default function TransactionsPage() {
             >
               {getEmptyStateTexts().description}
             </p>
-            {/* Helper: if filtering by a date field that is missing in all transactions, show a tip */}
-            {dateRange.startDate && !anyHasDateField && (
-              <div className="mt-4 text-sm text-yellow-700 bg-yellow-100 rounded p-3 border border-yellow-300">
-                Nenhuma transação possui o campo de data selecionado (<b>{dateField}</b>).<br />
-                Tente escolher outro campo de data ou limpe o filtro de período.
-              </div>
-            )}
             {getEmptyStateTexts().showButton && (
               <button
                 onClick={() => openModal('create')}
