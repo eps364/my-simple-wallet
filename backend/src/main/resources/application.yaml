@@ -5,6 +5,7 @@ spring:
     name: ${APP_NAME:My Simple Wallet}
 
   jackson:
+    date-format: dd/MM/yyyy
     time-zone: America/Sao_Paulo
 
 server:

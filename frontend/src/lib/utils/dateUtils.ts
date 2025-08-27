@@ -1,10 +1,14 @@
 // Centraliza funções de manipulação de datas para o frontend
 export function toDisplayDate(dateStr?: string): string {
-  if (!dateStr) return '-';
-  if (dateStr.includes('/')) return dateStr;
+  console.log("Data: " +dateStr);
+  if (!dateStr) return '';
   try {
-    return new Date(dateStr).toLocaleDateString('pt-BR');
-  } catch {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    return date.toLocaleDateString(dateStr);
+    } catch {
     return dateStr;
   }
 }

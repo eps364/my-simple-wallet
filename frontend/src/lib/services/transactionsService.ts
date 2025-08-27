@@ -66,6 +66,7 @@ export class TransactionsService {
     if (filters.username) params.append('username', filters.username);
     if (filters.sort) params.append('sort', filters.sort);
     if (filters.order) params.append('order', filters.order);
+    if (filters.dateType) params.append('dateType', filters.dateType); // Add dateType filter
     params.append('page', String(page));
     params.append('size', String(size));
     if (isParent) params.append('isParent', 'true');
