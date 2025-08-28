@@ -3,16 +3,21 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    const isAuthenticated = !!localStorage.getItem('token');
-    if (isAuthenticated) {
+    if (!isLoading && isAuthenticated) {
       router.push('/dashboard');
     }
-  }, [router]);
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) {
+    return <p>Loading...</p>; // Or a loading spinner component
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">

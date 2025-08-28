@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Container from './Container';
 import MobileMenu from './MobileMenu';
+import { useAuth } from '@/context/AuthContext';
 
 const Header = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, []);
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-md">
@@ -36,11 +31,7 @@ const Header = () => {
                   Profile
                 </Link>
                 <button
-                  onClick={() => {
-                    localStorage.removeItem('token');
-                    setIsAuthenticated(false);
-                    window.location.href = '/login';
-                  }}
+                  onClick={logout}
                   className="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700"
                 >
                   Logout

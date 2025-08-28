@@ -3,38 +3,26 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { loginUser } from '@/lib/apiService';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Assuming the token is in data.token
-        localStorage.setItem('token', data.data.token);
-        
-        router.push('/dashboard');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Invalid credentials');
-      }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+      const responseData = await loginUser({ username, password });
+      login(responseData.data.token);
+      router.push('/dashboard');
+    } catch (error: any) {
+      setError(error.message);
     }
   };
 

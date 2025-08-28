@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { registerUser } from '@/lib/apiService';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -16,23 +17,10 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, username, email, password }),
-      });
-
-      if (response.ok) {
-        // Redirect to login page after successful registration
-        router.push('/login');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Registration failed');
-      }
-    } catch (error) {
-      setError('An error occurred. Please try again.');
+      await registerUser({ name, username, email, password });
+      router.push('/login');
+    } catch (error: any) {
+      setError(error.message);
     }
   };
 
