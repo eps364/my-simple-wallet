@@ -15,6 +15,10 @@ const MobileMenu = ({ isAuthenticated }: MobileMenuProps) => {
     window.location.href = '/login';
   };
 
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+
   return (
     <div>
       <button onClick={() => setIsOpen(!isOpen)} className="text-gray-700 dark:text-gray-300 focus:outline-none">
@@ -30,22 +34,22 @@ const MobileMenu = ({ isAuthenticated }: MobileMenuProps) => {
         <div className="absolute top-16 right-0 w-48 py-2 mt-2 bg-white rounded-lg shadow-xl dark:bg-gray-800">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link href="/dashboard" onClick={closeMenu} className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                 Dashboard
               </Link>
-              <Link href="/profile" className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link href="/profile" onClick={closeMenu} className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                 Profile
               </Link>
-              <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <button onClick={() => { handleLogout(); closeMenu(); }} className="w-full text-left block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link href="/login" onClick={closeMenu} className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                 Login
               </Link>
-              <Link href="/register" className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link href="/register" onClick={closeMenu} className="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                 Register
               </Link>
             </>
