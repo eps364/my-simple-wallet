@@ -32,6 +32,9 @@ const Header = () => {
                 <Link href="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
                   Dashboard
                 </Link>
+                <Link href="/profile" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                  Profile
+                </Link>
                 <button
                   onClick={() => {
                     localStorage.removeItem('token');

@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         // Assuming the token is in data.token
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token', data.data.token);
         
         router.push('/dashboard');
       } else {
