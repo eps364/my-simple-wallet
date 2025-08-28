@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const response = await getUserProfile();
           setUser(response.data);
           setIsAuthenticated(true);
+          console.log(response);
         } catch (error) {
           console.error('Failed to fetch user on load', error);
           localStorage.removeItem('token');
