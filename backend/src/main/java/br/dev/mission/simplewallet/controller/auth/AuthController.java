@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+
 import br.dev.mission.simplewallet.dto.ApiResponse;
 import br.dev.mission.simplewallet.dto.auth.LoginRequest;
 import br.dev.mission.simplewallet.dto.auth.LoginResponse;
@@ -45,7 +48,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody @Valid LoginRequest request) {
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
         Optional<User> userOpt = userRepository.findByUsername(request.username());
         if (userOpt.isEmpty() || !passwordEncoder.matches(request.password(), userOpt.get().getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -55,15 +58,28 @@ public class AuthController {
         User user = userOpt.get();
         String token = jwtUtil.generateToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-        long expiresIn = jwtUtil.getExpirationInSeconds();
-        String expiresAt = jwtUtil.getExpirationDateISO();
         
-        LoginResponse loginResponse = new LoginResponse(token, refreshToken, expiresIn, expiresAt, "Bearer");
-        return ResponseEntity.ok(new ApiResponse<>(200, "Login realizado com sucesso", loginResponse));
+        // Criar cookie httpOnly para o token
+        Cookie tokenCookie = new Cookie("token", token);
+        tokenCookie.setHttpOnly(true);
+        tokenCookie.setSecure(true); // Para HTTPS
+        tokenCookie.setPath("/");
+        tokenCookie.setMaxAge((int) jwtUtil.getExpirationInSeconds());
+        response.addCookie(tokenCookie);
+        
+        // Criar cookie httpOnly para o refresh token
+        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 dias
+        response.addCookie(refreshCookie);
+        
+        return ResponseEntity.ok(new ApiResponse<>(200, "Login realizado com sucesso", "Autenticado"));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@RequestBody RefreshRequest request) {
+    public ResponseEntity<ApiResponse<String>> refresh(@RequestBody RefreshRequest request, HttpServletResponse response) {
         // Validação básica do refresh token
         if (request.refreshToken() == null || request.refreshToken().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -92,15 +108,48 @@ public class AuthController {
             // Gera novos tokens
             String newToken = jwtUtil.generateToken(user.getUsername());
             String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-            long expiresIn = jwtUtil.getExpirationInSeconds();
-            String expiresAt = jwtUtil.getExpirationDateISO();
             
-            LoginResponse loginResponse = new LoginResponse(newToken, newRefreshToken, expiresIn, expiresAt, "Bearer");
-            return ResponseEntity.ok(new ApiResponse<>(200, "Token renovado com sucesso", loginResponse));
+            // Criar novos cookies httpOnly
+            Cookie tokenCookie = new Cookie("token", newToken);
+            tokenCookie.setHttpOnly(true);
+            tokenCookie.setSecure(true);
+            tokenCookie.setPath("/");
+            tokenCookie.setMaxAge((int) jwtUtil.getExpirationInSeconds());
+            response.addCookie(tokenCookie);
+            
+            Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setSecure(true);
+            refreshCookie.setPath("/");
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 dias
+            response.addCookie(refreshCookie);
+            
+            return ResponseEntity.ok(new ApiResponse<>(200, "Token renovado com sucesso", "Token atualizado"));
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(401, "Refresh token inválido", null));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
+        // Limpar cookie do token
+        Cookie tokenCookie = new Cookie("token", "");
+        tokenCookie.setHttpOnly(true);
+        tokenCookie.setSecure(true);
+        tokenCookie.setPath("/");
+        tokenCookie.setMaxAge(0); // Remove o cookie
+        response.addCookie(tokenCookie);
+        
+        // Limpar cookie do refresh token
+        Cookie refreshCookie = new Cookie("refreshToken", "");
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0); // Remove o cookie
+        response.addCookie(refreshCookie);
+        
+        return ResponseEntity.ok(new ApiResponse<>(200, "Logout realizado com sucesso", "Desconectado"));
     }
 }
