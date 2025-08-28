@@ -25,10 +25,10 @@ export interface AccountUpdateRequest {
   dueDate?: number;
 }
 
-// Enum para tipos de conta (mantido para compatibilidade)
-export enum AccountType {
-  CHECKING = 'CHECKING',
-  SAVINGS = 'SAVINGS',
-  CREDIT = 'CREDIT',
-  INVESTMENT = 'INVESTMENT'
-}
+// // Enum para tipos de conta (mantido para compatibilidade)
+// export enum AccountType {
+//   CHECKING = 'CHECKING',
+//   SAVINGS = 'SAVINGS',
+//   CREDIT = 'CREDIT',
+//   INVESTMENT = 'INVESTMENT'
+// }

@@ -7,6 +7,6 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  theme: 'dracula-dark', // Tema padrão inicial
+  theme: 'dracula-dark', 
   setTheme: (newTheme) => set({ theme: newTheme }),
 }));
