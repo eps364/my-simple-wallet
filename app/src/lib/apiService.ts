@@ -1,25 +1,23 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token');
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
+  const defaultOptions: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    credentials: 'include',
+    ...options,
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-
-  const responseData = await response.json();
-
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, defaultOptions);
+  
   if (!response.ok) {
-    throw new Error(responseData.message || 'API Error');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Erro na requisição');
   }
-
-  return responseData;
+  
+  return response.json();
 }
 
 export const loginUser = (credentials: any) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(credentials) });

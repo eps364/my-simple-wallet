@@ -6,23 +6,14 @@
 // Base URL da API
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-// Função para obter o token do localStorage
-export const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-// Configuração base para fetch
+// Configuração base para fetch com suporte a cookies httpOnly
 export const fetchConfig = (method: string = 'GET', body?: object): RequestInit => {
-  const token = getAuthToken();
   const config: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    }
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include' // Inclui cookies httpOnly nas requisições
   };
 
   if (body && method !== 'GET') {

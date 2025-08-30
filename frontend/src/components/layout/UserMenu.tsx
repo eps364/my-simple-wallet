@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usersService } from '@/lib/services/usersService';
-import { clearAuthData } from '@/lib/apiService';
+import { authService } from '@/lib/services/authService';
+import { useAuth } from '@/context/AuthContext';
 import { User } from '@/lib/types/user';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
 
@@ -15,7 +16,7 @@ const getFamilyManagementEnabled = (): boolean => {
   return localStorage.getItem('familyManagementEnabled') === 'true';
 };
 
-const setFamilyManagementEnabled = (enabled: boolean): void => {
+const setFamilyManagementEnabledLocal = (enabled: boolean): void => {
   if (typeof window === 'undefined') return;
   localStorage.setItem('familyManagementEnabled', enabled.toString());
   window.dispatchEvent(new CustomEvent('familyManagementChanged'));
@@ -25,10 +26,11 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [familyManagementEnabled, setFamilyManagementEnabledState] = useState(false);
+  const [familyManagementEnabled, setFamilyManagementEnabled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const styles = useThemeStyles();
+  const { setIsAuthenticated } = useAuth();
 
   const getDisplayFirstName = (user: User): string => {
     if (user.name) {
@@ -42,20 +44,20 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
       const userData = await usersService.getProfile();
       setUser(userData);
     } catch {
-      clearAuthData();
+      setIsAuthenticated(false);
       if (onLogout) onLogout();
     } finally {
       setLoading(false);
     }
-  }, [onLogout]);
+  }, [onLogout, setIsAuthenticated]);
 
   useEffect(() => {
     loadUserProfile();
     
-    setFamilyManagementEnabledState(getFamilyManagementEnabled());
+    setFamilyManagementEnabled(getFamilyManagementEnabled());
     
     const handleStorageChange = () => {
-      setFamilyManagementEnabledState(getFamilyManagementEnabled());
+      setFamilyManagementEnabled(getFamilyManagementEnabled());
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -78,11 +80,17 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    clearAuthData();
-    setIsOpen(false);
-    if (onLogout) onLogout();
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Even if logout fails, we clear local state
+    } finally {
+      setIsAuthenticated(false);
+      setIsOpen(false);
+      if (onLogout) onLogout();
+      router.push('/login');
+    }
   };
 
   const handleProfileClick = () => {
@@ -123,7 +131,7 @@ export default function UserMenu({ onLogout }: UserMenuProps) {
   const handleToggleFamilyManagement = () => {
     const newValue = !familyManagementEnabled;
     setFamilyManagementEnabled(newValue);
-    setFamilyManagementEnabledState(newValue);
+    setFamilyManagementEnabledLocal(newValue);
   };
 
   if (loading) {

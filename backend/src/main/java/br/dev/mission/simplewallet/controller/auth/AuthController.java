@@ -49,8 +49,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
+        System.out.println("=== LOGIN DEBUG ===");
+        System.out.println("Username: " + request.username());
+        System.out.println("Password: " + (request.password() != null ? "[REDACTED]" : "NULL"));
+        System.out.println("Password length: " + (request.password() != null ? request.password().length() : "NULL"));
+        
         Optional<User> userOpt = userRepository.findByUsername(request.username());
         if (userOpt.isEmpty() || !passwordEncoder.matches(request.password(), userOpt.get().getPassword())) {
+            System.out.println("Login failed - user not found or password mismatch");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(401, "Usuário ou senha inválidos", null));
         }
@@ -59,10 +65,14 @@ public class AuthController {
         String token = jwtUtil.generateToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
         
+        // Determinar se estamos em produção (HTTPS) ou desenvolvimento (HTTP)
+        boolean isProduction = "prod".equals(System.getProperty("spring.profiles.active")) || 
+                              "prod".equals(System.getenv("SPRING_PROFILES_ACTIVE"));
+        
         // Criar cookie httpOnly para o token
         Cookie tokenCookie = new Cookie("token", token);
         tokenCookie.setHttpOnly(true);
-        tokenCookie.setSecure(true); // Para HTTPS
+        tokenCookie.setSecure(isProduction); // Secure apenas em produção
         tokenCookie.setPath("/");
         tokenCookie.setMaxAge((int) jwtUtil.getExpirationInSeconds());
         response.addCookie(tokenCookie);
@@ -70,7 +80,7 @@ public class AuthController {
         // Criar cookie httpOnly para o refresh token
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
+        refreshCookie.setSecure(isProduction); // Secure apenas em produção
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 dias
         response.addCookie(refreshCookie);
@@ -109,17 +119,21 @@ public class AuthController {
             String newToken = jwtUtil.generateToken(user.getUsername());
             String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
             
+            // Determinar se estamos em produção (HTTPS) ou desenvolvimento (HTTP)
+            boolean isProduction = "prod".equals(System.getProperty("spring.profiles.active")) || 
+                                  "prod".equals(System.getenv("SPRING_PROFILES_ACTIVE"));
+            
             // Criar novos cookies httpOnly
             Cookie tokenCookie = new Cookie("token", newToken);
             tokenCookie.setHttpOnly(true);
-            tokenCookie.setSecure(true);
+            tokenCookie.setSecure(isProduction); // Secure apenas em produção
             tokenCookie.setPath("/");
             tokenCookie.setMaxAge((int) jwtUtil.getExpirationInSeconds());
             response.addCookie(tokenCookie);
             
             Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken);
             refreshCookie.setHttpOnly(true);
-            refreshCookie.setSecure(true);
+            refreshCookie.setSecure(isProduction); // Secure apenas em produção
             refreshCookie.setPath("/");
             refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 dias
             response.addCookie(refreshCookie);
@@ -134,10 +148,14 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
+        // Determinar se estamos em produção (HTTPS) ou desenvolvimento (HTTP)
+        boolean isProduction = "prod".equals(System.getProperty("spring.profiles.active")) || 
+                              "prod".equals(System.getenv("SPRING_PROFILES_ACTIVE"));
+        
         // Limpar cookie do token
         Cookie tokenCookie = new Cookie("token", "");
         tokenCookie.setHttpOnly(true);
-        tokenCookie.setSecure(true);
+        tokenCookie.setSecure(isProduction); // Secure apenas em produção
         tokenCookie.setPath("/");
         tokenCookie.setMaxAge(0); // Remove o cookie
         response.addCookie(tokenCookie);
@@ -145,7 +163,7 @@ public class AuthController {
         // Limpar cookie do refresh token
         Cookie refreshCookie = new Cookie("refreshToken", "");
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
+        refreshCookie.setSecure(isProduction); // Secure apenas em produção
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(0); // Remove o cookie
         response.addCookie(refreshCookie);

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { loanService } from '@/lib/services/loanService';
+import { usersService } from '@/lib/services/usersService';
 import { Account } from '@/lib/types/account';
 import { Category } from '@/lib/types/category';
 import { TransactionType } from '@/lib/types/transaction';
@@ -43,38 +44,47 @@ export default function LoanModal({ isOpen, onClose, onSuccess, accounts, catego
 
   useEffect(() => {
     if (isOpen) {
-      const today = new Date().toISOString().split('T')[0];
-      const userId = typeof window !== 'undefined' ? window.localStorage.getItem('userId') : '';
-      // Conta do usuário logado
-      const userAccounts = (accounts ?? []).filter(acc => String(acc.userId) === String(userId));
-      const userAccountId = userAccounts.length > 0 ? userAccounts[0].id.toString() : '';
-      // Categoria IN para entrada
-      const userCategoriesIN = (categories ?? []).filter(cat => cat.type === 'IN' && String(cat.userId) === String(userId));
-      const userCategoryIdIN = userCategoriesIN.length > 0 ? userCategoriesIN[0].id.toString() : '';
-      // Categoria EX para empréstimo
-      const userCategoriesEX = (categories ?? []).filter(cat => cat.type === 'EX' && String(cat.userId) === String(userId));
-      const userCategoryIdEX = userCategoriesEX.length > 0 ? userCategoriesEX[0].id.toString() : '';
-      setForm({
-        description: 'Emprestimo',
-        amount: '',
-        type: TransactionType.INCOME,
-        dueDate: today,
-        effectiveDate: today,
-        accountId: userAccountId,
-        categoryId: userCategoryIdIN,
-        descriptionLoan: 'Emprestimo',
-        qtdeInstallments: '1',
-        amountInstallment: '',
-        typeLoan: TransactionType.EXPENSE,
-        accountIdLoan: userAccountId,
-        categoryIdLoan: userCategoryIdEX,
-        dueDateLoan: '',
-      });
-      setError('');
-      setInstallments([]);
-      setTimeout(() => {
-        amountRef.current?.focus();
-      }, 100);
+      const initializeData = async () => {
+        try {
+          const user = await usersService.getProfile();
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Conta do usuário logado
+          const userAccounts = (accounts ?? []).filter(acc => String(acc.userId) === String(user.id));
+          const userAccountId = userAccounts.length > 0 ? userAccounts[0].id.toString() : '';
+          // Categoria IN para entrada
+          const userCategoriesIN = (categories ?? []).filter(cat => cat.type === 'IN' && String(cat.userId) === String(user.id));
+          const userCategoryIdIN = userCategoriesIN.length > 0 ? userCategoriesIN[0].id.toString() : '';
+          // Categoria EX para empréstimo
+          const userCategoriesEX = (categories ?? []).filter(cat => cat.type === 'EX' && String(cat.userId) === String(user.id));
+          const userCategoryIdEX = userCategoriesEX.length > 0 ? userCategoriesEX[0].id.toString() : '';
+          setForm({
+            description: 'Emprestimo',
+            amount: '',
+            type: TransactionType.INCOME,
+            dueDate: today,
+            effectiveDate: today,
+            accountId: userAccountId,
+            categoryId: userCategoryIdIN,
+            descriptionLoan: 'Emprestimo',
+            qtdeInstallments: '1',
+            amountInstallment: '',
+            typeLoan: TransactionType.EXPENSE,
+            accountIdLoan: userAccountId,
+            categoryIdLoan: userCategoryIdEX,
+            dueDateLoan: '',
+          });
+          setError('');
+          setInstallments([]);
+          setTimeout(() => {
+            amountRef.current?.focus();
+          }, 100);
+        } catch {
+          setError('Erro ao carregar dados do usuário');
+        }
+      };
+
+      initializeData();
     }
   }, [isOpen, accounts, categories]);
 

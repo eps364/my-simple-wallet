@@ -1,29 +1,15 @@
 "use client";
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import ContainerHeader from './ContainerHeader';
 import UserMenu from './UserMenu';
-
-function isAuthenticated() {
-  if (typeof window === "undefined") return false;
-  return !!localStorage.getItem("token");
-}
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
-  const [logged, setLogged] = useState(false);
-
-  useEffect(() => {
-    function handleStorage() {
-      setLogged(isAuthenticated());
-    }
-    setLogged(isAuthenticated());
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  const { isAuthenticated } = useAuth();
 
   const handleLogout = () => {
-    setLogged(false);
+    // O logout será gerenciado pelo UserMenu
   };
 
   return (
@@ -37,7 +23,7 @@ export default function Header() {
       <ContainerHeader>
         <div className="flex items-center justify-between h-16">
           <Link 
-            href={logged ? "/dashboard" : "/"} 
+            href={isAuthenticated ? "/dashboard" : "/"} 
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
             <Image
@@ -56,7 +42,7 @@ export default function Header() {
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
-              {logged ? (                 
+              {isAuthenticated ? (                 
                   <UserMenu onLogout={handleLogout} />
               ) : (
                 <div className="flex items-center gap-3">

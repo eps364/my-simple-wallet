@@ -4,60 +4,61 @@
  */
 
 import { LoginResponse, RegisterResponse } from '@/lib/types/auth';
-import { API_BASE_URL, getAuthToken } from './baseService';
+import { API_BASE_URL } from './baseService';
 
 export class AuthService {
   // Login
   async login(username: string, password: string): Promise<LoginResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    console.log('AuthService.login called with:', { username, password: password ? '[REDACTED]' : 'EMPTY' });
+    
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
+      credentials: 'include', // Inclui cookies httpOnly
       body: JSON.stringify({ username, password })
     });
 
+    console.log('Login response status:', response.status);
+    console.log('Login response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('Login failed with error:', errorData);
       throw new Error(errorData.message || 'Erro ao fazer login');
     }
 
     const result = await response.json();
-    
-    // Verifica se a resposta tem a estrutura esperada da API
-    if (result.status === 200 && result.data?.token) {
-      // Salva os dados de autenticação no localStorage
-      localStorage.setItem('token', result.data.token);
-      localStorage.setItem('refreshToken', result.data.refreshToken);
-      localStorage.setItem('tokenType', result.data.tokenType);
-      localStorage.setItem('expiresAt', result.data.expiresAt);
-      
-      return result.data; // Retorna apenas o objeto data
-    }
-    
-    // Se não tem a estrutura esperada, lança erro
-    throw new Error(result.message || 'Resposta da API inválida');
+    console.log('Login response body:', result);
+
+    return { success: true };
   }
 
   // Logout
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('tokenType');
-    localStorage.removeItem('expiresAt');
-    // Remove o cookie também
-    if (typeof document !== 'undefined') {
-      document.cookie = 'token=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+  async logout(): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include' // Inclui cookies httpOnly
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Erro ao fazer logout');
     }
   }
 
   // Registro
   async register(username: string, email: string, name: string, password: string): Promise<RegisterResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
+      credentials: 'include', // Inclui cookies httpOnly
       body: JSON.stringify({ username, email, name, password })
     });
 
@@ -68,18 +69,41 @@ export class AuthService {
 
     const result = await response.json();
     
-    // Verifica se a resposta tem a estrutura esperada da API
     if (result.status === 201 && result.data) {
-      return result.data; // Retorna apenas o objeto data
+      return result.data;
     }
     
-    // Se não tem a estrutura esperada, lança erro
     throw new Error(result.message || 'Resposta da API inválida');
   }
 
-  // Verificar se está autenticado
-  isAuthenticated(): boolean {
-    return !!getAuthToken();
+  // Verificar se está autenticado fazendo uma requisição ao endpoint /me
+  async isAuthenticated(): Promise<boolean> {
+    try {
+      console.log('Checking authentication status...');
+      const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Inclui cookies httpOnly
+      });
+      
+      console.log('Auth check response status:', response.status);
+      console.log('Auth check response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Auth check response body:', result);
+      }
+      
+      const isAuth = response.ok;
+      console.log('Authentication status:', isAuth);
+      return isAuth;
+    } catch (error) {
+      // Se houver qualquer erro na requisição, consideramos não autenticado
+      console.error('Auth check error:', error);
+      return false;
+    }
   }
 }
 

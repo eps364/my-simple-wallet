@@ -3,30 +3,57 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { loginUser } from '@/lib/apiService';
+import { loginUser, getUserProfile } from '@/lib/apiService';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // New state
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true); // Set loading to true
+    setIsLoading(true);
 
     try {
-      const responseData = await loginUser({ username, password });
-      login(responseData.data.token);
-      router.push('/dashboard');
-    } catch (error: any) {
-      setError(error.message);
+      console.log('=== LOGIN DEBUG ===');
+      console.log('Username:', username);
+      console.log('Password:', password ? '[REDACTED]' : 'EMPTY');
+
+      // Fazer login
+      const loginResponse = await loginUser({ username, password });
+      console.log('Login response:', loginResponse);
+      
+      // Verificar se o login foi bem-sucedido
+      if (loginResponse.status === 200) {
+        console.log('Login successful, testing authentication...');
+        
+        // Testar se conseguimos acessar o perfil do usuário (validar o cookie)
+        try {
+          const userProfile = await getUserProfile();
+          console.log('User profile retrieved:', userProfile);
+          
+          // Se conseguimos obter o perfil, significa que estamos autenticados
+          login(); // Atualizar o estado de autenticação no contexto
+          
+          console.log('Authentication confirmed, redirecting to dashboard...');
+          router.push('/dashboard');
+        } catch (profileError) {
+          console.error('Failed to get user profile after login:', profileError);
+          setError('Login realizado, mas falha na verificação. Tente novamente.');
+        }
+      } else {
+        setError('Credenciais inválidas');
+      }
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.');
     } finally {
-      setIsLoading(false); // Set loading to false
+      setIsLoading(false);
     }
   };
 
@@ -49,7 +76,7 @@ export default function LoginPage() {
             onChange={(e) => setUsername(e.target.value)}
             className="w-full px-3 py-2 text-gray-900 bg-gray-200 rounded-md dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-            disabled={isLoading} // Disable input when loading
+            disabled={isLoading}
           />
         </div>
         <div className="mb-6">
@@ -63,15 +90,15 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 text-gray-900 bg-gray-200 rounded-md dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-            disabled={isLoading} // Disable input when loading
+            disabled={isLoading}
           />
         </div>
         <button
           type="submit"
           className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700"
-          disabled={isLoading} // Disable button when loading
+          disabled={isLoading}
         >
-          {isLoading ? 'Logging in...' : 'Login'} {/* Change button text */}
+          {isLoading ? 'Logging in...' : 'Login'}
         </button>
         <p className="mt-4 text-sm text-center text-gray-600 dark:text-gray-400">
           Don't have an account?{' '}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/lib/services/authService';
 import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { useAuth } from '@/context/AuthContext';
 import { FormField } from '@/components/ui/FormComponents';
 import { FormFeedback } from '@/components/ui/FormFeedback';
 import { SubmitButton } from '@/components/ui/SubmitButton';
@@ -15,27 +16,41 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const styles = useThemeStyles();
+  const { setIsAuthenticated } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    console.log('=== LOGIN DEBUG ===');
+    console.log('Username:', username);
+    console.log('Password:', password ? '[REDACTED]' : 'EMPTY');
+
     try {
-      // Chamada para a API de autenticação usando o authService corrigido
+      console.log('Calling authService.login...');
       const data = await authService.login(username, password);
+      console.log('Login response:', data);
       
-      if (data.token) {
-        // Dispara evento de storage para atualizar o Header
-        window.dispatchEvent(new Event('storage'));
+      if (data.success) {
+        console.log('Login successful, updating auth state...');
+        // Atualiza o estado de autenticação no contexto
+        setIsAuthenticated(true);
+        
+        // Teste imediato da autenticação
+        console.log('Testing authentication status...');
+        const isAuth = await authService.isAuthenticated();
+        console.log('isAuthenticated result:', isAuth);
         
         router.push('/dashboard');
       } else {
-        const errorMsg = 'Token não recebido da API';
+        const errorMsg = 'Ocorreu um erro ao fazer login.';
+        console.error('Login failed:', errorMsg);
         setError(errorMsg);
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
+      console.error('Login error:', error);
       setError(errorMessage);
     } finally {
       setLoading(false);
