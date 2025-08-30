@@ -1,13 +1,13 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { authService } from '@/lib/services/authService';
-import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
-import { useAuth } from '@/context/AuthContext';
 import { FormField } from '@/components/ui/FormComponents';
 import { FormFeedback } from '@/components/ui/FormFeedback';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useAuth } from '@/context/AuthContext';
+import { useThemeStyles } from '@/lib/hooks/useThemeStyles';
+import { authService } from '@/lib/services/authService';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -23,25 +23,14 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    console.log('=== LOGIN DEBUG ===');
-    console.log('Username:', username);
-    console.log('Password:', password ? '[REDACTED]' : 'EMPTY');
-
     try {
-      console.log('Calling authService.login...');
+
       const data = await authService.login(username, password);
-      console.log('Login response:', data);
+
       
       if (data.success) {
-        console.log('Login successful, updating auth state...');
-        // Atualiza o estado de autenticação no contexto
         setIsAuthenticated(true);
-        
-        // Teste imediato da autenticação
-        console.log('Testing authentication status...');
-        const isAuth = await authService.isAuthenticated();
-        console.log('isAuthenticated result:', isAuth);
-        
+        await authService.isAuthenticated();
         router.push('/dashboard');
       } else {
         const errorMsg = 'Ocorreu um erro ao fazer login.';
@@ -50,7 +39,6 @@ export default function LoginPage() {
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro de conexão. Verifique sua internet e tente novamente.';
-      console.error('Login error:', error);
       setError(errorMessage);
     } finally {
       setLoading(false);

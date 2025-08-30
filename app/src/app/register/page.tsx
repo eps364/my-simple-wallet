@@ -19,8 +19,12 @@ export default function RegisterPage() {
     try {
       await registerUser({ name, username, email, password });
       router.push('/login');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unexpected error occurred.');
+      }
     }
   };
 

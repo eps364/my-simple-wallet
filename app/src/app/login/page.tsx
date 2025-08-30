@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { loginUser, getUserProfile } from '@/lib/apiService';
 import { useAuth } from '@/context/AuthContext';
+import { getUserProfile, loginUser } from '@/lib/apiService';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -20,27 +20,12 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      console.log('=== LOGIN DEBUG ===');
-      console.log('Username:', username);
-      console.log('Password:', password ? '[REDACTED]' : 'EMPTY');
-
-      // Fazer login
       const loginResponse = await loginUser({ username, password });
-      console.log('Login response:', loginResponse);
-      
-      // Verificar se o login foi bem-sucedido
       if (loginResponse.status === 200) {
-        console.log('Login successful, testing authentication...');
-        
-        // Testar se conseguimos acessar o perfil do usuário (validar o cookie)
+
         try {
-          const userProfile = await getUserProfile();
-          console.log('User profile retrieved:', userProfile);
-          
-          // Se conseguimos obter o perfil, significa que estamos autenticados
-          login(); // Atualizar o estado de autenticação no contexto
-          
-          console.log('Authentication confirmed, redirecting to dashboard...');
+          await getUserProfile();
+          login(); 
           router.push('/dashboard');
         } catch (profileError) {
           console.error('Failed to get user profile after login:', profileError);
@@ -101,7 +86,7 @@ export default function LoginPage() {
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
         <p className="mt-4 text-sm text-center text-gray-600 dark:text-gray-400">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="font-medium text-blue-600 hover:underline">
             Register
           </Link>

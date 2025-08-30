@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getUserProfile } from '@/lib/apiService';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -21,18 +21,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async (): Promise<boolean> => {
     try {
-      console.log('Checking authentication status...');
+
       const response = await getUserProfile();
-      console.log('getUserProfile response:', response);
-      
+
+
       // Verificar se a resposta tem a estrutura esperada
       const userData = response.data || response;
       setUser(userData);
-      console.log('Authentication check successful, user:', userData);
+
       setIsAuthenticated(true);
       return true;
-    } catch (error) {
-      console.log('Authentication check failed:', error);
+    } catch {
       setUser(null);
       setIsAuthenticated(false);
       return false;
@@ -40,13 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (): Promise<void> => {
-    console.log('Login method called, re-checking auth...');
+
     setIsLoading(true);
     try {
-      const authSuccess = await checkAuth();
-      console.log('Auth recheck result:', authSuccess);
-    } catch (error) {
-      console.error('Error during login auth check:', error);
+      await checkAuth();
+
+    } catch {
+      logout();
     } finally {
       setIsLoading(false);
     }
@@ -55,25 +54,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
-    // For httpOnly cookies, we need to call a backend endpoint to clear the cookie.
-    // Example: await fetch('/api/auth/logout', { method: 'POST' });
-    // For now, just clear frontend state.
-    // Redirect to login page after logout
-    window.location.href = '/login'; // Force full page reload to clear all state
+    window.location.href = '/login';
   };
 
   useEffect(() => {
     const initAuth = async () => {
-      console.log('Initializing auth...');
+
       await checkAuth();
       setIsLoading(false);
-      console.log('Auth initialization complete');
+
     };
-    
+
     initAuth();
   }, []);
 
-  console.log('AuthProvider render - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user);
+
 
   if (isLoading) {
     return (
