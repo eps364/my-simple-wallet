@@ -55,19 +55,8 @@ public class TransactionService {
         return transactionRepository.findByUserId(userId, pageable).map(transactionMapper::toResponse);
     }
 
-    public Page<TransactionResponse> findByUserIdWithChildren(String userId, Pageable pageable) {
-        // Criar lista com o userId atual
-        List<String> userIds = new java.util.ArrayList<>();
-        userIds.add(userId);
-
-        // Buscar todos os filhos (usuários que têm este usuário como parent) e
-        // adicionar à lista
-        List<String> childrenIds = userRepository.findByParentId(UUID.fromString(userId)).stream()
-                .map(user -> user.getId().toString()).toList();
-        userIds.addAll(childrenIds);
-
-        // Buscar todas as transações paginadas
-        return transactionRepository.findByUserIdIn(userIds, pageable).map(transactionMapper::toResponse);
+    public Page<TransactionResponse> findByUserIdWithChildren(String userId, boolean isParent, Pageable pageable) {
+        return transactionRepository.findByUserIdIn(withChildren(userId, isParent), pageable).map(transactionMapper::toResponse);
     }
 
     public Optional<TransactionResponse> findById(Long id, String userId) {
@@ -159,13 +148,22 @@ public class TransactionService {
     public Page<TransactionResponse> findTransactionsByMonth(
         String userId, boolean isParent, String startDate, String endDate, Pageable pageable) {
 
-        Page<Transaction> transactions = transactionRepository.findByMonthAndParent(
-            userId, 
-            isParent, 
+        Page<Transaction> transactions = transactionRepository.transactionInMonth(
+            withChildren(userId, isParent), 
             LocalDateConverter.convert(startDate), 
             LocalDateConverter.convert(endDate),
-                pageable);
+            pageable);
         return transactions.map(transactionMapper::toResponse);
     }
 
+    private List<String> withChildren(String userId, boolean isParent) {
+        List<String> userIds = new ArrayList<>();
+        userIds.add(userId);
+        if (isParent) {
+            List<String> childrenIds = userRepository.findByParentId(UUID.fromString(userId)).stream()
+                    .map(user -> user.getId().toString()).toList();
+            userIds.addAll(childrenIds);
+        }
+        return userIds;
+    }
 }

@@ -54,13 +54,7 @@ public class TransactionController {
             @RequestParam(value = "isParent", required = false, defaultValue = "false") boolean isParent,
             Pageable pageable) {
         String userId = getLoggedUserId();
-        Page<TransactionResponse> transactions;
-
-        if (isParent) {
-            transactions = transactionService.findByUserIdWithChildren(userId, pageable);
-        } else {
-            transactions = transactionService.findByUserId(userId, pageable);
-        }
+        Page<TransactionResponse> transactions = transactionService.findByUserIdWithChildren(userId, isParent, pageable);
 
         return ResponseEntity.ok(new ApiResponse<>(200, "Transações encontradas", transactions));
     }
