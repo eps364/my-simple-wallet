@@ -109,4 +109,16 @@ public class TransactionController {
         List<TransactionResponse> responses = transactionService.createBatch(request, userId);
         return ResponseEntity.ok(new ApiResponse<>(201, "Transações criadas com sucesso", responses));
     }
+
+        @GetMapping("/month")
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> getTransactionsByMonth(
+            @RequestParam(value = "isParent", required = false, defaultValue = "false") boolean isParent,
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            Pageable pageable) {
+        String userId = getLoggedUserId();
+        
+        Page<TransactionResponse> transactions = transactionService.findTransactionsByMonth(userId, isParent, startDate, endDate, pageable);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Transações do mês encontradas", transactions));
+    }
 }

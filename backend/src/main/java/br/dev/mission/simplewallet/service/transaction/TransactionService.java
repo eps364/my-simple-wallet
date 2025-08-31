@@ -23,6 +23,7 @@ import br.dev.mission.simplewallet.repository.account.AccountRepository;
 import br.dev.mission.simplewallet.repository.category.CategoryRepository;
 import br.dev.mission.simplewallet.repository.transaction.TransactionRepository;
 import br.dev.mission.simplewallet.repository.user.UserRepository;
+import br.dev.mission.simplewallet.util.LocalDateConverter;
 
 @Service
 public class TransactionService {
@@ -154,4 +155,17 @@ public class TransactionService {
         return installments;
 
     }
+
+    public Page<TransactionResponse> findTransactionsByMonth(
+        String userId, boolean isParent, String startDate, String endDate, Pageable pageable) {
+
+        Page<Transaction> transactions = transactionRepository.findByMonthAndParent(
+            userId, 
+            isParent, 
+            LocalDateConverter.convert(startDate), 
+            LocalDateConverter.convert(endDate),
+                pageable);
+        return transactions.map(transactionMapper::toResponse);
+    }
+
 }
